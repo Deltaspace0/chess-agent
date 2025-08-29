@@ -57,9 +57,17 @@ class Recognizer {
     return grid;
   }
 
-  private getHash(grid: number[][][][][], row: number, col: number): string {
+  private getHash(grid: number[][][][][], row: number, col: number, removeBack: boolean): string {
     const backGrid = ((row+col) % 2 === 0) ? this.whiteGrid : this.blackGrid;
+    let backWidth = 0;
+    let backHeight = 0;
+    if (removeBack) {
+      backWidth = backGrid[0].length;
+      backHeight = backGrid.length;
+    }
     const squareGrid = grid[row][col];
+    const squareWidth = squareGrid[0].length;
+    const squareHeight = squareGrid.length;
     let hash = '';
     let startRow = 0;
     for (let i = 0; i < 8; i++) {
@@ -70,15 +78,17 @@ class Recognizer {
         const bgr = [0, 0, 0];
         for (let k = startRow; k < startRow+height; k++) {
           for (let l = startCol; l < startCol+width; l++) {
-            const backRow = Math.floor((k/squareGrid.length)*backGrid.length);
-            const backCol = Math.floor((l/squareGrid[0].length)*backGrid[0].length);
-            const backPixel = backGrid[backRow][backCol];
-            let backErrors = 0;
-            for (let m = 0; m < 3; m++) {
-              backErrors += Math.abs(squareGrid[k][l][m]-backPixel[m]);
-            }
-            if (backErrors < 30) {
-              continue;
+            if (removeBack) {
+              const backRow = Math.floor((k/squareHeight)*backHeight);
+              const backCol = Math.floor((l/squareWidth)*backWidth);
+              const backPixel = backGrid[backRow][backCol];
+              let backErrors = 0;
+              for (let m = 0; m < 3; m++) {
+                backErrors += Math.abs(squareGrid[k][l][m]-backPixel[m]);
+              }
+              if (backErrors < 30) {
+                continue;
+              }
             }
             for (let m = 0; m < 3; m++) {
               bgr[m] += squareGrid[k][l][m];
@@ -114,7 +124,7 @@ class Recognizer {
     this.blackGrid = grid[2][1];
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
-        this.pieceHashes[pieces[i][j]] = this.getHash(grid, i, j);
+        this.pieceHashes[pieces[i][j]] = this.getHash(grid, i, j, true);
       }
     }
   }
@@ -127,7 +137,7 @@ class Recognizer {
     const pieces: [Piece, number, number][] = [];
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
-        const currentHash = this.getHash(grid, i, j);
+        const currentHash = this.getHash(grid, i, j, true);
         let minErrors = Infinity;
         let likelyPieceString = 'e';
         for (const pieceString in this.pieceHashes) {
@@ -159,7 +169,7 @@ class Recognizer {
     for (let i = 0; i < 8; i++) {
       const rowHashes: string[] = [];
       for (let j = 0; j < 8; j++) {
-        rowHashes.push(this.getHash(grid, i, j));
+        rowHashes.push(this.getHash(grid, i, j, false));
       }
       boardHashes.push(rowHashes);
     }

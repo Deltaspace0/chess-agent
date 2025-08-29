@@ -266,8 +266,8 @@ class Solver {
         this.processMove(move);
       }
     }
+    await sleep(50);
     if (this.autoResponse && !this.game.isGameOver()) {
-      await sleep(50);
       return this.scanMove();
     }
   }
@@ -286,12 +286,13 @@ class Solver {
       }
       squares = await this.getChangedSquares();
     } catch (e) {
+      console.log(e);
       this.statusCallback('Failed to scan move');
       return;
     }
     this.boardHashes = [];
     const squareStrings = squares.map((x) => this.board.squareToString(x));
-    console.log(`Changed squares: ${squareStrings.join(', ')}`);
+    this.statusCallback(`Changed squares: ${squareStrings.join(', ')}`);
     this.isScanning = false;
     if (squares.length < 2 || squares.length > 9) {
       this.statusCallback('No move detected');
