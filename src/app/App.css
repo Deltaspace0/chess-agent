@@ -6,9 +6,9 @@ label {
 input[type="checkbox"] {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
-  margin: 6px;
+  width: 16px;
+  height: 16px;
+  margin: 4px;
   background: #000000;
   border: 2px solid #cccccc;
   border-radius: 4px;
@@ -45,9 +45,9 @@ input[type="checkbox"]:checked::after {
 input[type="radio"] {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
-  margin: 6px;
+  width: 16px;
+  height: 16px;
+  margin: 4px;
   background: #000000;
   border: 2px solid #cccccc;
   border-radius: 50%;
@@ -78,14 +78,14 @@ input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   width: 120px;
-  height: 20px;
-  margin: 6px;
+  height: 16px;
+  margin: 4px;
   background: transparent;
   cursor: pointer;
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
-  height: 20px;
+  height: 16px;
   background: #000000;
   border: 2px solid rgba(255, 255, 255, 0.87);
   border-radius: 4px;
@@ -94,8 +94,8 @@ input[type="range"]::-webkit-slider-runnable-track {
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border: 2px solid #0ec3c9;
   border-radius: 4px;
   background: linear-gradient(45deg, #0ec3c9, #0ab4b9);
@@ -127,8 +127,8 @@ input[type="range"]:disabled::-webkit-slider-runnable-track {
 button {
   font-size: 12px;
   width: 180px;
-  margin: 6px;
-  padding: 6px;
+  margin: 4px;
+  padding: 2px;
   background-color: #000000;
   color: rgba(255, 255, 255, 0.87);
   border: 1px solid rgba(255, 255, 255, 0.87);
@@ -172,17 +172,18 @@ li:hover {
 p {
   padding: 0 6px;
   margin: -10px 0;
+  font-size: 14px;
 }
 
 .status {
-  margin: 8px auto;
+  margin: 4px auto;
 }
 
 .App {
   background-color: #282c34;
   min-height: 100vh;
   display: flex;
-  padding: 6px;
+  padding: 4px;
   color: white;
 }
 
@@ -208,7 +209,7 @@ p {
   width: 32px;
   height: 320px;
   background-color: #666666;
-  margin: 0 auto;
+  margin: 4px auto;
   display: flex;
   justify-content: center;
 }
@@ -235,7 +236,7 @@ p {
   height: 320px;
   background-image: url('../../assets/background.png');
   background-size: cover;
-  margin: 0 auto;
+  margin: 4px auto;
   position: relative;
   user-select: none;
 }

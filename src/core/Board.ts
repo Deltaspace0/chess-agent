@@ -75,7 +75,6 @@ class Board {
 
   setDraggingMode(value: boolean) {
     this.draggingMode = value;
-    mouse.config.mouseSpeed = this.draggingMode ? 3000 : 500;
     this.draggingCallback(this.draggingMode);
   }
 

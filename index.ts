@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
-import { mouse, Region, screen } from '@nut-tree-fork/nut-js';
+import { mouse, screen, Region } from '@nut-tree-fork/nut-js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Board from './src/core/Board.ts';
@@ -81,6 +81,7 @@ async function createWindow(): Promise<BrowserWindow> {
   ipcMain.on('perspective-value', (_event, value) => board.setPerspective(value));
   ipcMain.on('dragging-value', (_event, value) => board.setDraggingMode(value));
   ipcMain.on('duration-value', (_event, value) => engine.setAnalysisDuration(value));
+  ipcMain.on('mousespeed-value', (_event, value) => mouse.config.mouseSpeed = value);
   ipcMain.handle('new-region', () => solver.detectNewRegion());
   ipcMain.handle('reload-hashes', () => {
     recognizer.load().then(

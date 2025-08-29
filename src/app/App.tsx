@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import type { SquarePiece } from './interface';
 import Board from './components/Board.tsx';
 import Gauge from './components/Gauge.tsx';
-import { Slider } from './components/Slider.tsx';
+import { useListSlider, Slider } from './components/Slider.tsx';
 
 function App() {
   const [statusText, setStatusText] = useState('');
@@ -26,6 +26,12 @@ function App() {
     electron.onEvaluation(setEvaluation);
   }, [electron]);
   const analysisDurations = [100, 300, 1000, 3000, 5000];
+  const mouseProps = useListSlider({
+    label: 'Mouse speed',
+    initialValue: 3000,
+    list: [500, 1000, 3000, 5000, 10000],
+    callback: (value) => electron.mouseSpeedValue(value)
+  });
   return (
     <div className='App'>
       <div className='flex-column'>
@@ -100,6 +106,7 @@ function App() {
           map={(x) => analysisDurations[x]}
           disabled={detectingRegion}
         />
+        <Slider {...mouseProps} disabled={detectingRegion}/>
         <label>
           <input
             type='checkbox'
