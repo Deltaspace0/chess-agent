@@ -15,8 +15,8 @@ function Gauge({ evaluation, isWhitePerspective }: GaugeProps) {
     ...(isWhitePerspective ? {bottom: 0} : {})
   };
   const evalStyle = {
-    color: (isWhitePerspective && height > 98
-      || !isWhitePerspective && height > 5) ? '#000' : '#fff'
+    color: (height >= 50) ? '#000' : '#fff',
+    ...((isWhitePerspective ? height : (100-height)) > 50 ? {bottom: 0} : {})
   };
   const evalText = type === 'mate' ? `M${value}` : value/100;
   return (
