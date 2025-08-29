@@ -22,6 +22,7 @@ interface IElectronAPI {
   draggingValue: (value: boolean) => void;
   durationValue: (value: number) => void;
   mouseSpeedValue: (value: number) => void;
+  actionRegionValue: (value: boolean) => void;
   newRegion: () => void;
   reloadHashes: () => void;
   scanMove: () => void;

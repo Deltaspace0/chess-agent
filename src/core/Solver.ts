@@ -44,6 +44,7 @@ class Solver {
   private isScanning: boolean = false;
   private stopBestMove: (() => void) | null = null;
   private actionRegions: {[key: string]: Region} = {};
+  private actionRegionsEnabled: boolean = true;
   private boardHashes: string[][] = [];
   private statusCallback: (status: string) => void = console.log;
   private autoResponseCallback: (value: boolean) => void = () => {};
@@ -195,9 +196,13 @@ class Solver {
     this.recognizer.setRegion(region);
   }
 
+  setActionRegionsEnabled(value: boolean) {
+    this.actionRegionsEnabled = value;
+  }
+
   async observe() {
     const actionCallback = async () => {
-      if (this.isDetectingRegion) {
+      if (this.isDetectingRegion || !this.actionRegionsEnabled) {
         return;
       }
       const point = await mouse.getPosition();

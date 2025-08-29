@@ -82,6 +82,7 @@ async function createWindow(): Promise<BrowserWindow> {
   ipcMain.on('dragging-value', (_event, value) => board.setDraggingMode(value));
   ipcMain.on('duration-value', (_event, value) => engine.setAnalysisDuration(value));
   ipcMain.on('mousespeed-value', (_event, value) => mouse.config.mouseSpeed = value);
+  ipcMain.on('actionregion-value', (_event, value) => solver.setActionRegionsEnabled(value));
   ipcMain.handle('new-region', () => solver.detectNewRegion());
   ipcMain.handle('reload-hashes', () => {
     recognizer.load().then(

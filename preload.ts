@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   draggingValue: (value) => ipcRenderer.send('dragging-value', value),
   durationValue: (value) => ipcRenderer.send('duration-value', value),
   mouseSpeedValue: (value) => ipcRenderer.send('mousespeed-value', value),
+  actionRegionValue: (value) => ipcRenderer.send('actionregion-value', value),
   newRegion: () => ipcRenderer.invoke('new-region'),
   reloadHashes: () => ipcRenderer.invoke('reload-hashes'),
   scanMove: () => ipcRenderer.invoke('scan-move'),

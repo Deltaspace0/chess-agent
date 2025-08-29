@@ -10,6 +10,7 @@ function App() {
   const [autoResponse, setAutoResponse] = useState(false);
   const [isWhitePerspective, setIsWhitePerspective] = useState(true);
   const [draggingMode, setDraggingMode] = useState(true);
+  const [actionRegion, setActionRegion] = useState(true);
   const [regionSelection, setRegionSelection] = useState<RegionSelection>('first');
   const [analysisDuration, setAnalysisDuration] = useState(5000);
   const [positionPieces, setPositionPieces] = useState<(SquarePiece | null)[]>([]);
@@ -33,6 +34,10 @@ function App() {
     callback: (value) => electron.mouseSpeedValue(value)
   });
   const detectingRegion = regionSelection !== 'none';
+  const handleActionRegion = (value: boolean) => {
+    setActionRegion(value);
+    electron.actionRegionValue(value);
+  }
   return (
     <div className='App'>
       <div className='flex-column'>
@@ -115,6 +120,14 @@ function App() {
             onChange={(e) => electron.autoResponseValue(e.target.checked)}
             disabled={detectingRegion}/>
           <p>Auto response</p>
+        </label>
+        <label>
+          <input
+            type='checkbox'
+            checked={actionRegion}
+            onChange={(e) => handleActionRegion(e.target.checked)}
+            disabled={detectingRegion}/>
+          <p>Invisible action regions</p>
         </label>
       </div>
     </div>
