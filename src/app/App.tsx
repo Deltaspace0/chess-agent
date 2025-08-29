@@ -1,6 +1,6 @@
 import './App.css';
 import { useEffect, useState } from 'react';
-import type { SquarePiece } from './interface';
+import type { SquarePiece, RegionSelection } from './interface';
 import Board from './components/Board.tsx';
 import Gauge from './components/Gauge.tsx';
 import { useListSlider, Slider } from './components/Slider.tsx';
@@ -10,7 +10,7 @@ function App() {
   const [autoResponse, setAutoResponse] = useState(false);
   const [isWhitePerspective, setIsWhitePerspective] = useState(true);
   const [draggingMode, setDraggingMode] = useState(true);
-  const [detectingRegion, setDetectingRegion] = useState(true);
+  const [regionSelection, setRegionSelection] = useState<RegionSelection>('first');
   const [analysisDuration, setAnalysisDuration] = useState(5000);
   const [positionPieces, setPositionPieces] = useState<(SquarePiece | null)[]>([]);
   const [evaluation, setEvaluation] = useState('cp 0');
@@ -20,7 +20,7 @@ function App() {
     electron.onUpdateAutoResponse(setAutoResponse);
     electron.onUpdatePerspective(setIsWhitePerspective);
     electron.onUpdateDragging(setDraggingMode);
-    electron.onDetectingRegion(setDetectingRegion);
+    electron.onUpdateRegion(setRegionSelection);
     electron.onUpdateDuration(setAnalysisDuration);
     electron.onUpdatePosition(setPositionPieces);
     electron.onEvaluation(setEvaluation);
@@ -32,14 +32,15 @@ function App() {
     list: [500, 1000, 3000, 5000, 10000],
     callback: (value) => electron.mouseSpeedValue(value)
   });
+  const detectingRegion = regionSelection !== 'none';
   return (
     <div className='App'>
       <div className='flex-column'>
         <div className='flex-row'>
           <button
             onClick={() => electron.newRegion()}
-            disabled={detectingRegion}>
-              Select new region
+            disabled={regionSelection === 'first'}>
+              {regionSelection === 'new' ? 'Cancel selection' : 'Select new region'}
           </button>
           <button
             onClick={() => electron.reloadHashes()}

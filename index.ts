@@ -71,7 +71,7 @@ async function createWindow(): Promise<BrowserWindow> {
     win.webContents.send('update-autoresponse', value);
   });
   solver.onDetectingRegion((value) => {
-    win.webContents.send('detecting-region', value);
+    win.webContents.send('update-region', value ? 'new' : 'none');
   });
   app.on('window-all-closed', () => {
     app.quit();
@@ -94,6 +94,6 @@ async function createWindow(): Promise<BrowserWindow> {
   ipcMain.handle('best-move', () => solver.playBestMove());
   ipcMain.handle('reset-position', () => solver.resetPosition());
   ipcMain.handle('recognize-board', () => solver.recognizeBoard());
-  win.webContents.send('detecting-region', false);
+  win.webContents.send('update-region', 'none');
   await solver.observe();
 })();

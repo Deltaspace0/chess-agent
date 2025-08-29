@@ -6,7 +6,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onUpdateAutoResponse: (callback) => ipcRenderer.on('update-autoresponse', (_event, value) => callback(value)),
   onUpdatePerspective: (callback) => ipcRenderer.on('update-perspective', (_event, value) => callback(value)),
   onUpdateDragging: (callback) => ipcRenderer.on('update-dragging', (_event, value) => callback(value)),
-  onDetectingRegion: (callback) => ipcRenderer.on('detecting-region', (_event, value) => callback(value)),
+  onUpdateRegion: (callback) => ipcRenderer.on('update-region', (_event, value) => callback(value)),
   onUpdateDuration: (callback) => ipcRenderer.on('update-duration', (_event, value) => callback(value)),
   onUpdatePosition: (callback) => ipcRenderer.on('update-position', (_event, value) => callback(value)),
   onEvaluation: (callback) => ipcRenderer.on('evaluation', (_event, value) => callback(value)),

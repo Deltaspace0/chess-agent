@@ -6,12 +6,14 @@ interface SquarePiece {
   color: Color
 }
 
+type RegionSelection = 'first' | 'new' | 'none';
+
 interface IElectronAPI {
   onUpdateStatus: (callback: (value: string) => void) => void;
   onUpdateAutoResponse: (callback: (value: boolean) => void) => void;
   onUpdatePerspective: (callback: (value: boolean) => void) => void;
   onUpdateDragging: (callback: (value: boolean) => void) => void;
-  onDetectingRegion: (callback: (value: boolean) => void) => void;
+  onUpdateRegion: (callback: (value: RegionSelection) => void) => void;
   onUpdateDuration: (callback: (value: number) => void) => void;
   onUpdatePosition: (callback: (value: (SquarePiece | null)[]) => void) => void;
   onEvaluation: (callback: (value: string) => void) => void;

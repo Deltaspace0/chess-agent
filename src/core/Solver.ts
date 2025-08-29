@@ -57,6 +57,11 @@ class Solver {
     this.setActionRegions(region);
   }
 
+  private setDetectingRegion(value: boolean) {
+    this.isDetectingRegion = value;
+    this.detectingCallback(value);
+  }
+
   private setActionRegions(region: Region) {
     const left = region.left;
     const top = region.top+region.height;
@@ -210,14 +215,12 @@ class Solver {
 
   async detectNewRegion() {
     if (this.isDetectingRegion) {
-      return;
+      return detectRegion();
     }
     this.statusCallback('Select new region');
-    this.isDetectingRegion = true;
-    this.detectingCallback(true);
+    this.setDetectingRegion(true);
     const region = await detectRegion();
-    this.isDetectingRegion = false;
-    this.detectingCallback(false);
+    this.setDetectingRegion(false);
     if (region === null) {
       this.statusCallback('No new region');
       return;
