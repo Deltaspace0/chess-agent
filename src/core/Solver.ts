@@ -40,6 +40,7 @@ class Solver {
   private recognizer: Recognizer;
   private board: Board;
   private autoResponse: boolean = false;
+  private autoScan: boolean = false;
   private isDetectingRegion: boolean = false;
   private isScanning: boolean = false;
   private stopBestMove: (() => void) | null = null;
@@ -48,6 +49,7 @@ class Solver {
   private boardHashes: string[][] = [];
   private statusCallback: (status: string) => void = console.log;
   private autoResponseCallback: (value: boolean) => void = () => {};
+  private autoScanCallback: (value: boolean) => void = () => {};
   private detectingCallback: (value: boolean) => void = () => {};
 
   constructor({ region, game, engine, recognizer, board }: SolverProps) {
@@ -181,13 +183,18 @@ class Solver {
       this.statusCallback(`Illegal move: ${move}`);
       return;
     }
-    if (this.game.isGameOver()) {
-      this.statusCallback('Game is over');
-      this.isScanning = false;
-    }
     const moves = this.engine.sendMove(move);
     console.log(`Moves: ${moves}`);
     this.printBoard();
+    const myTurn = this.game.turn() === 'bw'[Number(this.board.getPerspective())];
+    if (this.game.isGameOver()) {
+      this.statusCallback('Game is over');
+      this.isScanning = false;
+    } else if (this.autoScan && !myTurn) {
+      this.scanMove();
+    } else if (this.autoResponse && myTurn) {
+      this.playBestMove();
+    }
   }
 
   setRegion(region: Region) {
@@ -266,10 +273,6 @@ class Solver {
         this.processMove(move);
       }
     }
-    await sleep(50);
-    if (this.autoResponse && !this.game.isGameOver()) {
-      return this.scanMove();
-    }
   }
 
   async scanMove(): Promise<void> {
@@ -306,10 +309,6 @@ class Solver {
         const move = square1+square2;
         if (this.game.isLegalMove(move)) {
           this.processMove(move);
-          if (this.autoResponse && !this.game.isGameOver()) {
-            await sleep(this.engine.getAnalysisDuration()+100);
-            return this.playBestMove();
-          }
           return;
         }
       }
@@ -377,6 +376,13 @@ class Solver {
     console.log(`Autoresponse is ${enabledString}`);
   }
 
+  setAutoScan(value: boolean) {
+    this.autoScan = value;
+    this.autoScanCallback(value);
+    const enabledString = value ? 'enabled' : 'disabled';
+    console.log(`Autoscan is ${enabledString}`);
+  }
+
   resetPosition() {
     this.game.reset();
     this.engine.reset();
@@ -389,6 +395,10 @@ class Solver {
 
   onUpdateAutoResponse(callback: (value: boolean) => void) {
     this.autoResponseCallback = callback;
+  }
+
+  onUpdateAutoScan(callback: (value: boolean) => void) {
+    this.autoScanCallback = callback;
   }
 
   onDetectingRegion(callback: (value: boolean) => void) {

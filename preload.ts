@@ -4,6 +4,7 @@ const { ipcRenderer } = require('electron/renderer');
 contextBridge.exposeInMainWorld('electronAPI', {
   onUpdateStatus: (callback) => ipcRenderer.on('update-status', (_event, value) => callback(value)),
   onUpdateAutoResponse: (callback) => ipcRenderer.on('update-autoresponse', (_event, value) => callback(value)),
+  onUpdateAutoScan: (callback) => ipcRenderer.on('update-autoscan', (_event, value) => callback(value)),
   onUpdatePerspective: (callback) => ipcRenderer.on('update-perspective', (_event, value) => callback(value)),
   onUpdateDragging: (callback) => ipcRenderer.on('update-dragging', (_event, value) => callback(value)),
   onUpdateRegion: (callback) => ipcRenderer.on('update-region', (_event, value) => callback(value)),
@@ -11,6 +12,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onUpdatePosition: (callback) => ipcRenderer.on('update-position', (_event, value) => callback(value)),
   onEvaluation: (callback) => ipcRenderer.on('evaluation', (_event, value) => callback(value)),
   autoResponseValue: (value) => ipcRenderer.send('autoresponse-value', value),
+  autoScanValue: (value) => ipcRenderer.send('autoscan-value', value),
   perspectiveValue: (value) => ipcRenderer.send('perspective-value', value),
   draggingValue: (value) => ipcRenderer.send('dragging-value', value),
   durationValue: (value) => ipcRenderer.send('duration-value', value),

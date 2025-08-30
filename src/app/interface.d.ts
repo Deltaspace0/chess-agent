@@ -11,6 +11,7 @@ type RegionSelection = 'first' | 'new' | 'none';
 interface IElectronAPI {
   onUpdateStatus: (callback: (value: string) => void) => void;
   onUpdateAutoResponse: (callback: (value: boolean) => void) => void;
+  onUpdateAutoScan: (callback: (value: boolean) => void) => void;
   onUpdatePerspective: (callback: (value: boolean) => void) => void;
   onUpdateDragging: (callback: (value: boolean) => void) => void;
   onUpdateRegion: (callback: (value: RegionSelection) => void) => void;
@@ -18,6 +19,7 @@ interface IElectronAPI {
   onUpdatePosition: (callback: (value: (SquarePiece | null)[]) => void) => void;
   onEvaluation: (callback: (value: string) => void) => void;
   autoResponseValue: (value: boolean) => void;
+  autoScanValue: (value: boolean) => void;
   perspectiveValue: (value: boolean) => void;
   draggingValue: (value: boolean) => void;
   durationValue: (value: number) => void;

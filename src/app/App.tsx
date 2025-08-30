@@ -8,6 +8,7 @@ import { useListSlider, Slider } from './components/Slider.tsx';
 function App() {
   const [statusText, setStatusText] = useState('');
   const [autoResponse, setAutoResponse] = useState(false);
+  const [autoScan, setAutoScan] = useState(false);
   const [isWhitePerspective, setIsWhitePerspective] = useState(true);
   const [draggingMode, setDraggingMode] = useState(true);
   const [actionRegion, setActionRegion] = useState(true);
@@ -19,6 +20,7 @@ function App() {
   useEffect(() => {
     electron.onUpdateStatus(setStatusText);
     electron.onUpdateAutoResponse(setAutoResponse);
+    electron.onUpdateAutoScan(setAutoScan);
     electron.onUpdatePerspective(setIsWhitePerspective);
     electron.onUpdateDragging(setDraggingMode);
     electron.onUpdateRegion(setRegionSelection);
@@ -120,6 +122,14 @@ function App() {
             onChange={(e) => electron.autoResponseValue(e.target.checked)}
             disabled={detectingRegion}/>
           <p>Auto response</p>
+        </label>
+        <label>
+          <input
+            type='checkbox'
+            checked={autoScan}
+            onChange={(e) => electron.autoScanValue(e.target.checked)}
+            disabled={detectingRegion}/>
+          <p>Auto scan</p>
         </label>
         <label>
           <input

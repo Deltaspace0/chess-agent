@@ -70,6 +70,9 @@ async function createWindow(): Promise<BrowserWindow> {
   solver.onUpdateAutoResponse((value) => {
     win.webContents.send('update-autoresponse', value);
   });
+  solver.onUpdateAutoScan((value) => {
+    win.webContents.send('update-autoscan', value);
+  });
   solver.onDetectingRegion((value) => {
     win.webContents.send('update-region', value ? 'new' : 'none');
   });
@@ -78,6 +81,7 @@ async function createWindow(): Promise<BrowserWindow> {
   });
   updateStatus('Ready');
   ipcMain.on('autoresponse-value', (_event, value) => solver.setAutoResponse(value));
+  ipcMain.on('autoscan-value', (_event, value) => solver.setAutoScan(value));
   ipcMain.on('perspective-value', (_event, value) => board.setPerspective(value));
   ipcMain.on('dragging-value', (_event, value) => board.setDraggingMode(value));
   ipcMain.on('duration-value', (_event, value) => engine.setAnalysisDuration(value));
