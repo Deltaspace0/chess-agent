@@ -12,6 +12,7 @@ function App() {
   const [isWhitePerspective, setIsWhitePerspective] = useState(true);
   const [draggingMode, setDraggingMode] = useState(true);
   const [actionRegion, setActionRegion] = useState(true);
+  const [showEvalBar, setShowEvalBar] = useState(true);
   const [regionSelection, setRegionSelection] = useState<RegionSelection>('first');
   const [analysisDuration, setAnalysisDuration] = useState(5000);
   const [positionPieces, setPositionPieces] = useState<(SquarePiece | null)[]>([]);
@@ -57,7 +58,7 @@ function App() {
         </div>
         <div className='flex-row'>
           <Board positionPieces={positionPieces} isWhitePerspective={isWhitePerspective}/>
-          <Gauge evaluation={evaluation} isWhitePerspective={isWhitePerspective}/>
+          {showEvalBar && <Gauge evaluation={evaluation} isWhitePerspective={isWhitePerspective}/>}
         </div>
         <p className='status'>{statusText}</p>
         <div className='flex-row'>
@@ -115,30 +116,44 @@ function App() {
           disabled={detectingRegion}
         />
         <Slider {...mouseProps} disabled={detectingRegion}/>
-        <label>
-          <input
-            type='checkbox'
-            checked={autoResponse}
-            onChange={(e) => electron.autoResponseValue(e.target.checked)}
-            disabled={detectingRegion}/>
-          <p>Auto response</p>
-        </label>
-        <label>
-          <input
-            type='checkbox'
-            checked={autoScan}
-            onChange={(e) => electron.autoScanValue(e.target.checked)}
-            disabled={detectingRegion}/>
-          <p>Auto scan</p>
-        </label>
-        <label>
-          <input
-            type='checkbox'
-            checked={actionRegion}
-            onChange={(e) => handleActionRegion(e.target.checked)}
-            disabled={detectingRegion}/>
-          <p>Invisible action regions</p>
-        </label>
+        <div className='flex-row'>
+          <div className='flex-column'>
+            <label>
+              <input
+                type='checkbox'
+                checked={autoResponse}
+                onChange={(e) => electron.autoResponseValue(e.target.checked)}
+                disabled={detectingRegion}/>
+              <p>Auto response</p>
+            </label>
+            <label>
+              <input
+                type='checkbox'
+                checked={autoScan}
+                onChange={(e) => electron.autoScanValue(e.target.checked)}
+                disabled={detectingRegion}/>
+              <p>Auto scan</p>
+            </label>
+          </div>
+          <div className='flex-column'>
+            <label>
+              <input
+                type='checkbox'
+                checked={actionRegion}
+                onChange={(e) => handleActionRegion(e.target.checked)}
+                disabled={detectingRegion}/>
+              <p>Invisible action regions</p>
+            </label>
+            <label>
+              <input
+                type='checkbox'
+                checked={showEvalBar}
+                onChange={(e) => setShowEvalBar(e.target.checked)}
+                disabled={detectingRegion}/>
+              <p>Show eval bar</p>
+            </label>
+          </div>
+        </div>
       </div>
     </div>
   );
