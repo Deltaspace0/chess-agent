@@ -11,6 +11,8 @@ class Engine {
   private ponderMove: string | null = null;
   private evaluation: string | null = null;
   private analysisDuration: number = 5000;
+  private principalMoves: string[] = [];
+  private principalMovesCallback: (value: string[]) => void = () => {};
   private bestMoveCallback: (value: string) => void = () => {};
   private ponderMoveCallback: (value: string) => void = () => {};
   private evaluationCallback: (value: string) => void = () => {};
@@ -20,22 +22,25 @@ class Engine {
     this.engine = new Worker(new URL('stockfish.js', import.meta.url), { type: 'module' });
     this.engine.addEventListener('message', (e) => {
       const words: string[] = e.data.split(' ');
+      if (words.includes('pv')) {
+        const pv = Number(words[words.indexOf('multipv')+1])-1;
+        this.setPrincipalMove(pv, words[words.indexOf('pv')+1]);
+        if (pv === 0) {
+          const i = words.indexOf('score');
+          this.setEvaluation(words[i+1]+' '+words[i+2]);
+        }
+      }
       if (words.includes('bestmove')) {
         this.setBestMove(words[words.indexOf('bestmove')+1]);
-      }
-      if (words.includes('ponder')) {
         this.setPonderMove(words[words.indexOf('ponder')+1]);
-      }
-      const depth = words[words.indexOf('depth')+1];
-      if (this.evaluation === null && depth !== '1') {
-        return;
-      }
-      if (words.includes('score')) {
-        const i = words.indexOf('score');
-        this.setEvaluation(words[i+1]+' '+words[i+2]);
       }
     });
     this.engine.postMessage('uci');
+  }
+
+  private setPrincipalMove(pv: number, move: string) {
+    this.principalMoves[pv] = move;
+    this.principalMovesCallback([...this.principalMoves]);
   }
 
   private setBestMove(value: string) {
@@ -58,6 +63,7 @@ class Engine {
   }
 
   private async analyzePosition() {
+    this.principalMoves = [];
     this.bestMove = null;
     this.ponderMove = null;
     this.evaluation = null;
@@ -97,6 +103,10 @@ class Engine {
     const duration = analysisDurations[(i+1)%analysisDurations.length];
     this.setAnalysisDuration(duration);
     return this.analysisDuration;
+  }
+
+  onPrincipalMoves(callback: (value: string[]) => void) {
+    this.principalMovesCallback = callback;
   }
 
   onBestMove(callback: (value: string) => void) {

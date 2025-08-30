@@ -18,6 +18,7 @@ interface IElectronAPI {
   onUpdateDuration: (callback: (value: number) => void) => void;
   onUpdatePosition: (callback: (value: (SquarePiece | null)[]) => void) => void;
   onEvaluation: (callback: (value: string) => void) => void;
+  onHighlightMoves: (callback: (value: string[]) => void) => void;
   autoResponseValue: (value: boolean) => void;
   autoScanValue: (value: boolean) => void;
   perspectiveValue: (value: boolean) => void;

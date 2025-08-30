@@ -165,14 +165,18 @@ li:hover {
   cursor: pointer;
 }
 
-.button-auto {
-  width: auto;
-}
-
 p {
   padding: 0 6px;
   margin: -10px 0;
   font-size: 14px;
+}
+
+svg {
+  position: absolute;
+}
+
+.button-auto {
+  width: auto;
 }
 
 .status {

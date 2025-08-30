@@ -38,6 +38,9 @@ async function createWindow(): Promise<BrowserWindow> {
   });
   game.reset();
   const engine = new Engine();
+  engine.onPrincipalMoves((value) => {
+    win.webContents.send('highlight-moves', value);
+  });
   engine.onEvaluation((value) => {
     win.webContents.send('evaluation', value);
   });

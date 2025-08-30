@@ -17,6 +17,7 @@ function App() {
   const [analysisDuration, setAnalysisDuration] = useState(5000);
   const [positionPieces, setPositionPieces] = useState<(SquarePiece | null)[]>([]);
   const [evaluation, setEvaluation] = useState('cp 0');
+  const [highlightMoves, setHighlightMoves] = useState<string[]>([]);
   const electron = window.electronAPI;
   useEffect(() => {
     electron.onUpdateStatus(setStatusText);
@@ -28,6 +29,7 @@ function App() {
     electron.onUpdateDuration(setAnalysisDuration);
     electron.onUpdatePosition(setPositionPieces);
     electron.onEvaluation(setEvaluation);
+    electron.onHighlightMoves(setHighlightMoves);
   }, [electron]);
   const analysisDurations = [100, 300, 1000, 3000, 5000];
   const mouseProps = useListSlider({
@@ -57,7 +59,11 @@ function App() {
           </button>
         </div>
         <div className='flex-row'>
-          <Board positionPieces={positionPieces} isWhitePerspective={isWhitePerspective}/>
+          <Board
+            positionPieces={positionPieces}
+            isWhitePerspective={isWhitePerspective}
+            highlightMoves={highlightMoves}
+          />
           {showEvalBar && <Gauge evaluation={evaluation} isWhitePerspective={isWhitePerspective}/>}
         </div>
         <p className='status'>{statusText}</p>
