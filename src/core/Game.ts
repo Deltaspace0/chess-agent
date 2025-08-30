@@ -128,6 +128,10 @@ class Game {
     return true;
   }
 
+  moves(): string[] {
+    return this.chess.moves({ verbose: true }).map((x) => x.lan);
+  }
+
   setTurn(color: Color): boolean {
     try {
       this.chess.setTurn(color);
@@ -137,14 +141,14 @@ class Game {
     return true;
   }
 
-  isLegalMove(move: string): boolean {
-    try {
-      this.chess.move(move);
-    } catch (e) {
-      return false;
+  boardAfterMove(move: string | null): (Piece | null)[][] {
+    if (!move) {
+      return this.chess.board();
     }
+    this.chess.move(move);
+    const grid = this.chess.board();
     this.chess.undo();
-    return true;
+    return grid;
   }
 
   onUpdatePosition(callback: (grid: (SquarePiece | null)[]) => void) {

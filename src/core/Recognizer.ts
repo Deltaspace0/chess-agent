@@ -1,10 +1,6 @@
-import { screen, Region } from '@nut-tree-fork/nut-js';
-import type { Color, PieceSymbol } from 'chess.js';
-
-interface Piece {
-  type: PieceSymbol;
-  color: Color;
-}
+import { screen, sleep, Region } from '@nut-tree-fork/nut-js';
+import type { Color, Piece, PieceSymbol } from 'chess.js';
+import Game from './Game.ts';
 
 function getSquareGrid(byteRows: number[][], region: Region, channels: number): number[][][] {
   const grid: number[][][] = [];
@@ -22,8 +18,33 @@ function getSquareGrid(byteRows: number[][], region: Region, channels: number): 
   return grid;
 }
 
+function countChangedSquares(oldHashes: string[][], newHashes: string[][]): number {
+  let changedSquares = 0;
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      for (let k = 0; k < newHashes[i][j].length; k++) {
+        if (newHashes[i][j][k] !== oldHashes[i][j][k]) {
+          changedSquares++;
+          break;
+        }
+      }
+    }
+  }
+  return changedSquares;
+}
+
+function compareHashes(hash1: string, hash2: string): number {
+  let errors = 0;
+  for (let i = 0; i < hash1.length; i++) {
+    errors += Math.abs(Number(hash1[i])-Number(hash2[i]));
+  }
+  return errors;
+}
+
 class Recognizer {
   private region: Region;
+  private scanning: boolean = false;
+  private boardHashes: string[][] = [];
   private pieceHashes: { [key: string]: string } = {};
   private whiteGrid: number[][][] = [];
   private blackGrid: number[][][] = [];
@@ -106,6 +127,35 @@ class Recognizer {
     return hash;
   }
 
+  private async getBoardHashes(removeBack: boolean): Promise<string[][]> {
+    const grid = await this.grabSquares();
+    const boardHashes: string[][] = [];
+    for (let i = 0; i < 8; i++) {
+      const rowHashes: string[] = [];
+      for (let j = 0; j < 8; j++) {
+        rowHashes.push(this.getHash(grid, i, j, removeBack));
+      }
+      boardHashes.push(rowHashes);
+    }
+    return boardHashes;
+  }
+
+  private getPieceHashErrors(piece: Piece | null, hash: string): number {
+    if (piece === null) {
+      const errors1 = compareHashes(hash, this.pieceHashes['e12']);
+      const errors2 = compareHashes(hash, this.pieceHashes['e13']);
+      return Math.min(errors1, errors2);
+    }
+    let minErrors = Infinity;
+    for (const key in this.pieceHashes) {
+      if (piece.type === key[0] && piece.color === key[1]) {
+        const errors = compareHashes(hash, this.pieceHashes[key]);
+        minErrors = Math.min(errors, minErrors);
+      }
+    }
+    return minErrors;
+  }
+
   setRegion(region: Region) {
     this.region = region;
   }
@@ -131,7 +181,7 @@ class Recognizer {
 
   async recognizeBoard(): Promise<[Piece, number, number][]> {
     if (!this.pieceHashes['rb1']) {
-      throw new Error('no-hashes');
+      throw new Error('no hashes');
     }
     const grid = await this.grabSquares();
     const pieces: [Piece, number, number][] = [];
@@ -142,10 +192,7 @@ class Recognizer {
         let likelyPieceString = 'e';
         for (const pieceString in this.pieceHashes) {
           const hash = this.pieceHashes[pieceString];
-          let errors = 0;
-          for (let i = 0; i < currentHash.length; i++) {
-            errors += Math.abs(Number(currentHash[i])-Number(hash[i]));
-          }
+          const errors = compareHashes(currentHash, hash);
           if (errors < minErrors) {
             minErrors = errors;
             likelyPieceString = pieceString;
@@ -163,17 +210,88 @@ class Recognizer {
     return pieces;
   }
 
-  async getBoardHashes(): Promise<string[][]> {
-    const grid = await this.grabSquares();
-    const boardHashes: string[][] = [];
-    for (let i = 0; i < 8; i++) {
-      const rowHashes: string[] = [];
-      for (let j = 0; j < 8; j++) {
-        rowHashes.push(this.getHash(grid, i, j, false));
-      }
-      boardHashes.push(rowHashes);
+  async rememberBoard() {
+    try {
+      this.boardHashes = await this.getBoardHashes(false);
+    } catch (e) {
+      this.boardHashes = [];
     }
-    return boardHashes;
+  }
+
+  isScanning(): boolean {
+    return this.scanning;
+  }
+
+  stopScanning() {
+    this.scanning = false;
+  }
+
+  async scanMove(game: Game): Promise<string | null> {
+    if (!this.pieceHashes['rb1']) {
+      throw new Error('no hashes');
+    }
+    if (this.scanning) {
+      throw new Error('already scanning');
+    }
+    this.scanning = true;
+    if (this.boardHashes.length === 0) {
+      this.boardHashes = await this.getBoardHashes(false);
+    }
+    const changedSquares = await (async () => {
+      let prevBoardHashes = await this.getBoardHashes(false);
+      const changedSquares = countChangedSquares(this.boardHashes, prevBoardHashes);
+      if (changedSquares > 2) {
+        return changedSquares;
+      }
+      let quietPeriod = true;
+      while (this.scanning) {
+        await sleep(20);
+        const boardHashes = await this.getBoardHashes(false);
+        const changedSquares = countChangedSquares(prevBoardHashes, boardHashes);
+        if (changedSquares > 0) {
+          quietPeriod = false;
+        }
+        if (changedSquares === 0) {
+          if (quietPeriod) {
+            this.boardHashes = boardHashes;
+          } else {
+            return countChangedSquares(this.boardHashes, boardHashes);
+          }
+        }
+        prevBoardHashes = boardHashes;
+      }
+      return 0;
+    })();
+    this.boardHashes = [];
+    this.scanning = false;
+    if (changedSquares < 2 || changedSquares > 9) {
+      return null;
+    }
+    const boardHashes = await this.getBoardHashes(true);
+    const moves = [...game.moves(), null];
+    let minErrors = Infinity;
+    let probableMove = null;
+    const pieceErrors: { [key: string]: number } = {};
+    for (const move of moves) {
+      const grid = game.boardAfterMove(move);
+      let errors = 0;
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+          const hash = boardHashes[i][j];
+          const piece = grid[i][j];
+          const key = hash+(piece ? (piece.type+piece.color) : 'null');
+          if (!(key in pieceErrors)) {
+            pieceErrors[key] = this.getPieceHashErrors(piece, hash);
+          }
+          errors += pieceErrors[key];
+        }
+      }
+      if (errors < minErrors) {
+        minErrors = errors;
+        probableMove = move;
+      }
+    }
+    return probableMove;
   }
 }
 

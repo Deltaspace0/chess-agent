@@ -1,4 +1,4 @@
-import { mouse, screen, sleep, Point, Region } from '@nut-tree-fork/nut-js';
+import { mouse, screen, Point, Region } from '@nut-tree-fork/nut-js';
 import mouseEvents from 'global-mouse-events';
 import type { Color, Square } from 'chess.js';
 import Board from './Board.ts';
@@ -6,25 +6,6 @@ import Engine from './Engine.ts';
 import Game from './Game.ts';
 import Recognizer from './Recognizer.ts';
 import { detectRegion } from './util.ts';
-
-function compareBoardHashes(oldHashes: string[][], newHashes: string[][]): [number, number][] {
-  const changedSquaresWithErrors: [[number, number], number][] = [];
-  for (let i = 0; i < 8; i++) {
-    for (let j = 0; j < 8; j++) {
-      const newHash = newHashes[i][j];
-      const oldHash = oldHashes[i][j];
-      let errors = 0;
-      for (let i = 0; i < newHash.length; i++) {
-        errors += Math.abs(Number(newHash[i])-Number(oldHash[i]));
-      }
-      if (errors > 0) {
-        changedSquaresWithErrors.push([[i, j], errors]);
-      }
-    }
-  }
-  changedSquaresWithErrors.sort((a, b) => b[1]-a[1]);
-  return changedSquaresWithErrors.map((x) => x[0]);
-}
 
 interface SolverProps {
   region: Region;
@@ -42,11 +23,9 @@ class Solver {
   private autoResponse: boolean = false;
   private autoScan: boolean = false;
   private isDetectingRegion: boolean = false;
-  private isScanning: boolean = false;
   private stopBestMove: (() => void) | null = null;
   private actionRegions: {[key: string]: Region} = {};
   private actionRegionsEnabled: boolean = true;
-  private boardHashes: string[][] = [];
   private statusCallback: (status: string) => void = console.log;
   private autoResponseCallback: (value: boolean) => void = () => {};
   private autoScanCallback: (value: boolean) => void = () => {};
@@ -97,32 +76,6 @@ class Solver {
     const ascii = this.game.ascii()+'  ';
     const reversed = ascii.split('').reverse().join('');
     console.log(this.board.getPerspective() ? ascii : reversed);
-  }
-
-  private async getChangedSquares(): Promise<[number, number][]> {
-    let prevBoardHashes = await this.recognizer.getBoardHashes();
-    const changedSquares = compareBoardHashes(this.boardHashes, prevBoardHashes);
-    if (changedSquares.length > 2) {
-      return changedSquares;
-    }
-    let quietPeriod: boolean = true;
-    while (this.isScanning) {
-      await sleep(20);
-      const boardHashes = await this.recognizer.getBoardHashes();
-      const changedSquares = compareBoardHashes(prevBoardHashes, boardHashes);
-      if (changedSquares.length > 0) {
-        quietPeriod = false;
-      }
-      if (changedSquares.length === 0) {
-        if (quietPeriod) {
-          this.boardHashes = boardHashes;
-        } else {
-          return compareBoardHashes(this.boardHashes, boardHashes);
-        }
-      }
-      prevBoardHashes = boardHashes;
-    }
-    return [];
   }
 
   private async performAction(actionName: string) {
@@ -189,7 +142,7 @@ class Solver {
     const myTurn = this.game.turn() === 'bw'[Number(this.board.getPerspective())];
     if (this.game.isGameOver()) {
       this.statusCallback('Game is over');
-      this.isScanning = false;
+      this.recognizer.stopScanning();
     } else if (this.autoScan && !myTurn) {
       this.scanMove();
     } else if (this.autoResponse && myTurn) {
@@ -263,11 +216,7 @@ class Solver {
     const ponderMove = this.engine.getPonderMove();
     this.statusCallback(`Best move: ${move}, ponder: ${ponderMove}`);
     if (move !== null) {
-      try {
-        this.boardHashes = await this.recognizer.getBoardHashes();
-      } catch (e) {
-        this.boardHashes = [];
-      }
+      await this.recognizer.rememberBoard();
       await this.board.playMove(move);
       if (!this.board.getDraggingMode()) {
         this.processMove(move);
@@ -276,45 +225,29 @@ class Solver {
   }
 
   async scanMove(): Promise<void> {
-    if (this.isScanning) {
-      this.isScanning = false;
+    if (this.recognizer.isScanning()) {
+      this.recognizer.stopScanning();
       return;
     }
-    this.isScanning = true;
-    this.statusCallback('Scanning for move');
-    let squares;
+    this.statusCallback('Scanning move');
+    let move;
     try {
-      if (this.boardHashes.length === 0) {
-        this.boardHashes = await this.recognizer.getBoardHashes();
+      move = await this.recognizer.scanMove(this.game);
+      if (move === null) {
+        this.statusCallback('No move found');
+        return;
       }
-      squares = await this.getChangedSquares();
     } catch (e) {
-      console.log(e);
-      this.statusCallback('Failed to scan move');
-      return;
-    }
-    this.boardHashes = [];
-    const squareStrings = squares.map((x) => this.board.squareToString(x));
-    this.statusCallback(`Changed squares: ${squareStrings.join(', ')}`);
-    this.isScanning = false;
-    if (squares.length < 2 || squares.length > 9) {
-      this.statusCallback('No move detected');
-      return;
-    }
-    for (const square1 of squareStrings) {
-      for (const square2 of squareStrings) {
-        if (square1 === square2) {
-          continue;
-        }
-        const move = square1+square2;
-        if (this.game.isLegalMove(move)) {
-          this.processMove(move);
-          return;
-        }
+      if (e instanceof Error && e.message === 'no hashes') {
+        this.statusCallback('Reload hashes first');
+      } else {
+        console.log(e);
+        this.statusCallback('Failed to scan move');
       }
+      return;
     }
-    this.statusCallback('All combinations are illegal');
-    return this.scanMove();
+    this.statusCallback(`Found move: ${move}`);
+    this.processMove(move);
   }
 
   async recognizeBoard() {
@@ -323,9 +256,10 @@ class Solver {
     try {
       pieces = await this.recognizer.recognizeBoard();
     } catch (e) {
-      if (e instanceof Error && e.message === 'no-hashes') {
+      if (e instanceof Error && e.message === 'no hashes') {
         this.statusCallback('Reload hashes first');
       } else {
+        console.log(e);
         this.statusCallback('Failed to recognize board');
       }
       return;
