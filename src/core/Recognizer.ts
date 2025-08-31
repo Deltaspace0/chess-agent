@@ -1,4 +1,4 @@
-import { screen, sleep, Region } from '@nut-tree-fork/nut-js';
+import { screen, Region } from '@nut-tree-fork/nut-js';
 import type { Color, Piece, PieceSymbol } from 'chess.js';
 
 interface BoardState {
@@ -6,29 +6,23 @@ interface BoardState {
   grid: (Piece | null)[][];
 }
 
-function getSquareGrid(byteRows: number[][], region: Region, channels: number): number[][][] {
-  const grid: number[][][] = [];
+function getBufferSquare(bufferRows: Buffer[], region: Region): Buffer[] {
+  const bufferSquare: Buffer[] = [];
   for (let i = region.top; i < region.top+region.height; i++) {
-    const row: number[][] = [];
-    for (let j = region.left; j < region.left+region.width; j++) {
-      const bgr: number[] = [];
-      for (let k = 0; k < 3; k++) {
-        bgr.push(byteRows[i][j*channels+k]);
-      }
-      row.push(bgr);
-    }
-    grid.push(row);
+    const start = region.left*4;
+    const end = (region.left+region.width)*4;
+    bufferSquare.push(bufferRows[i].subarray(start, end));
   }
-  return grid;
+  return bufferSquare;
 }
 
-function countChangedSquares(oldHashes: string[][], newHashes: string[][]): number {
-  let changedSquares = 0;
+function getChangedSquares(oldHashes: string[][], newHashes: string[][]): [number, number][] {
+  const changedSquares: [number, number][] = [];
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       for (let k = 0; k < newHashes[i][j].length; k++) {
         if (newHashes[i][j][k] !== oldHashes[i][j][k]) {
-          changedSquares++;
+          changedSquares.push([i, j]);
           break;
         }
       }
@@ -50,39 +44,38 @@ class Recognizer {
   private scanning: boolean = false;
   private boardHashes: string[][] = [];
   private pieceHashes: { [key: string]: string } = {};
-  private whiteGrid: number[][][] = [];
-  private blackGrid: number[][][] = [];
+  private whiteGrid: Buffer[] = [];
+  private blackGrid: Buffer[] = [];
 
   constructor(region: Region) {
     this.region = region;
   }
 
-  private async grabSquares(): Promise<number[][][][][]> {
+  private async grabBoard(): Promise<Buffer[][][]> {
     const image = await screen.grabRegion(this.region);
-    const byteArray = [...image.data];
-    const byteRows: number[][] = [];
-    for (let i = 0; i < byteArray.length; i += image.byteWidth) {
-      byteRows.push(byteArray.slice(i, i+image.byteWidth));
+    const bufferRows: Buffer[] = [];
+    for (let i = 0; i < image.data.byteLength; i += image.byteWidth) {
+      bufferRows.push(image.data.subarray(i, i+image.byteWidth));
     }
-    const squareWidth = image.byteWidth/image.channels/8;
-    const squareHeight = byteRows.length/8;
+    const squareWidth = image.byteWidth/32;
+    const squareHeight = bufferRows.length/8;
     const width = Math.floor(squareWidth-10);
     const height = Math.floor(squareHeight-10);
-    const grid: number[][][][][] = [];
+    const grid: Buffer[][][] = [];
     for (let i = 0; i < 8; i++) {
       const top = Math.floor(squareHeight*i+5);
-      const row: number[][][][] = [];
+      const row: Buffer[][] = [];
       for (let j = 0; j < 8; j++) {
         const left = Math.floor(squareWidth*j+5);
         const region = new Region(left, top, width, height);
-        row.push(getSquareGrid(byteRows, region, image.channels));
+        row.push(getBufferSquare(bufferRows, region));
       }
       grid.push(row);
     }
     return grid;
   }
 
-  private getHash(grid: number[][][][][], row: number, col: number, removeBack: boolean): string {
+  private getHash(grid: Buffer[][][], row: number, col: number, removeBack: boolean): string {
     const backGrid = ((row+col) % 2 === 0) ? this.whiteGrid : this.blackGrid;
     let backWidth = 0;
     let backHeight = 0;
@@ -91,32 +84,32 @@ class Recognizer {
       backHeight = backGrid.length;
     }
     const squareGrid = grid[row][col];
-    const squareWidth = squareGrid[0].length;
+    const squareWidth = Math.floor(squareGrid[0].byteLength/4);
     const squareHeight = squareGrid.length;
     let hash = '';
     let startRow = 0;
     for (let i = 0; i < 8; i++) {
-      const height = Math.floor((squareGrid.length-startRow)/(8-i));
+      const height = Math.floor((squareHeight-startRow)/(8-i));
       let startCol = 0;
       for (let j = 0; j < 8; j++) {
-        const width = Math.floor((squareGrid[0].length-startCol)/(8-j));
+        const width = Math.floor((squareWidth-startCol)/(8-j));
         const bgr = [0, 0, 0];
         for (let k = startRow; k < startRow+height; k++) {
           for (let l = startCol; l < startCol+width; l++) {
             if (removeBack) {
               const backRow = Math.floor((k/squareHeight)*backHeight);
               const backCol = Math.floor((l/squareWidth)*backWidth);
-              const backPixel = backGrid[backRow][backCol];
               let backErrors = 0;
               for (let m = 0; m < 3; m++) {
-                backErrors += Math.abs(squareGrid[k][l][m]-backPixel[m]);
+                const backPixel = backGrid[backRow][backCol*4+m];
+                backErrors += Math.abs(squareGrid[k][l*4+m]-backPixel);
               }
               if (backErrors < 30) {
                 continue;
               }
             }
             for (let m = 0; m < 3; m++) {
-              bgr[m] += squareGrid[k][l][m];
+              bgr[m] += squareGrid[k][l*4+m];
             }
           }
         }
@@ -132,7 +125,7 @@ class Recognizer {
   }
 
   private async getBoardHashes(removeBack: boolean): Promise<string[][]> {
-    const grid = await this.grabSquares();
+    const grid = await this.grabBoard();
     const boardHashes: string[][] = [];
     for (let i = 0; i < 8; i++) {
       const rowHashes: string[] = [];
@@ -173,7 +166,7 @@ class Recognizer {
                     ['e41', 'e42', 'e43', 'e44', 'e45', 'e46', 'e47', 'e48'],
                     ['pw1', 'pw2', 'pw3', 'pw4', 'pw5', 'pw6', 'pw7', 'pw8'],
                     ['rw1', 'nw1', 'bw1', 'qw1', 'kw1', 'bw2', 'nw2', 'rw2']];
-    const grid = await this.grabSquares();
+    const grid = await this.grabBoard();
     this.whiteGrid = grid[2][2];
     this.blackGrid = grid[2][1];
     for (let i = 0; i < 8; i++) {
@@ -187,7 +180,7 @@ class Recognizer {
     if (!this.pieceHashes['rb1']) {
       throw new Error('no hashes');
     }
-    const grid = await this.grabSquares();
+    const grid = await this.grabBoard();
     const pieces: [Piece, number, number][] = [];
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
@@ -243,50 +236,41 @@ class Recognizer {
     }
     const changedSquares = await (async () => {
       let prevBoardHashes = await this.getBoardHashes(false);
-      const changedSquares = countChangedSquares(this.boardHashes, prevBoardHashes);
-      if (changedSquares > 2) {
+      const changedSquares = getChangedSquares(this.boardHashes, prevBoardHashes);
+      if (changedSquares.length > 2) {
         return changedSquares;
       }
       let quietPeriod = true;
       while (this.scanning) {
-        await sleep(20);
         const boardHashes = await this.getBoardHashes(false);
-        const changedSquares = countChangedSquares(prevBoardHashes, boardHashes);
-        if (changedSquares > 0) {
+        const changedSquares = getChangedSquares(prevBoardHashes, boardHashes);
+        if (changedSquares.length > 1) {
           quietPeriod = false;
         }
-        if (changedSquares === 0) {
+        if (changedSquares.length === 0) {
           if (quietPeriod) {
             this.boardHashes = boardHashes;
           } else {
-            return countChangedSquares(this.boardHashes, boardHashes);
+            return getChangedSquares(this.boardHashes, boardHashes);
           }
         }
         prevBoardHashes = boardHashes;
       }
-      return 0;
+      return [];
     })();
     this.boardHashes = [];
     this.scanning = false;
-    if (changedSquares < 2 || changedSquares > 9) {
+    if (changedSquares.length < 2 || changedSquares.length > 9) {
       return null;
     }
     const boardHashes = await this.getBoardHashes(true);
     let minErrors = Infinity;
     let probableMove = null;
-    const pieceErrors: { [key: string]: number } = {};
     for (const { move, grid } of boardStates) {
       let errors = 0;
-      for (let i = 0; i < 8; i++) {
-        for (let j = 0; j < 8; j++) {
-          const hash = boardHashes[i][j];
-          const piece = grid[i][j];
-          const key = hash+(piece ? (piece.type+piece.color) : 'null');
-          if (!(key in pieceErrors)) {
-            pieceErrors[key] = this.getPieceHashErrors(piece, hash);
-          }
-          errors += pieceErrors[key];
-        }
+      for (const [row, col] of changedSquares) {
+        const hash = boardHashes[row][col];
+        errors += this.getPieceHashErrors(grid[row][col], hash);
       }
       if (errors < minErrors) {
         minErrors = errors;
