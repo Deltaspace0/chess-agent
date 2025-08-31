@@ -4,19 +4,20 @@ import type { SquarePiece, RegionSelection } from './interface';
 import Board from './components/Board.tsx';
 import Gauge from './components/Gauge.tsx';
 import { useListSlider, Slider } from './components/Slider.tsx';
+import { analysisDurations, mouseSpeeds, defaultValues } from '../config.ts';
 
 function App() {
   const [statusText, setStatusText] = useState('');
   const [showSettings, setShowSettings] = useState(false);
-  const [autoResponse, setAutoResponse] = useState(false);
-  const [autoScan, setAutoScan] = useState(false);
-  const [isWhitePerspective, setIsWhitePerspective] = useState(true);
-  const [draggingMode, setDraggingMode] = useState(true);
-  const [actionRegion, setActionRegion] = useState(true);
-  const [showEvalBar, setShowEvalBar] = useState(true);
-  const [showArrows, setShowArrows] = useState(true);
+  const [autoResponse, setAutoResponse] = useState(defaultValues.autoResponse);
+  const [autoScan, setAutoScan] = useState(defaultValues.autoScan);
+  const [isWhitePerspective, setIsWhitePerspective] = useState(defaultValues.isWhitePerspective);
+  const [draggingMode, setDraggingMode] = useState(defaultValues.draggingMode);
+  const [actionRegion, setActionRegion] = useState(defaultValues.actionRegion);
+  const [showEvalBar, setShowEvalBar] = useState(defaultValues.showEvalBar);
+  const [showArrows, setShowArrows] = useState(defaultValues.showArrows);
   const [regionSelection, setRegionSelection] = useState<RegionSelection>('first');
-  const [analysisDuration, setAnalysisDuration] = useState(5000);
+  const [analysisDuration, setAnalysisDuration] = useState(defaultValues.analysisDuration);
   const [positionPieces, setPositionPieces] = useState<(SquarePiece | null)[]>([]);
   const [evaluation, setEvaluation] = useState('cp 0');
   const [highlightMoves, setHighlightMoves] = useState<string[]>([]);
@@ -33,11 +34,10 @@ function App() {
     electron.onEvaluation(setEvaluation);
     electron.onHighlightMoves(setHighlightMoves);
   }, [electron]);
-  const analysisDurations = [100, 300, 1000, 3000, 5000];
   const mouseProps = useListSlider({
     label: 'Mouse speed',
-    initialValue: 3000,
-    list: [500, 1000, 3000, 5000, 10000],
+    initialValue: defaultValues.mouseSpeed,
+    list: mouseSpeeds,
     callback: (value) => electron.mouseSpeedValue(value)
   });
   const detectingRegion = regionSelection !== 'none';

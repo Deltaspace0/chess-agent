@@ -6,6 +6,7 @@ import Engine from './Engine.ts';
 import Game from './Game.ts';
 import Recognizer from './Recognizer.ts';
 import { detectRegion } from './util.ts';
+import { defaultValues } from '../config.ts';
 
 interface SolverProps {
   region: Region;
@@ -20,12 +21,12 @@ class Solver {
   private engine: Engine;
   private recognizer: Recognizer;
   private board: Board;
-  private autoResponse: boolean = false;
-  private autoScan: boolean = false;
+  private autoResponse: boolean = defaultValues.autoResponse;
+  private autoScan: boolean = defaultValues.autoScan;
   private isDetectingRegion: boolean = false;
   private stopBestMove: (() => void) | null = null;
   private actionRegions: {[key: string]: Region} = {};
-  private actionRegionsEnabled: boolean = true;
+  private actionRegionsEnabled: boolean = defaultValues.actionRegion;
   private statusCallback: (status: string) => void = console.log;
   private autoResponseCallback: (value: boolean) => void = () => {};
   private autoScanCallback: (value: boolean) => void = () => {};

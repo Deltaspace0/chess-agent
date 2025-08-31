@@ -1,5 +1,6 @@
 import { mouse, sleep, straightTo, Point, Region } from '@nut-tree-fork/nut-js';
 import mouseEvents from 'global-mouse-events';
+import { defaultValues } from '../config.ts';
 
 type Square = [number, number];
 
@@ -7,8 +8,8 @@ class Board {
   private region!: Region;
   private squareWidth!: number;
   private squareHeight!: number;
-  private isWhitePerspective: boolean = true;
-  private draggingMode: boolean = true;
+  private isWhitePerspective: boolean = defaultValues.isWhitePerspective;
+  private draggingMode: boolean = defaultValues.draggingMode;
   private perspectiveCallback: (value: boolean) => void = () => {};
   private draggingCallback: (value: boolean) => void = () => {};
 

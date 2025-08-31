@@ -1,6 +1,5 @@
 import Worker from 'web-worker';
-
-const analysisDurations = [100, 300, 1000, 3000, 5000];
+import { analysisDurations, defaultValues } from '../config.ts';
 
 class Engine {
   private engine: Worker;
@@ -10,7 +9,7 @@ class Engine {
   private bestMove: string | null = null;
   private ponderMove: string | null = null;
   private evaluation: string | null = null;
-  private analysisDuration: number = 5000;
+  private analysisDuration: number = defaultValues.analysisDuration;
   private principalMoves: string[] = [];
   private principalMovesCallback: (value: string[]) => void = () => {};
   private bestMoveCallback: (value: string) => void = () => {};

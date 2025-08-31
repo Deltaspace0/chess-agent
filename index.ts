@@ -8,6 +8,7 @@ import Game from './src/core/Game.ts';
 import Recognizer from './src/core/Recognizer.ts';
 import Solver from './src/core/Solver.ts';
 import { detectRegion } from './src/core/util.ts';
+import { defaultValues } from './src/config.ts';
 
 async function createWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({
@@ -31,7 +32,7 @@ async function createWindow(): Promise<BrowserWindow> {
     console.log(status);
     win.webContents.send('update-status', status);
   };
-  mouse.config.mouseSpeed = 3000;
+  mouse.config.mouseSpeed = defaultValues.mouseSpeed;
   const game = new Game();
   game.onUpdatePosition((value) => {
     win.webContents.send('update-position', value);
