@@ -24,6 +24,7 @@ interface IElectronAPI {
   perspectiveValue: (value: boolean) => void;
   draggingValue: (value: boolean) => void;
   durationValue: (value: number) => void;
+  multiPVValue: (value: number) => void;
   mouseSpeedValue: (value: number) => void;
   actionRegionValue: (value: boolean) => void;
   newRegion: () => void;

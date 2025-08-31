@@ -4,7 +4,7 @@ import type { SquarePiece, RegionSelection } from './interface';
 import Board from './components/Board.tsx';
 import Gauge from './components/Gauge.tsx';
 import { useListSlider, Slider } from './components/Slider.tsx';
-import { analysisDurations, mouseSpeeds, defaultValues } from '../config.ts';
+import { analysisDurations, multiPVs, mouseSpeeds, defaultValues } from '../config.ts';
 
 function App() {
   const [statusText, setStatusText] = useState('');
@@ -39,6 +39,12 @@ function App() {
     initialValue: defaultValues.mouseSpeed,
     list: mouseSpeeds,
     callback: (value) => electron.mouseSpeedValue(value)
+  });
+  const multiPVProps = useListSlider({
+    label: 'Multiple lines',
+    initialValue: defaultValues.multiPV,
+    list: multiPVs,
+    callback: (value) => electron.multiPVValue(value)
   });
   const detectingRegion = regionSelection !== 'none';
   const handleActionRegion = (value: boolean) => {
@@ -80,6 +86,7 @@ function App() {
             map={(x) => analysisDurations[x]}
             disabled={detectingRegion}
           />
+          <Slider {...multiPVProps} disabled={detectingRegion}/>
           <Slider {...mouseProps} disabled={detectingRegion}/>
           <div className='flex-row'>
             <div className='flex-column'>

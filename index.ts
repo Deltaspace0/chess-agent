@@ -89,6 +89,7 @@ async function createWindow(): Promise<BrowserWindow> {
   ipcMain.on('perspective-value', (_event, value) => board.setPerspective(value));
   ipcMain.on('dragging-value', (_event, value) => board.setDraggingMode(value));
   ipcMain.on('duration-value', (_event, value) => engine.setAnalysisDuration(value));
+  ipcMain.on('multipv-value', (_event, value) => engine.setMultiPV(value));
   ipcMain.on('mousespeed-value', (_event, value) => mouse.config.mouseSpeed = value);
   ipcMain.on('actionregion-value', (_event, value) => solver.setActionRegionsEnabled(value));
   ipcMain.handle('new-region', () => solver.detectNewRegion());

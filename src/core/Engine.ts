@@ -22,6 +22,10 @@ class Engine {
     this.engine.addEventListener('message', (e) => {
       const words: string[] = e.data.split(' ');
       if (words.includes('pv')) {
+        const depth = words[words.indexOf('depth')+1];
+        if (this.principalMoves.length === 0 && depth !== '1') {
+          return;
+        }
         const pv = Number(words[words.indexOf('multipv')+1])-1;
         this.setPrincipalMove(pv, words[words.indexOf('pv')+1]);
         if (pv === 0) {
@@ -102,6 +106,11 @@ class Engine {
     const duration = analysisDurations[(i+1)%analysisDurations.length];
     this.setAnalysisDuration(duration);
     return this.analysisDuration;
+  }
+
+  setMultiPV(value: number) {
+    this.engine.postMessage(`setoption name MultiPV value ${value}`);
+    this.analyzePosition();
   }
 
   onPrincipalMoves(callback: (value: string[]) => void) {
