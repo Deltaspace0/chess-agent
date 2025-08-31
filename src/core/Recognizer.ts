@@ -1,6 +1,10 @@
 import { screen, sleep, Region } from '@nut-tree-fork/nut-js';
 import type { Color, Piece, PieceSymbol } from 'chess.js';
-import Game from './Game.ts';
+
+interface BoardState {
+  move: string | null;
+  grid: (Piece | null)[][];
+}
 
 function getSquareGrid(byteRows: number[][], region: Region, channels: number): number[][][] {
   const grid: number[][][] = [];
@@ -226,7 +230,7 @@ class Recognizer {
     this.scanning = false;
   }
 
-  async scanMove(game: Game): Promise<string | null> {
+  async scanMove(boardStates: BoardState[]): Promise<string | null> {
     if (!this.pieceHashes['rb1']) {
       throw new Error('no hashes');
     }
@@ -268,12 +272,10 @@ class Recognizer {
       return null;
     }
     const boardHashes = await this.getBoardHashes(true);
-    const moves = [...game.moves(), null];
     let minErrors = Infinity;
     let probableMove = null;
     const pieceErrors: { [key: string]: number } = {};
-    for (const move of moves) {
-      const grid = game.boardAfterMove(move);
+    for (const { move, grid } of boardStates) {
       let errors = 0;
       for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {

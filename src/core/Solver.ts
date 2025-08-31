@@ -233,7 +233,19 @@ class Solver {
     this.statusCallback('Scanning move');
     let move;
     try {
-      move = await this.recognizer.scanMove(this.game);
+      const boardStates = [];
+      const moves = this.game.moves();
+      for (const move of moves) {
+        boardStates.push({
+          move: move,
+          grid: this.game.boardAfterMove(move)
+        });
+      }
+      boardStates.push({
+        move: null,
+        grid: this.game.boardAfterMove(null)
+      });
+      move = await this.recognizer.scanMove(boardStates);
       if (move === null) {
         this.statusCallback('No move found');
         return;
