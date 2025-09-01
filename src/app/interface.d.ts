@@ -3,7 +3,7 @@ import type { Square, PieceSymbol, Color } from 'chess.js';
 interface SquarePiece {
   square: Square;
   type: PieceSymbol;
-  color: Color
+  color: Color;
 }
 
 type RegionSelection = 'first' | 'new' | 'none';

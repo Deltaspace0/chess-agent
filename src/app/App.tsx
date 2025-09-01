@@ -6,6 +6,18 @@ import Gauge from './components/Gauge.tsx';
 import { useListSlider, Slider } from './components/Slider.tsx';
 import { analysisDurations, multiPVs, mouseSpeeds, defaultValues } from '../config.ts';
 
+function useCheckboxProps(initialValue: boolean) {
+  const [value, setValue] = useState(initialValue);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(e.target.checked);
+  }
+  return {
+    type: 'checkbox',
+    checked: value,
+    onChange: handleChange
+  };
+}
+
 function App() {
   const [statusText, setStatusText] = useState('');
   const [showSettings, setShowSettings] = useState(false);
@@ -14,8 +26,8 @@ function App() {
   const [isWhitePerspective, setIsWhitePerspective] = useState(defaultValues.isWhitePerspective);
   const [draggingMode, setDraggingMode] = useState(defaultValues.draggingMode);
   const [actionRegion, setActionRegion] = useState(defaultValues.actionRegion);
-  const [showEvalBar, setShowEvalBar] = useState(defaultValues.showEvalBar);
-  const [showArrows, setShowArrows] = useState(defaultValues.showArrows);
+  const showEvalBarProps = useCheckboxProps(defaultValues.showEvalBar);
+  const showArrowsProps = useCheckboxProps(defaultValues.showArrows);
   const [regionSelection, setRegionSelection] = useState<RegionSelection>('first');
   const [analysisDuration, setAnalysisDuration] = useState(defaultValues.analysisDuration);
   const [positionPieces, setPositionPieces] = useState<(SquarePiece | null)[]>([]);
@@ -36,17 +48,24 @@ function App() {
     electron.onHighlightMoves(setHighlightMoves);
     electron.onPrincipalVariations(setPrincipalVariations);
   }, [electron]);
-  const mouseProps = useListSlider({
-    label: 'Mouse speed',
-    initialValue: defaultValues.mouseSpeed,
-    list: mouseSpeeds,
-    callback: (value) => electron.mouseSpeedValue(value)
+  const durationProps = useListSlider({
+    label: 'Analysis duration (ms)',
+    value: analysisDuration,
+    list: analysisDurations,
+    callback: (value) => electron.durationValue(value),
+    noState: true
   });
   const multiPVProps = useListSlider({
     label: 'Multiple lines',
-    initialValue: defaultValues.multiPV,
+    value: defaultValues.multiPV,
     list: multiPVs,
     callback: (value) => electron.multiPVValue(value)
+  });
+  const mouseProps = useListSlider({
+    label: 'Mouse speed',
+    value: defaultValues.mouseSpeed,
+    list: mouseSpeeds,
+    callback: (value) => electron.mouseSpeedValue(value)
   });
   const detectingRegion = regionSelection !== 'none';
   const handleActionRegion = (value: boolean) => {
@@ -76,22 +95,16 @@ function App() {
           <Board
             positionPieces={positionPieces}
             isWhitePerspective={isWhitePerspective}
-            highlightMoves={showArrows ? highlightMoves : []}
+            highlightMoves={showArrowsProps.checked ? highlightMoves : []}
           />
-          {showEvalBar && <Gauge evaluation={evaluation} isWhitePerspective={isWhitePerspective}/>}
+          {showEvalBarProps.checked && <Gauge
+            evaluation={evaluation}
+            isWhitePerspective={isWhitePerspective}
+          />}
         </div>
         <p className='status'>{statusText}</p>
         {showSettings ? (<>
-          <Slider
-            label='Analysis duration (ms)'
-            value={analysisDurations.indexOf(analysisDuration)}
-            setValue={(value) => electron.durationValue(value)}
-            min={0}
-            max={analysisDurations.length-1}
-            step={1}
-            map={(x) => analysisDurations[x]}
-            disabled={detectingRegion}
-          />
+          <Slider {...durationProps} disabled={detectingRegion}/>
           <Slider {...multiPVProps} disabled={detectingRegion}/>
           <Slider {...mouseProps} disabled={detectingRegion}/>
           <div className='flex-row'>
@@ -115,19 +128,11 @@ function App() {
             </div>
             <div className='flex-column'>
               <label>
-                <input
-                  type='checkbox'
-                  checked={showEvalBar}
-                  onChange={(e) => setShowEvalBar(e.target.checked)}
-                  disabled={detectingRegion}/>
+                <input {...showEvalBarProps} disabled={detectingRegion}/>
                 <p>Show eval bar</p>
               </label>
               <label>
-                <input
-                  type='checkbox'
-                  checked={showArrows}
-                  onChange={(e) => setShowArrows(e.target.checked)}
-                  disabled={detectingRegion}/>
+                <input {...showArrowsProps} disabled={detectingRegion}/>
                 <p>Show arrows</p>
               </label>
             </div>

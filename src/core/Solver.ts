@@ -25,7 +25,7 @@ class Solver {
   private autoScan: boolean = defaultValues.autoScan;
   private isDetectingRegion: boolean = false;
   private stopBestMove: (() => void) | null = null;
-  private actionRegions: {[key: string]: Region} = {};
+  private actionRegions: Record<string, Region> = {};
   private actionRegionsEnabled: boolean = defaultValues.actionRegion;
   private statusCallback: (status: string) => void = console.log;
   private autoResponseCallback: (value: boolean) => void = () => {};

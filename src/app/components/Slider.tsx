@@ -3,9 +3,10 @@ import { useState } from 'react';
 
 interface SliderHookProps {
   label: string;
-  initialValue: number;
+  value: number;
   list: number[];
   callback: (i: number) => void;
+  noState?: boolean;
 }
 
 interface SliderProps {
@@ -20,7 +21,11 @@ interface SliderProps {
 }
 
 export function useListSlider(props: SliderHookProps): SliderProps {
-  const [value, setValue] = useState(props.initialValue);
+  let [value, setValue] = useState(props.value);
+  if (props.noState) {
+    value = props.value;
+    setValue = () => {};
+  }
   return {
     label: props.label,
     value: props.list.indexOf(value),

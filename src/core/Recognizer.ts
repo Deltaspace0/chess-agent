@@ -43,7 +43,7 @@ class Recognizer {
   private region: Region;
   private scanning: boolean = false;
   private boardHashes: string[][] = [];
-  private pieceHashes: { [key: string]: string } = {};
+  private pieceHashes: Record<string, string> = {};
   private whiteGrid: Buffer[] = [];
   private blackGrid: Buffer[] = [];
 
