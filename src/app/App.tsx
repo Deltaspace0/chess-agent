@@ -21,6 +21,7 @@ function App() {
   const [positionPieces, setPositionPieces] = useState<(SquarePiece | null)[]>([]);
   const [evaluation, setEvaluation] = useState('cp 0');
   const [highlightMoves, setHighlightMoves] = useState<string[]>([]);
+  const [principalVariations, setPrincipalVariations] = useState<string[]>([]);
   const electron = window.electronAPI;
   useEffect(() => {
     electron.onUpdateStatus(setStatusText);
@@ -33,6 +34,7 @@ function App() {
     electron.onUpdatePosition(setPositionPieces);
     electron.onEvaluation(setEvaluation);
     electron.onHighlightMoves(setHighlightMoves);
+    electron.onPrincipalVariations(setPrincipalVariations);
   }, [electron]);
   const mouseProps = useListSlider({
     label: 'Mouse speed',
@@ -50,6 +52,10 @@ function App() {
   const handleActionRegion = (value: boolean) => {
     setActionRegion(value);
     electron.actionRegionValue(value);
+  }
+  const pvComponents = [];
+  for (const variation of principalVariations) {
+    pvComponents.push(<p className='variation'>{variation}</p>);
   }
   return (
     <div className='App'>
@@ -193,6 +199,7 @@ function App() {
                 Open settings
             </button>
           </div>
+          {pvComponents}
         </>)}
       </div>
     </div>

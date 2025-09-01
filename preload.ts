@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onUpdatePosition: (callback) => ipcRenderer.on('update-position', (_event, value) => callback(value)),
   onEvaluation: (callback) => ipcRenderer.on('evaluation', (_event, value) => callback(value)),
   onHighlightMoves: (callback) => ipcRenderer.on('highlight-moves', (_event, value) => callback(value)),
+  onPrincipalVariations: (callback) => ipcRenderer.on('principal-variations', (_event, value) => callback(value)),
   autoResponseValue: (value) => ipcRenderer.send('autoresponse-value', value),
   autoScanValue: (value) => ipcRenderer.send('autoscan-value', value),
   perspectiveValue: (value) => ipcRenderer.send('perspective-value', value),

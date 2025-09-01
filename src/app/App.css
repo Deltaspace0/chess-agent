@@ -168,7 +168,7 @@ li:hover {
 p {
   padding: 0 6px;
   margin: -10px 0;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 svg {
@@ -181,6 +181,13 @@ svg {
 
 .status {
   margin: 4px auto;
+}
+
+.variation {
+  margin: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .App {

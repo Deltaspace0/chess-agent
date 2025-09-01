@@ -137,11 +137,12 @@ class Solver {
       this.statusCallback(`Illegal move: ${move}`);
       return;
     }
-    const moves = this.engine.sendMove(move);
+    const gameOver = this.game.isGameOver();
+    const moves = this.engine.sendMove(move, gameOver);
     console.log(`Moves: ${moves}`);
     this.printBoard();
     const myTurn = this.game.turn() === 'bw'[Number(this.board.getPerspective())];
-    if (this.game.isGameOver()) {
+    if (gameOver) {
       this.statusCallback('Game is over');
       this.recognizer.stopScanning();
     } else if (this.autoScan && !myTurn) {
@@ -199,6 +200,9 @@ class Solver {
   async playBestMove() {
     if (this.stopBestMove) {
       this.stopBestMove();
+      return;
+    }
+    if (this.game.isGameOver()) {
       return;
     }
     let move = this.engine.getBestMove();

@@ -6,7 +6,7 @@ export const defaultValues = {
   autoScan: false,
   isWhitePerspective: true,
   draggingMode: true,
-  actionRegion: true,
+  actionRegion: false,
   showEvalBar: true,
   showArrows: true,
   analysisDuration: 1000,

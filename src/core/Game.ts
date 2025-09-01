@@ -151,6 +151,26 @@ class Game {
     return grid;
   }
 
+  formatEvalMoves(input: string): string {
+    const words = input.split(' ');
+    const evaluation = Number(words[1]);
+    const evalText = words[0] === 'mate' ? `M${evaluation}` : evaluation/100;
+    const chess = new Chess();
+    chess.load(this.chess.fen());
+    try {
+      for (const move of words.slice(2)) {
+        chess.move(move);
+      }
+    } catch (e) {
+      return '';
+    }
+    const headers = chess.getHeaders();
+    for (const header in headers) {
+      chess.setHeader(header, '');
+    }
+    return evalText+' '+chess.pgn({ newline: ' ' });
+  }
+
   onUpdatePosition(callback: (grid: (SquarePiece | null)[]) => void) {
     this.positionCallback = () => {
       this.updateChessPieces();

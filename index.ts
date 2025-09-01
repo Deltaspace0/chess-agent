@@ -40,7 +40,8 @@ async function createWindow(): Promise<BrowserWindow> {
   game.reset();
   const engine = new Engine();
   engine.onPrincipalMoves((value) => {
-    win.webContents.send('highlight-moves', value);
+    win.webContents.send('highlight-moves', value.map((x) => x.split(' ')[2]));
+    win.webContents.send('principal-variations', value.map((x) => game.formatEvalMoves(x)));
   });
   engine.onEvaluation((value) => {
     win.webContents.send('evaluation', value);

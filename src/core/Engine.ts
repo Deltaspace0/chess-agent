@@ -3,6 +3,8 @@ import { analysisDurations, defaultValues } from '../config.ts';
 
 class Engine {
   private engine: Worker;
+  private searching: boolean = false;
+  private needSearch: boolean = false;
   private moves: string[] = [];
   private whiteFirst: boolean = true;
   private fen: string | null = null;
@@ -26,19 +28,34 @@ class Engine {
         if (this.principalMoves.length === 0 && depth !== '1') {
           return;
         }
+        const i = words.indexOf('score');
+        const evaluation = this.signEvaluation(words[i+1]+' '+words[i+2]);
         const pv = Number(words[words.indexOf('multipv')+1])-1;
-        this.setPrincipalMove(pv, words[words.indexOf('pv')+1]);
         if (pv === 0) {
-          const i = words.indexOf('score');
-          this.setEvaluation(words[i+1]+' '+words[i+2]);
+          this.setEvaluation(evaluation);
         }
+        const moves = words.slice(words.indexOf('pv')+1).join(' ');
+        this.setPrincipalMove(pv, evaluation+' '+moves);
       }
       if (words.includes('bestmove')) {
-        this.setBestMove(words[words.indexOf('bestmove')+1]);
-        this.setPonderMove(words[words.indexOf('ponder')+1]);
+        this.searching = false;
+        if (this.needSearch) {
+          this.search();
+        } else {
+          this.setBestMove(words[words.indexOf('bestmove')+1]);
+          this.setPonderMove(words[words.indexOf('ponder')+1]);
+        }
       }
     });
     this.engine.postMessage('uci');
+  }
+
+  private signEvaluation(evaluation: string) {
+    if ((this.moves.length+Number(this.whiteFirst)) % 2 === 0) {
+      const [type, n] = evaluation.split(' ');
+      return type+' '+(-Number(n));
+    }
+    return evaluation;
   }
 
   private setPrincipalMove(pv: number, move: string) {
@@ -57,23 +74,33 @@ class Engine {
   }
 
   private setEvaluation(value: string) {
-    if ((this.moves.length+Number(this.whiteFirst)) % 2 === 0) {
-      const [type, n] = value.split(' ');
-      value = type+' '+(-Number(n));
-    }
     this.evaluation = value;
     this.evaluationCallback(value);
   }
 
-  private async analyzePosition() {
+  private resetAnalysis() {
     this.principalMoves = [];
     this.bestMove = null;
     this.ponderMove = null;
     this.evaluation = null;
-    const pos = this.fen === null ? 'startpos' : `fen ${this.fen}`;
     this.engine.postMessage('stop');
-    this.engine.postMessage(`position ${pos} moves ${this.moves.join(' ')}`);
-    this.engine.postMessage(`go movetime ${this.analysisDuration}`);
+  }
+
+  private search() {
+    if (!this.searching) {
+      const pos = this.fen === null ? 'startpos' : `fen ${this.fen}`;
+      this.engine.postMessage(`position ${pos} moves ${this.moves.join(' ')}`);
+      this.engine.postMessage(`go movetime ${this.analysisDuration}`);
+      this.searching = true;
+      this.needSearch = false;
+    } else {
+      this.needSearch = true;
+    }
+  }
+
+  private analyzePosition() {
+    this.resetAnalysis();
+    this.search();
   }
 
   getBestMove(): string | null {
@@ -144,9 +171,13 @@ class Engine {
     this.analyzePosition();
   }
 
-  sendMove(move: string): string {
+  sendMove(move: string, skipAnalysis?: boolean): string {
     this.moves.push(move);
-    this.analyzePosition();
+    if (skipAnalysis) {
+      this.resetAnalysis();
+    } else {
+      this.analyzePosition();
+    }
     return this.getMoves();
   }
 
