@@ -1,78 +1,12 @@
 import { Chess } from 'chess.js';
-import type { Color, Piece, PieceSymbol, Square } from 'chess.js';
-
-interface SquarePiece {
-  square: Square;
-  type: PieceSymbol;
-  color: Color
-}
+import type { Color, Piece, Square } from 'chess.js';
 
 class Game {
   private chess: Chess;
-  private chessPieces: (SquarePiece | null)[] = Array(64).fill(null);
-  private positionCallback = () => this.updateChessPieces();
+  private positionCallback = () => {};
 
   constructor() {
     this.chess = new Chess();
-  }
-
-  private updateChessPieces() {
-    const nextChessPieces: (SquarePiece | null)[] = [];
-    const lostPieces: [number, SquarePiece][] = [];
-    const grid = this.chess.board();
-    const accountedPiecesGrid: boolean[][] = [];
-    for (let i = 0; i < 8; i++) {
-      accountedPiecesGrid.push(Array(8).fill(false));
-    }
-    for (const piece of this.chessPieces) {
-      if (piece === null) {
-        nextChessPieces.push(null);
-        continue;
-      }
-      const row = 8-Number(piece.square[1]);
-      const col = 'abcdefgh'.indexOf(piece.square[0]);
-      const newPiece = grid[row][col];
-      if (newPiece === null) {
-        lostPieces.push([nextChessPieces.length, piece]);
-        nextChessPieces.push(null);
-        continue;
-      }
-      if (newPiece.type !== piece.type || newPiece.color !== piece.color) {
-        nextChessPieces.push(null);
-        continue;
-      }
-      nextChessPieces.push(piece);
-      accountedPiecesGrid[row][col] = true;
-    }
-    const newPieces: SquarePiece[] = [];
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
-        if (accountedPiecesGrid[i][j]) {
-          continue;
-        }
-        const piece = grid[i][j];
-        if (piece === null) {
-          continue;
-        }
-        let foundPiece = false;
-        for (let k = 0; k < lostPieces.length; k++) {
-          const [index, lostPiece] = lostPieces[k];
-          if (lostPiece.type === piece.type && lostPiece.color === piece.color) {
-            nextChessPieces[index] = piece;
-            lostPieces.splice(k, 1);
-            foundPiece = true;
-            break;
-          }
-        }
-        if (!foundPiece) {
-          newPieces.push(piece);
-        }
-      }
-    }
-    for (const piece of newPieces) {
-      nextChessPieces[nextChessPieces.indexOf(null)] = piece;
-    }
-    this.chessPieces = nextChessPieces;
   }
 
   ascii() {
@@ -171,11 +105,8 @@ class Game {
     return evalText+' '+chess.pgn({ newline: ' ' });
   }
 
-  onUpdatePosition(callback: (grid: (SquarePiece | null)[]) => void) {
-    this.positionCallback = () => {
-      this.updateChessPieces();
-      callback(this.chessPieces);
-    };
+  onUpdatePosition(callback: (fen: string) => void) {
+    this.positionCallback = () => callback(this.chess.fen());
   }
 }
 

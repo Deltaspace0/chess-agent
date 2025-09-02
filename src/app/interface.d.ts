@@ -1,11 +1,5 @@
 import type { Square, PieceSymbol, Color } from 'chess.js';
 
-interface SquarePiece {
-  square: Square;
-  type: PieceSymbol;
-  color: Color;
-}
-
 type RegionSelection = 'first' | 'new' | 'none';
 
 interface IElectronAPI {
@@ -16,7 +10,7 @@ interface IElectronAPI {
   onUpdateDragging: (callback: (value: boolean) => void) => void;
   onUpdateRegion: (callback: (value: RegionSelection) => void) => void;
   onUpdateDuration: (callback: (value: number) => void) => void;
-  onUpdatePosition: (callback: (value: (SquarePiece | null)[]) => void) => void;
+  onUpdatePosition: (callback: (value: string) => void) => void;
   onEvaluation: (callback: (value: string) => void) => void;
   onHighlightMoves: (callback: (value: string[]) => void) => void;
   onPrincipalVariations: (callback: (value: string[]) => void) => void;

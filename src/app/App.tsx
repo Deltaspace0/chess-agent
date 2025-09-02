@@ -1,7 +1,9 @@
 import './App.css';
 import { useEffect, useState } from 'react';
-import type { SquarePiece, RegionSelection } from './interface';
-import Board from './components/Board.tsx';
+import { useDebounce } from 'use-debounce';
+import { Chessboard } from 'react-chessboard';
+import type { Arrow, ChessboardOptions } from 'react-chessboard';
+import type { RegionSelection } from './interface';
 import Gauge from './components/Gauge.tsx';
 import { useListSlider, Slider } from './components/Slider.tsx';
 import { analysisDurations, multiPVs, mouseSpeeds, defaultValues } from '../config.ts';
@@ -30,9 +32,10 @@ function App() {
   const showArrowsProps = useCheckboxProps(defaultValues.showArrows);
   const [regionSelection, setRegionSelection] = useState<RegionSelection>('first');
   const [analysisDuration, setAnalysisDuration] = useState(defaultValues.analysisDuration);
-  const [positionPieces, setPositionPieces] = useState<(SquarePiece | null)[]>([]);
+  const [positionFEN, setPositionFEN] = useState('');
   const [evaluation, setEvaluation] = useState('cp 0');
-  const [highlightMoves, setHighlightMoves] = useState<string[]>([]);
+  const [arrows, setArrows] = useState<Arrow[]>([]);
+  const [debouncedArrows] = useDebounce(arrows, 50);
   const [principalVariations, setPrincipalVariations] = useState<string[]>([]);
   const electron = window.electronAPI;
   useEffect(() => {
@@ -43,9 +46,20 @@ function App() {
     electron.onUpdateDragging(setDraggingMode);
     electron.onUpdateRegion(setRegionSelection);
     electron.onUpdateDuration(setAnalysisDuration);
-    electron.onUpdatePosition(setPositionPieces);
+    electron.onUpdatePosition(setPositionFEN);
     electron.onEvaluation(setEvaluation);
-    electron.onHighlightMoves(setHighlightMoves);
+    electron.onHighlightMoves((moves) => {
+      const newArrows: Arrow[] = [];
+      for (let i = moves.length-1; i >= 0; i--) {
+        const move = moves[i];
+        newArrows.push({
+          startSquare: move.substring(0, 2),
+          endSquare: move.substring(2),
+          color: `rgb(${i === 0 ? 160 : 255}, 255, 210)`
+        });
+      }
+      setArrows(newArrows);
+    });
     electron.onPrincipalVariations(setPrincipalVariations);
   }, [electron]);
   const durationProps = useListSlider({
@@ -76,6 +90,12 @@ function App() {
   for (const variation of principalVariations) {
     pvComponents.push(<p className='variation'>{variation}</p>);
   }
+  const chessboardOptions: ChessboardOptions = {
+    arrows: showArrowsProps.checked ? debouncedArrows : [],
+    allowDrawingArrows: false,
+    boardOrientation: isWhitePerspective ? 'white' : 'black',
+    position: positionFEN
+  };
   return (
     <div className='App'>
       <div className='flex-column'>
@@ -92,11 +112,9 @@ function App() {
           </button>
         </div>
         <div className='flex-row'>
-          <Board
-            positionPieces={positionPieces}
-            isWhitePerspective={isWhitePerspective}
-            highlightMoves={showArrowsProps.checked ? highlightMoves : []}
-          />
+          <div className='board'>
+            <Chessboard options={chessboardOptions}/>
+          </div>
           {showEvalBarProps.checked && <Gauge
             evaluation={evaluation}
             isWhitePerspective={isWhitePerspective}
