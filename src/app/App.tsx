@@ -48,14 +48,21 @@ function App() {
     electron.onUpdateDuration(setAnalysisDuration);
     electron.onUpdatePosition(setPositionFEN);
     electron.onEvaluation(setEvaluation);
-    electron.onHighlightMoves((moves) => {
+    electron.onHighlightMoves((evalMoves) => {
       const newArrows: Arrow[] = [];
-      for (let i = moves.length-1; i >= 0; i--) {
-        const move = moves[i];
+      for (let i = evalMoves.length-1; i >= 0; i--) {
+        const [type, evaluation, move] = evalMoves[i];
+        const opacity = i === 0 ? 0.8 : 0.5;
+        const n = Math.tanh(Number(evaluation)/300);
         newArrows.push({
           startSquare: move.substring(0, 2),
           endSquare: move.substring(2),
-          color: `rgb(${i === 0 ? 160 : 255}, 255, 210)`
+          color: type === 'mate'
+            ? `rgba(219, 201, 1, ${opacity})`
+            : (n > 0
+              ? `rgba(${255*(1-n)}, ${255*(1-n)}, 255, ${opacity})`
+              : `rgba(255, ${255*(1+n)}, ${255*(1+n)}, ${opacity})`
+            )
         });
       }
       setArrows(newArrows);
