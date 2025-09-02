@@ -9,6 +9,7 @@ export const defaultValues = {
   actionRegion: false,
   showEvalBar: true,
   showArrows: true,
+  showLines: true,
   analysisDuration: 1000,
   multiPV: 1,
   mouseSpeed: 3000

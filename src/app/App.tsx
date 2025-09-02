@@ -30,6 +30,7 @@ function App() {
   const [actionRegion, setActionRegion] = useState(defaultValues.actionRegion);
   const showEvalBarProps = useCheckboxProps(defaultValues.showEvalBar);
   const showArrowsProps = useCheckboxProps(defaultValues.showArrows);
+  const showLinesProps = useCheckboxProps(defaultValues.showLines);
   const [regionSelection, setRegionSelection] = useState<RegionSelection>('first');
   const [analysisDuration, setAnalysisDuration] = useState(defaultValues.analysisDuration);
   const [positionFEN, setPositionFEN] = useState('');
@@ -150,6 +151,14 @@ function App() {
                   disabled={detectingRegion}/>
                 <p>Auto scan</p>
               </label>
+              <label>
+                <input
+                  type='checkbox'
+                  checked={actionRegion}
+                  onChange={(e) => handleActionRegion(e.target.checked)}
+                  disabled={detectingRegion}/>
+                <p>Invisible action regions</p>
+              </label>
             </div>
             <div className='flex-column'>
               <label>
@@ -160,16 +169,12 @@ function App() {
                 <input {...showArrowsProps} disabled={detectingRegion}/>
                 <p>Show arrows</p>
               </label>
+              <label>
+                <input {...showLinesProps} disabled={detectingRegion}/>
+                <p>Show lines</p>
+              </label>
             </div>
           </div>
-          <label>
-            <input
-              type='checkbox'
-              checked={actionRegion}
-              onChange={(e) => handleActionRegion(e.target.checked)}
-              disabled={detectingRegion}/>
-            <p>Invisible action regions</p>
-          </label>
           <div className='flex-row'>
             <button
               onClick={() => setShowSettings(false)}
@@ -229,7 +234,7 @@ function App() {
                 Open settings
             </button>
           </div>
-          {pvComponents}
+          {showLinesProps.checked && pvComponents}
         </>)}
       </div>
     </div>
