@@ -52,14 +52,23 @@ class Game {
     this.positionCallback();
   }
 
-  move(move: string): boolean {
+  move(move: string): number | null {
     try {
-      this.chess.move(move);
+      const moveObject = this.chess.move(move);
+      this.positionCallback();
+      if (moveObject.isPromotion()) {
+        return -1;
+      }
+      if (moveObject.isEnPassant()) {
+        return 3;
+      }
+      if (moveObject.isKingsideCastle() || moveObject.isQueensideCastle()) {
+        return 4;
+      }
+      return 2;
     } catch (e) {
-      return false;
+      return null;
     }
-    this.positionCallback();
-    return true;
   }
 
   moves(): string[] {

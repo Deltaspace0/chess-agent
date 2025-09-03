@@ -132,8 +132,8 @@ class Solver {
         move += 'q';
       }
     }
-    const result = this.game.move(move);
-    if (!result) {
+    const squareCount = this.game.move(move);
+    if (squareCount === null) {
       this.statusCallback(`Illegal move: ${move}`);
       return;
     }
@@ -145,8 +145,8 @@ class Solver {
     if (gameOver) {
       this.statusCallback('Game is over');
       this.recognizer.stopScanning();
-    } else if (this.autoScan && !myTurn) {
-      this.scanMove();
+    } else if (this.autoScan && !myTurn && squareCount !== -1) {
+      this.scanMove(squareCount);
     } else if (this.autoResponse && myTurn) {
       this.playBestMove();
     }
@@ -229,7 +229,7 @@ class Solver {
     }
   }
 
-  async scanMove(): Promise<void> {
+  async scanMove(squareCount?: number): Promise<void> {
     if (this.recognizer.isScanning()) {
       this.recognizer.stopScanning();
       return;
@@ -242,14 +242,19 @@ class Solver {
       for (const move of moves) {
         boardStates.push({
           move: move,
+          squares: [
+            this.board.stringToSquare(move.substring(0, 2)),
+            this.board.stringToSquare(move.substring(2))
+          ],
           grid: this.game.boardAfterMove(move)
         });
       }
       boardStates.push({
         move: null,
+        squares: [],
         grid: this.game.boardAfterMove(null)
       });
-      move = await this.recognizer.scanMove(boardStates);
+      move = await this.recognizer.scanMove(boardStates, squareCount);
       if (move === null) {
         this.statusCallback('No move found');
         return;

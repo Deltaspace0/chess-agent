@@ -1,8 +1,9 @@
-import { screen, Region } from '@nut-tree-fork/nut-js';
+import { screen, sleep, Region } from '@nut-tree-fork/nut-js';
 import type { Color, Piece, PieceSymbol } from 'chess.js';
 
 interface BoardState {
   move: string | null;
+  squares: [number, number][];
   grid: (Piece | null)[][];
 }
 
@@ -223,7 +224,7 @@ class Recognizer {
     this.scanning = false;
   }
 
-  async scanMove(boardStates: BoardState[]): Promise<string | null> {
+  async scanMove(boardStates: BoardState[], squareCount?: number): Promise<string | null> {
     if (!this.pieceHashes['rb1']) {
       throw new Error('no hashes');
     }
@@ -231,26 +232,33 @@ class Recognizer {
       throw new Error('already scanning');
     }
     this.scanning = true;
-    if (this.boardHashes.length === 0) {
-      this.boardHashes = await this.getBoardHashes(false);
-    }
     const changedSquares = await (async () => {
-      let prevBoardHashes = await this.getBoardHashes(false);
-      const changedSquares = getChangedSquares(this.boardHashes, prevBoardHashes);
-      if (changedSquares.length > 2) {
-        return changedSquares;
-      }
-      let quietPeriod = true;
+      let prevBoardHashes = this.boardHashes;
+      let scanStep = 0;
       while (this.scanning) {
+        await sleep(50);
         const boardHashes = await this.getBoardHashes(false);
         const changedSquares = getChangedSquares(prevBoardHashes, boardHashes);
-        if (changedSquares.length > 1) {
-          quietPeriod = false;
+        if (scanStep === 0) {
+          if (changedSquares.length === 0) {
+            scanStep++;
+          }
         }
-        if (changedSquares.length === 0) {
-          if (quietPeriod) {
+        if (scanStep === 1) {
+          if (squareCount) {
+            const changedSquares = getChangedSquares(this.boardHashes, boardHashes);
+            if (changedSquares.length > squareCount) {
+              return changedSquares;
+            }
             this.boardHashes = boardHashes;
-          } else {
+            squareCount = 0;
+          }
+          if (changedSquares.length > 0) {
+            scanStep++;
+          }
+        }
+        if (scanStep === 2) {
+          if (changedSquares.length === 0) {
             return getChangedSquares(this.boardHashes, boardHashes);
           }
         }
@@ -266,7 +274,23 @@ class Recognizer {
     const boardHashes = await this.getBoardHashes(true);
     let minErrors = Infinity;
     let probableMove = null;
-    for (const { move, grid } of boardStates) {
+    for (const { move, squares, grid } of boardStates) {
+      let foundSquare = false;
+      for (const square of squares) {
+        foundSquare = false;
+        for (const [row, col] of changedSquares) {
+          if (square[0] === row && square[1] === col) {
+            foundSquare = true;
+            break;
+          }
+        }
+        if (!foundSquare) {
+          break;
+        }
+      }
+      if (!foundSquare) {
+        continue;
+      }
       let errors = 0;
       for (const [row, col] of changedSquares) {
         const hash = boardHashes[row][col];
