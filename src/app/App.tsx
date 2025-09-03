@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { Chessboard } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
-import type { RegionSelection } from './interface';
+import type { RegionStatus } from './interface';
 import Gauge from './components/Gauge.tsx';
 import { useListSlider, Slider } from './components/Slider.tsx';
 import { analysisDurations, multiPVs, mouseSpeeds, defaultValues } from '../config.ts';
@@ -31,7 +31,7 @@ function App() {
   const showEvalBarProps = useCheckboxProps(defaultValues.showEvalBar);
   const showArrowsProps = useCheckboxProps(defaultValues.showArrows);
   const showLinesProps = useCheckboxProps(defaultValues.showLines);
-  const [regionSelection, setRegionSelection] = useState<RegionSelection>('first');
+  const [regionStatus, setRegionStatus] = useState<RegionStatus>('none');
   const [analysisDuration, setAnalysisDuration] = useState(defaultValues.analysisDuration);
   const [positionFEN, setPositionFEN] = useState('');
   const [evaluation, setEvaluation] = useState('cp 0');
@@ -45,7 +45,7 @@ function App() {
     electron.onUpdateAutoScan(setAutoScan);
     electron.onUpdatePerspective(setIsWhitePerspective);
     electron.onUpdateDragging(setDraggingMode);
-    electron.onUpdateRegion(setRegionSelection);
+    electron.onUpdateRegion(setRegionStatus);
     electron.onUpdateDuration(setAnalysisDuration);
     electron.onUpdatePosition(setPositionFEN);
     electron.onEvaluation(setEvaluation);
@@ -91,7 +91,6 @@ function App() {
     list: mouseSpeeds,
     callback: (value) => electron.mouseSpeedValue(value)
   });
-  const detectingRegion = regionSelection !== 'none';
   const handleActionRegion = (value: boolean) => {
     setActionRegion(value);
     electron.actionRegionValue(value);
@@ -110,14 +109,12 @@ function App() {
     <div className='App'>
       <div className='flex-column'>
         <div className='flex-row'>
-          <button
-            onClick={() => electron.newRegion()}
-            disabled={regionSelection === 'first'}>
-              {regionSelection === 'new' ? 'Cancel selection' : 'Select new region'}
+          <button onClick={() => electron.newRegion()}>
+            {regionStatus === 'selecting' ? 'Cancel selection' : 'Select new region'}
           </button>
           <button
             onClick={() => electron.reloadHashes()}
-            disabled={detectingRegion}>
+            disabled={regionStatus !== 'exist'}>
               Reload piece hashes
           </button>
         </div>
@@ -132,9 +129,9 @@ function App() {
         </div>
         <p className='status'>{statusText}</p>
         {showSettings ? (<>
-          <Slider {...durationProps} disabled={detectingRegion}/>
-          <Slider {...multiPVProps} disabled={detectingRegion}/>
-          <Slider {...mouseProps} disabled={detectingRegion}/>
+          <Slider {...durationProps}/>
+          <Slider {...multiPVProps}/>
+          <Slider {...mouseProps}/>
           <div className='flex-row'>
             <div className='flex-column'>
               <label>
@@ -142,7 +139,7 @@ function App() {
                   type='checkbox'
                   checked={autoResponse}
                   onChange={(e) => electron.autoResponseValue(e.target.checked)}
-                  disabled={detectingRegion}/>
+                />
                 <p>Auto response</p>
               </label>
               <label>
@@ -150,7 +147,7 @@ function App() {
                   type='checkbox'
                   checked={autoScan}
                   onChange={(e) => electron.autoScanValue(e.target.checked)}
-                  disabled={detectingRegion}/>
+                />
                 <p>Auto scan</p>
               </label>
               <label>
@@ -158,83 +155,59 @@ function App() {
                   type='checkbox'
                   checked={actionRegion}
                   onChange={(e) => handleActionRegion(e.target.checked)}
-                  disabled={detectingRegion}/>
+                />
                 <p>Invisible action regions</p>
               </label>
             </div>
             <div className='flex-column'>
               <label>
-                <input {...showEvalBarProps} disabled={detectingRegion}/>
+                <input {...showEvalBarProps}/>
                 <p>Show eval bar</p>
               </label>
               <label>
-                <input {...showArrowsProps} disabled={detectingRegion}/>
+                <input {...showArrowsProps}/>
                 <p>Show arrows</p>
               </label>
               <label>
-                <input {...showLinesProps} disabled={detectingRegion}/>
+                <input {...showLinesProps}/>
                 <p>Show lines</p>
               </label>
             </div>
           </div>
           <div className='flex-row'>
-            <button
-              onClick={() => setShowSettings(false)}
-              disabled={detectingRegion}>
-                Close settings
-            </button>
+            <button onClick={() => setShowSettings(false)}>Close settings</button>
           </div>
         </>) : (<>
           <div className='flex-row'>
             <button
               onClick={() => electron.bestMove()}
-              disabled={detectingRegion}>
+              disabled={regionStatus !== 'exist'}>
                 Best move
             </button>
             <button
               onClick={() => electron.scanMove()}
-              disabled={detectingRegion}>
+              disabled={regionStatus !== 'exist'}>
                 Scan move
             </button>
-            <button
-              onClick={() => electron.resetPosition()}
-              disabled={detectingRegion}>
-                Reset
-            </button>
-            <button
-              onClick={() => electron.perspectiveValue(!isWhitePerspective)}
-              disabled={detectingRegion}>
-                {isWhitePerspective ? 'White' : 'Black'}
+            <button onClick={() => electron.resetPosition()}>Reset</button>
+            <button onClick={() => electron.perspectiveValue(!isWhitePerspective)}>
+              {isWhitePerspective ? 'White' : 'Black'}
             </button>
           </div>
           <div className='flex-row'>
             <button
               onClick={() => electron.recognizeBoard()}
-              disabled={detectingRegion}>
+              disabled={regionStatus !== 'exist'}>
                 Recognize
             </button>
-            <button
-              onClick={() => electron.undoMove()}
-              disabled={detectingRegion}>
-                Undo move
-            </button>
-            <button
-              onClick={() => electron.skipMove()}
-              disabled={detectingRegion}>
-                Skip move
-            </button>
-            <button
-              onClick={() => electron.draggingValue(!draggingMode)}
-              disabled={detectingRegion}>
-                {draggingMode ? 'Dragging' : 'Clicking'}
+            <button onClick={() => electron.undoMove()}>Undo move</button>
+            <button onClick={() => electron.skipMove()}>Skip move</button>
+            <button onClick={() => electron.draggingValue(!draggingMode)}>
+              {draggingMode ? 'Dragging' : 'Clicking'}
             </button>
           </div>
           <div className='flex-row'>
-            <button
-              onClick={() => setShowSettings(true)}
-              disabled={detectingRegion}>
-                Open settings
-            </button>
+            <button onClick={() => setShowSettings(true)}>Open settings</button>
           </div>
           {showLinesProps.checked && pvComponents}
         </>)}

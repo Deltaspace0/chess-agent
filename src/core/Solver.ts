@@ -1,76 +1,51 @@
-import { mouse, screen, Point, Region } from '@nut-tree-fork/nut-js';
+import { mouse, screen, Region } from '@nut-tree-fork/nut-js';
 import mouseEvents from 'global-mouse-events';
 import type { Color, Square } from 'chess.js';
 import Board from './Board.ts';
 import Engine from './Engine.ts';
 import Game from './Game.ts';
 import Recognizer from './Recognizer.ts';
+import RegionManager from './RegionManager.ts';
 import { detectRegion } from './util.ts';
 import { defaultValues } from '../config.ts';
 
 interface SolverProps {
-  region: Region;
-  game: Game;
-  engine: Engine;
-  recognizer: Recognizer;
   board: Board;
+  engine: Engine;
+  game: Game;
+  recognizer: Recognizer;
+  regionManager: RegionManager;
 }
 
+type RegionStatus = 'none' | 'exist' | 'selecting';
+
 class Solver {
-  private game: Game;
-  private engine: Engine;
-  private recognizer: Recognizer;
   private board: Board;
+  private engine: Engine;
+  private game: Game;
+  private recognizer: Recognizer;
+  private regionManager: RegionManager;
+  private regionStatus: RegionStatus = 'none';
+  private actionRegionsEnabled: boolean = defaultValues.actionRegion;
   private autoResponse: boolean = defaultValues.autoResponse;
   private autoScan: boolean = defaultValues.autoScan;
-  private isDetectingRegion: boolean = false;
   private stopBestMove: (() => void) | null = null;
-  private actionRegions: Record<string, Region> = {};
-  private actionRegionsEnabled: boolean = defaultValues.actionRegion;
   private statusCallback: (status: string) => void = console.log;
   private autoResponseCallback: (value: boolean) => void = () => {};
   private autoScanCallback: (value: boolean) => void = () => {};
-  private detectingCallback: (value: boolean) => void = () => {};
+  private regionStatusCallback: (value: RegionStatus) => void = () => {};
 
-  constructor({ region, game, engine, recognizer, board }: SolverProps) {
-    this.game = game;
-    this.engine = engine;
-    this.recognizer = recognizer;
+  constructor({ board, engine, game, recognizer, regionManager }: SolverProps) {
     this.board = board;
-    this.setActionRegions(region);
+    this.engine = engine;
+    this.game = game;
+    this.recognizer = recognizer;
+    this.regionManager = regionManager;
   }
 
-  private setDetectingRegion(value: boolean) {
-    this.isDetectingRegion = value;
-    this.detectingCallback(value);
-  }
-
-  private setActionRegions(region: Region) {
-    const left = region.left;
-    const top = region.top+region.height;
-    const width = region.width/8;
-    const height = region.height/8;
-    this.actionRegions.recog = new Region(left, top, width, height);
-    this.actionRegions.bestMove = new Region(left+width, top, width, height);
-    this.actionRegions.reset = new Region(left+width*2, top, width, height);
-    this.actionRegions.auto = new Region(left+width*3, top, width, height);
-    this.actionRegions.undo = new Region(left+width*4, top, width, height);
-    this.actionRegions.skip = new Region(left+width*5, top, width, height);
-    this.actionRegions.scan = new Region(left+width*6, top, width, height);
-    this.actionRegions.duration = new Region(left+width*7, top, width, height);
-    this.actionRegions.region = new Region(left+region.width, region.top, width, height);
-    this.actionRegions.drag = new Region(left+region.width, region.top+height, width, height);
-    this.actionRegions.perspective = new Region(left+region.width, top-height, width, height);
-  }
-
-  private getActionName(p: Point): string | null {
-    for (const name in this.actionRegions) {
-      const { left, top, width, height } = this.actionRegions[name];
-      if (p.x >= left && p.y >= top && p.x <= left+width && p.y <= top+height) {
-        return name;
-      }
-    }
-    return null;
+  private setRegionStatus(value: RegionStatus) {
+    this.regionStatus = value;
+    this.regionStatusCallback(value);
   }
 
   private printBoard() {
@@ -111,7 +86,7 @@ class Solver {
       return;
     }
     if (actionName === 'region') {
-      return this.detectNewRegion();
+      return this.selectNewRegion();
     }
     if (actionName === 'drag') {
       const draggingMode = this.board.toggleDraggingMode();
@@ -153,9 +128,9 @@ class Solver {
   }
 
   setRegion(region: Region) {
-    this.setActionRegions(region);
     this.board.setRegion(region);
     this.recognizer.setRegion(region);
+    this.regionManager.setRegion(region);
   }
 
   setActionRegionsEnabled(value: boolean) {
@@ -164,11 +139,11 @@ class Solver {
 
   async observe() {
     const actionCallback = async () => {
-      if (this.isDetectingRegion || !this.actionRegionsEnabled) {
+      if (this.regionStatus === 'selecting' || !this.actionRegionsEnabled) {
         return;
       }
       const point = await mouse.getPosition();
-      const actionName = this.getActionName(point);
+      const actionName = this.regionManager.getActionName(point);
       if (actionName !== null) {
         await this.performAction(actionName);
       }
@@ -180,21 +155,23 @@ class Solver {
     }
   }
 
-  async detectNewRegion() {
-    if (this.isDetectingRegion) {
+  async selectNewRegion() {
+    if (this.regionStatus === 'selecting') {
       return detectRegion();
     }
     this.statusCallback('Select new region');
-    this.setDetectingRegion(true);
+    const previousStatus = this.regionStatus;
+    this.setRegionStatus('selecting');
     const region = await detectRegion();
-    this.setDetectingRegion(false);
     if (region === null) {
+      this.setRegionStatus(previousStatus);
       this.statusCallback('No new region');
       return;
     }
-    this.statusCallback('Ready');
+    this.setRegionStatus('exist');
     screen.highlight(region);
     this.setRegion(region);
+    this.statusCallback('Ready');
   }
 
   async playBestMove() {
@@ -357,8 +334,8 @@ class Solver {
     this.autoScanCallback = callback;
   }
 
-  onDetectingRegion(callback: (value: boolean) => void) {
-    this.detectingCallback = callback;
+  onUpdateRegionStatus(callback: (value: RegionStatus) => void) {
+    this.regionStatusCallback = callback;
   }
 }
 

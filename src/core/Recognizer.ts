@@ -41,18 +41,23 @@ function compareHashes(hash1: string, hash2: string): number {
 }
 
 class Recognizer {
-  private region: Region;
+  private region: Region | null = null;
   private scanning: boolean = false;
   private boardHashes: string[][] = [];
   private pieceHashes: Record<string, string> = {};
   private whiteGrid: Buffer[] = [];
   private blackGrid: Buffer[] = [];
 
-  constructor(region: Region) {
-    this.region = region;
+  constructor(region?: Region) {
+    if (region) {
+      this.region = region;
+    }
   }
 
   private async grabBoard(): Promise<Buffer[][][]> {
+    if (this.region === null) {
+      throw new Error('No region set');
+    }
     const image = await screen.grabRegion(this.region);
     const bufferRows: Buffer[] = [];
     for (let i = 0; i < image.data.byteLength; i += image.byteWidth) {

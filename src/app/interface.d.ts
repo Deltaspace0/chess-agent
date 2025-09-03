@@ -1,6 +1,6 @@
 import type { Square, PieceSymbol, Color } from 'chess.js';
 
-type RegionSelection = 'first' | 'new' | 'none';
+type RegionStatus = 'none' | 'exist' | 'selecting';
 
 interface IElectronAPI {
   onUpdateStatus: (callback: (value: string) => void) => void;
@@ -8,7 +8,7 @@ interface IElectronAPI {
   onUpdateAutoScan: (callback: (value: boolean) => void) => void;
   onUpdatePerspective: (callback: (value: boolean) => void) => void;
   onUpdateDragging: (callback: (value: boolean) => void) => void;
-  onUpdateRegion: (callback: (value: RegionSelection) => void) => void;
+  onUpdateRegion: (callback: (value: RegionStatus) => void) => void;
   onUpdateDuration: (callback: (value: number) => void) => void;
   onUpdatePosition: (callback: (value: string) => void) => void;
   onEvaluation: (callback: (value: string) => void) => void;

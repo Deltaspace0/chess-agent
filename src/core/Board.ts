@@ -5,21 +5,24 @@ import { defaultValues } from '../config.ts';
 type Square = [number, number];
 
 class Board {
-  private region!: Region;
-  private squareWidth!: number;
-  private squareHeight!: number;
+  private region: Region | null = null;
   private isWhitePerspective: boolean = defaultValues.isWhitePerspective;
   private draggingMode: boolean = defaultValues.draggingMode;
   private perspectiveCallback: (value: boolean) => void = () => {};
   private draggingCallback: (value: boolean) => void = () => {};
 
-  constructor(region: Region) {
-    this.setRegion(region);
+  constructor(region?: Region) {
+    if (region) {
+      this.region = region;
+    }
   }
 
   private getSquare(p: Point): Square | null {
-    const row = Math.floor((p.y-this.region.top)/this.squareHeight);
-    const col = Math.floor((p.x-this.region.left)/this.squareWidth);
+    if (this.region === null) {
+      return null;
+    }
+    const row = Math.floor((p.y-this.region.top)*8/this.region.height);
+    const col = Math.floor((p.x-this.region.left)*8/this.region.width);
     if (row < 0 || row > 7 || col < 0 || col > 7) {
       return null;
     }
@@ -27,15 +30,16 @@ class Board {
   }
 
   private getPoint([row, col]: Square): Point {
-    const x = this.region.left+this.squareWidth*col+this.squareWidth/2;
-    const y = this.region.top+this.squareHeight*row+this.squareHeight/2;
+    if (this.region === null) {
+      throw new Error('No region set');
+    }
+    const x = this.region.left+this.region.width/8*(col+0.5);
+    const y = this.region.top+this.region.height/8*(row+0.5);
     return new Point(x, y);
   }
 
   setRegion(region: Region) {
     this.region = region;
-    this.squareWidth = region.width/8;
-    this.squareHeight = region.height/8;
   }
 
   squareToString([row, col]: Square): string {
