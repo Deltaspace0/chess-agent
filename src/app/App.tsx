@@ -57,10 +57,12 @@ function App() {
         const n = Math.tanh(Number(evaluation)/300);
         newArrows.push({
           startSquare: move.substring(0, 2),
-          endSquare: move.substring(2),
+          endSquare: move.substring(2, 4),
           color: type === 'mate'
-            ? `rgba(219, 201, 1, ${opacity})`
-            : (n > 0
+            ? (n > 0
+              ? `rgba(0, 255, 238, ${opacity})`
+              : `rgba(255, 98, 0, ${opacity})`
+            ) : (n > 0
               ? `rgba(${255*(1-n)}, ${255*(1-n)}, 255, ${opacity})`
               : `rgba(255, ${255*(1+n)}, ${255*(1+n)}, ${opacity})`
             )
