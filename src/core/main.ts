@@ -157,6 +157,7 @@ async function createWindow(): Promise<BrowserWindow> {
   ipcMain.on('multipv-value', (_event, value) => engine.setMultiPV(value));
   ipcMain.on('mousespeed-value', (_event, value) => mouse.config.mouseSpeed = value);
   ipcMain.on('actionregion-value', (_event, value) => regionManager.setActive(value));
+  ipcMain.on('piece-dropped', (_event, value) => solver.processMove(value));
   ipcMain.handle('new-region', () => solver.selectNewRegion());
   ipcMain.handle('reload-hashes', () => {
     recognizer.load().then(

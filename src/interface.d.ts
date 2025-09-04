@@ -24,6 +24,7 @@ interface IElectronAPI {
   multiPVValue: Value<number>;
   mouseSpeedValue: Value<number>;
   actionRegionValue: Value<boolean>;
+  pieceDropped: Value<string>;
   newRegion: () => void;
   reloadHashes: () => void;
   scanMove: () => void;

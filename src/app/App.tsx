@@ -55,7 +55,7 @@ function App() {
         const [type, evaluation, move] = evalMoves[i];
         const opacity = i === 0 ? 0.8 : 0.5;
         const n = Math.tanh(Number(evaluation)/300);
-        newArrows.push({
+        const newArrow = {
           startSquare: move.substring(0, 2),
           endSquare: move.substring(2, 4),
           color: type === 'mate'
@@ -66,7 +66,19 @@ function App() {
               ? `rgba(${255*(1-n)}, ${255*(1-n)}, 255, ${opacity})`
               : `rgba(255, ${255*(1+n)}, ${255*(1+n)}, ${opacity})`
             )
-        });
+        };
+        let exists = false;
+        for (const arrow of newArrows) {
+          let same = arrow.startSquare === newArrow.startSquare;
+          same &&= arrow.endSquare === newArrow.endSquare;
+          if (same) {
+            exists = true;
+            break;
+          }
+        }
+        if (!exists) {
+          newArrows.push(newArrow);
+        }
       }
       setArrows(newArrows);
     });
@@ -103,7 +115,14 @@ function App() {
     arrows: showArrowsProps.checked ? debouncedArrows : [],
     allowDrawingArrows: false,
     boardOrientation: isWhitePerspective ? 'white' : 'black',
-    position: positionFEN
+    position: positionFEN,
+    onPieceDrop: ({ sourceSquare, targetSquare }) => {
+      if (targetSquare === null || targetSquare === sourceSquare) {
+        return false;
+      }
+      electron.pieceDropped(sourceSquare+targetSquare);
+      return true;
+    }
   };
   return (
     <div className='App'>

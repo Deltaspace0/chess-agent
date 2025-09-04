@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   multiPVValue: sendValue('multipv-value'),
   mouseSpeedValue: sendValue('mousespeed-value'),
   actionRegionValue: sendValue('actionregion-value'),
+  pieceDropped: sendValue('piece-dropped'),
   newRegion: invoke('new-region'),
   reloadHashes: invoke('reload-hashes'),
   scanMove: invoke('scan-move'),
