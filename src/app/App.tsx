@@ -30,6 +30,7 @@ function App() {
   const showEvalBarProps = useCheckboxProps(defaultValues.showEvalBar);
   const showArrowsProps = useCheckboxProps(defaultValues.showArrows);
   const showLinesProps = useCheckboxProps(defaultValues.showLines);
+  const showNotationProps = useCheckboxProps(defaultValues.showNotation);
   const [regionStatus, setRegionStatus] = useState<RegionStatus>('none');
   const [analysisDuration, setAnalysisDuration] = useState(defaultValues.analysisDuration);
   const [positionFEN, setPositionFEN] = useState('');
@@ -110,6 +111,7 @@ function App() {
     pvComponents.push(<p className='variation'>{variation}</p>);
   }
   const chessboardOptions: ChessboardOptions = {
+    showNotation: showNotationProps.checked,
     arrows: showArrowsProps.checked ? arrows : [],
     allowDrawingArrows: false,
     boardOrientation: isWhitePerspective ? 'white' : 'black',
@@ -128,11 +130,6 @@ function App() {
         <div className='flex-row'>
           <button onClick={() => electron.newRegion()}>
             {regionStatus === 'selecting' ? 'Cancel selection' : 'Select new region'}
-          </button>
-          <button
-            onClick={() => electron.reloadHashes()}
-            disabled={regionStatus !== 'exist'}>
-              Reload piece hashes
           </button>
         </div>
         <div className='flex-row'>
@@ -183,6 +180,14 @@ function App() {
                   />
                   <p>Invisible action regions</p>
                 </label>
+                <label>
+                  <input
+                    type='checkbox'
+                    checked={draggingMode}
+                    onChange={(e) => electron.draggingValue(e.target.checked)}
+                  />
+                  <p>Dragging mode</p>
+                </label>
               </div>
               <div className='flex-column'>
                 <label>
@@ -196,6 +201,10 @@ function App() {
                 <label>
                   <input {...showLinesProps}/>
                   <p>Show lines</p>
+                </label>
+                <label>
+                  <input {...showNotationProps}/>
+                  <p>Show notation</p>
                 </label>
               </div>
             </div>
@@ -225,11 +234,13 @@ function App() {
                 disabled={regionStatus !== 'exist'}>
                   Recognize
               </button>
+              <button
+                onClick={() => electron.loadHashes()}
+                disabled={regionStatus !== 'exist'}>
+                  Load hashes
+              </button>
               <button onClick={() => electron.undoMove()}>Undo move</button>
               <button onClick={() => electron.skipMove()}>Skip move</button>
-              <button onClick={() => electron.draggingValue(!draggingMode)}>
-                {draggingMode ? 'Dragging' : 'Clicking'}
-              </button>
             </div>
           </fieldset>
           {showLinesProps.checked && <fieldset className='pv'>

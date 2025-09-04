@@ -35,7 +35,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   actionRegionValue: sendValue('actionregion-value'),
   pieceDropped: sendValue('piece-dropped'),
   newRegion: invoke('new-region'),
-  reloadHashes: invoke('reload-hashes'),
+  loadHashes: invoke('load-hashes'),
   scanMove: invoke('scan-move'),
   skipMove: invoke('skip-move'),
   undoMove: invoke('undo-move'),

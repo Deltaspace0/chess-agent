@@ -159,10 +159,10 @@ async function createWindow(): Promise<BrowserWindow> {
   ipcMain.on('actionregion-value', (_event, value) => regionManager.setActive(value));
   ipcMain.on('piece-dropped', (_event, value) => solver.processMove(value));
   ipcMain.handle('new-region', () => solver.selectNewRegion());
-  ipcMain.handle('reload-hashes', () => {
+  ipcMain.handle('load-hashes', () => {
     recognizer.load().then(
-      () => updateStatus('Reloaded piece hashes'),
-      () => updateStatus('Failed to reload piece hashes'));
+      () => updateStatus('Loaded piece hashes'),
+      () => updateStatus('Failed to load piece hashes'));
   });
   ipcMain.handle('scan-move', () => solver.scanMove());
   ipcMain.handle('skip-move', () => solver.skipMove());

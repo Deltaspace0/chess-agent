@@ -186,7 +186,7 @@ class Solver {
       }
     } catch (e) {
       if (e instanceof Error && e.message === 'no hashes') {
-        this.statusCallback('Reload hashes first');
+        this.statusCallback('Load hashes first');
       } else {
         console.log(e);
         this.statusCallback('Failed to scan move');
@@ -204,7 +204,7 @@ class Solver {
       pieces = await this.recognizer.recognizeBoard();
     } catch (e) {
       if (e instanceof Error && e.message === 'no hashes') {
-        this.statusCallback('Reload hashes first');
+        this.statusCallback('Load hashes first');
       } else {
         console.log(e);
         this.statusCallback('Failed to recognize board');

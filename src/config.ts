@@ -10,6 +10,7 @@ export const defaultValues = {
   showEvalBar: true,
   showArrows: true,
   showLines: true,
+  showNotation: true,
   analysisDuration: 1000,
   multiPV: 1,
   mouseSpeed: 3000
