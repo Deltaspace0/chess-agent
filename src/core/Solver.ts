@@ -53,15 +53,17 @@ class Solver {
   }
 
   processMove(move: string) {
+    const piece = this.game.get(move.substring(0, 2) as Square);
     if (move[3] === '1' || move[3] === '8') {
-      const piece = this.game.get(move.substring(0, 2) as Square);
       if (piece && piece.type === 'p' && move.length < 5) {
         move += 'q';
       }
     }
     const squareCount = this.game.move(move);
     if (squareCount === null) {
-      this.statusCallback(`Illegal move: ${move}`);
+      if (piece) {
+        this.statusCallback(`Illegal move: ${move}`);
+      }
       return;
     }
     const gameOver = this.game.isGameOver();
