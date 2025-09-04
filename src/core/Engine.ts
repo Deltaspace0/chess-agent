@@ -13,6 +13,7 @@ class Engine {
   private evaluation: string | null = null;
   private analysisDuration: number = defaultValues.analysisDuration;
   private principalMoves: string[] = [];
+  private sendingPrincipalMoves: boolean = false;
   private principalMovesCallback: (value: string[]) => void = () => {};
   private bestMoveCallback: (value: string) => void = () => {};
   private ponderMoveCallback: (value: string) => void = () => {};
@@ -60,7 +61,13 @@ class Engine {
 
   private setPrincipalMove(pv: number, move: string) {
     this.principalMoves[pv] = move;
-    this.principalMovesCallback([...this.principalMoves]);
+    if (!this.sendingPrincipalMoves) {
+      this.sendingPrincipalMoves = true;
+      setTimeout(() => {
+        this.principalMovesCallback([...this.principalMoves]);
+        this.sendingPrincipalMoves = false;
+      }, 50);
+    }
   }
 
   private setBestMove(value: string) {

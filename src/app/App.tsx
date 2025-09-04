@@ -1,6 +1,5 @@
 import './App.css';
 import { useEffect, useState } from 'react';
-import { useDebounce } from 'use-debounce';
 import { Chessboard } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import type { RegionStatus } from '../interface';
@@ -36,7 +35,6 @@ function App() {
   const [positionFEN, setPositionFEN] = useState('');
   const [evaluation, setEvaluation] = useState('cp 0');
   const [arrows, setArrows] = useState<Arrow[]>([]);
-  const [debouncedArrows] = useDebounce(arrows, 50);
   const [principalVariations, setPrincipalVariations] = useState<string[]>([]);
   const electron = window.electronAPI;
   useEffect(() => {
@@ -112,7 +110,7 @@ function App() {
     pvComponents.push(<p className='variation'>{variation}</p>);
   }
   const chessboardOptions: ChessboardOptions = {
-    arrows: showArrowsProps.checked ? debouncedArrows : [],
+    arrows: showArrowsProps.checked ? arrows : [],
     allowDrawingArrows: false,
     boardOrientation: isWhitePerspective ? 'white' : 'black',
     position: positionFEN,
