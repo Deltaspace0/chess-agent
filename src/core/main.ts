@@ -1,14 +1,14 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
-import { mouse } from '@nut-tree-fork/nut-js';
+import { mouse, Region } from '@nut-tree-fork/nut-js';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import Board from './src/core/Board.ts';
-import Engine from './src/core/Engine.ts';
-import Game from './src/core/Game.ts';
-import Recognizer from './src/core/Recognizer.ts';
-import RegionManager from './src/core/RegionManager.ts';
-import Solver from './src/core/Solver.ts';
-import { defaultValues } from './src/config.ts';
+import Board from './Board.ts';
+import Engine from './Engine.ts';
+import Game from './Game.ts';
+import Recognizer from './Recognizer.ts';
+import RegionManager from './RegionManager.ts';
+import Solver from './Solver.ts';
+import { defaultValues } from '../config.ts';
 
 async function createWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({
@@ -16,7 +16,7 @@ async function createWindow(): Promise<BrowserWindow> {
     height: 600,
     resizable: false,
     webPreferences: {
-      preload: path.join(path.dirname(fileURLToPath(import.meta.url)), 'preload.ts')
+      preload: path.join(path.dirname(fileURLToPath(import.meta.url)), 'preload.js')
     }
   });
   win.removeMenu();
@@ -73,6 +73,82 @@ async function createWindow(): Promise<BrowserWindow> {
   solver.onUpdateRegionStatus((value) => {
     win.webContents.send('update-region', value);
   });
+  regionManager.addActionRegion({
+    callback: () => solver.recognizeBoard(),
+    regionSelector: ({ left, top, width, height }) => {
+      return new Region(left, top+height, width/8, height/16);
+    }
+  });
+  regionManager.addActionRegion({
+    callback: () => solver.playBestMove(),
+    regionSelector: ({ left, top, width, height }) => {
+      return new Region(left+width/8, top+height, width/8, height/16);
+    }
+  });
+  regionManager.addActionRegion({
+    callback: () => solver.resetPosition(),
+    regionSelector: ({ left, top, width, height }) => {
+      return new Region(left+width*2/8, top+height, width/8, height/16);
+    }
+  });
+  regionManager.addActionRegion({
+    callback: () => solver.toggleAutoResponse(),
+    regionSelector: ({ left, top, width, height }) => {
+      return new Region(left+width*3/8, top+height, width/8, height/16);
+    }
+  });
+  regionManager.addActionRegion({
+    callback: () => solver.undoMove(),
+    regionSelector: ({ left, top, width, height }) => {
+      return new Region(left+width*4/8, top+height, width/8, height/16);
+    }
+  });
+  regionManager.addActionRegion({
+    callback: () => solver.skipMove(),
+    regionSelector: ({ left, top, width, height }) => {
+      return new Region(left+width*5/8, top+height, width/8, height/16);
+    }
+  });
+  regionManager.addActionRegion({
+    callback: () => solver.scanMove(),
+    regionSelector: ({ left, top, width, height }) => {
+      return new Region(left+width*6/8, top+height, width/8, height/16);
+    }
+  });
+  regionManager.addActionRegion({
+    callback: () => {
+      const analysisDuration = engine.switchAnalysisDuration();
+      console.log(`Analysis duration: ${analysisDuration} ms`);
+    },
+    regionSelector: ({ left, top, width, height }) => {
+      return new Region(left+width*7/8, top+height, width/8, height/16);
+    }
+  });
+  regionManager.addActionRegion({
+    callback: () => solver.selectNewRegion(),
+    regionSelector: ({ left, top, width, height }) => {
+      return new Region(left+width, top, width/16, height/8);
+    }
+  });
+  regionManager.addActionRegion({
+    callback: () => {
+      const draggingMode = board.toggleDraggingMode();
+      console.log(`${draggingMode ? 'Dragging' : 'Clicking'} mode`);
+    },
+    regionSelector: ({ left, top, width, height }) => {
+      return new Region(left+width, top+height/8, width/16, height/8);
+    }
+  });
+  regionManager.addActionRegion({
+    callback: () => {
+      const isWhite = board.togglePerspective();
+      console.log(`${isWhite ? 'White' : 'Black'} perspective`);
+    },
+    regionSelector: ({ left, top, width, height }) => {
+      return new Region(left+width, top+height*7/8, width/16, height/8);
+    }
+  });
+  regionManager.setActive(defaultValues.actionRegion);
   ipcMain.on('autoresponse-value', (_event, value) => solver.setAutoResponse(value));
   ipcMain.on('autoscan-value', (_event, value) => solver.setAutoScan(value));
   ipcMain.on('perspective-value', (_event, value) => board.setPerspective(value));
@@ -80,7 +156,7 @@ async function createWindow(): Promise<BrowserWindow> {
   ipcMain.on('duration-value', (_event, value) => engine.setAnalysisDuration(value));
   ipcMain.on('multipv-value', (_event, value) => engine.setMultiPV(value));
   ipcMain.on('mousespeed-value', (_event, value) => mouse.config.mouseSpeed = value);
-  ipcMain.on('actionregion-value', (_event, value) => solver.setActionRegionsEnabled(value));
+  ipcMain.on('actionregion-value', (_event, value) => regionManager.setActive(value));
   ipcMain.handle('new-region', () => solver.selectNewRegion());
   ipcMain.handle('reload-hashes', () => {
     recognizer.load().then(
@@ -94,5 +170,5 @@ async function createWindow(): Promise<BrowserWindow> {
   ipcMain.handle('reset-position', () => solver.resetPosition());
   ipcMain.handle('recognize-board', () => solver.recognizeBoard());
   updateStatus('Ready');
-  await solver.observe();
+  await solver.observeMoves();
 })();

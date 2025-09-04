@@ -1,5 +1,4 @@
-import { mouse, screen, Region } from '@nut-tree-fork/nut-js';
-import mouseEvents from 'global-mouse-events';
+import { screen, Region } from '@nut-tree-fork/nut-js';
 import type { Color, Square } from 'chess.js';
 import Board from './Board.ts';
 import Engine from './Engine.ts';
@@ -26,7 +25,6 @@ class Solver {
   private recognizer: Recognizer;
   private regionManager: RegionManager;
   private regionStatus: RegionStatus = 'none';
-  private actionRegionsEnabled: boolean = defaultValues.actionRegion;
   private autoResponse: boolean = defaultValues.autoResponse;
   private autoScan: boolean = defaultValues.autoScan;
   private stopBestMove: (() => void) | null = null;
@@ -52,52 +50,6 @@ class Solver {
     const ascii = this.game.ascii()+'  ';
     const reversed = ascii.split('').reverse().join('');
     console.log(this.board.getPerspective() ? ascii : reversed);
-  }
-
-  private async performAction(actionName: string) {
-    if (actionName === 'recog') {
-      return this.recognizeBoard();
-    }
-    if (actionName === 'bestMove') {
-      return this.playBestMove();
-    }
-    if (actionName === 'reset') {
-      this.resetPosition();
-      return;
-    }
-    if (actionName === 'auto') {
-      this.setAutoResponse(!this.autoResponse);
-      return;
-    }
-    if (actionName === 'undo') {
-      this.undoMove();
-      return;
-    }
-    if (actionName === 'skip') {
-      this.skipMove();
-      return;
-    }
-    if (actionName === 'scan') {
-      return this.scanMove();
-    }
-    if (actionName === 'duration') {
-      const analysisDuration = this.engine.switchAnalysisDuration();
-      console.log(`Analysis duration: ${analysisDuration} ms`);
-      return;
-    }
-    if (actionName === 'region') {
-      return this.selectNewRegion();
-    }
-    if (actionName === 'drag') {
-      const draggingMode = this.board.toggleDraggingMode();
-      console.log(`${draggingMode ? 'Dragging' : 'Clicking'} mode`);
-      return;
-    }
-    if (actionName === 'perspective') {
-      const isWhite = this.board.togglePerspective();
-      console.log(`${isWhite ? 'White' : 'Black'} perspective`);
-      return;
-    }
   }
 
   private processMove(move: string) {
@@ -133,22 +85,7 @@ class Solver {
     this.regionManager.setRegion(region);
   }
 
-  setActionRegionsEnabled(value: boolean) {
-    this.actionRegionsEnabled = value;
-  }
-
-  async observe() {
-    const actionCallback = async () => {
-      if (this.regionStatus === 'selecting' || !this.actionRegionsEnabled) {
-        return;
-      }
-      const point = await mouse.getPosition();
-      const actionName = this.regionManager.getActionName(point);
-      if (actionName !== null) {
-        await this.performAction(actionName);
-      }
-    };
-    mouseEvents.on('mouseup', actionCallback);
+  async observeMoves() {
     while (true) {
       const move = await this.board.detectMove();
       this.processMove(move);
@@ -157,12 +94,16 @@ class Solver {
 
   async selectNewRegion() {
     if (this.regionStatus === 'selecting') {
-      return detectRegion();
+      detectRegion();
+      return;
     }
     this.statusCallback('Select new region');
     const previousStatus = this.regionStatus;
     this.setRegionStatus('selecting');
+    const actionRegionsEnabled = this.regionManager.isActive();
+    this.regionManager.setActive(false);
     const region = await detectRegion();
+    this.regionManager.setActive(actionRegionsEnabled);
     if (region === null) {
       this.setRegionStatus(previousStatus);
       this.statusCallback('No new region');
@@ -309,11 +250,19 @@ class Solver {
     console.log(`Autoresponse is ${enabledString}`);
   }
 
+  toggleAutoResponse() {
+    this.setAutoResponse(!this.autoResponse);
+  }
+
   setAutoScan(value: boolean) {
     this.autoScan = value;
     this.autoScanCallback(value);
     const enabledString = value ? 'enabled' : 'disabled';
     console.log(`Autoscan is ${enabledString}`);
+  }
+
+  toggleAutoScan() {
+    this.setAutoScan(!this.autoScan);
   }
 
   resetPosition() {

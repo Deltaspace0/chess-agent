@@ -1,40 +1,58 @@
-import { Point, Region } from '@nut-tree-fork/nut-js';
+import { mouse, Region } from '@nut-tree-fork/nut-js';
+import mouseEvents from 'global-mouse-events';
+
+interface ActionRegion {
+  callback: () => Promise<void> | void;
+  regionSelector: (region: Region) => Region;
+}
 
 class RegionManager {
-  private actionRegions: Record<string, Region> = {};
+  private region: Region | null = null;
+  private actionRegions: ActionRegion[] = [];
+  private active: boolean = false;
+  private actionCallback: () => void = () => this.performAction();
 
   constructor(region?: Region) {
     if (region) {
-      this.setRegion(region);
+      this.region = region;
+    }
+  }
+
+  private async performAction() {
+    if (this.region === null) {
+      return;
+    }
+    const { x, y } = await mouse.getPosition();
+    for (const { callback, regionSelector } of this.actionRegions) {
+      const { left, top, width, height } = regionSelector(this.region);
+      if (x >= left && y >= top && x <= left+width && y <= top+height) {
+        callback();
+      }
     }
   }
 
   setRegion(region: Region) {
-    const left = region.left;
-    const top = region.top+region.height;
-    const width = region.width/8;
-    const height = region.height/8;
-    this.actionRegions.recog = new Region(left, top, width, height);
-    this.actionRegions.bestMove = new Region(left+width, top, width, height);
-    this.actionRegions.reset = new Region(left+width*2, top, width, height);
-    this.actionRegions.auto = new Region(left+width*3, top, width, height);
-    this.actionRegions.undo = new Region(left+width*4, top, width, height);
-    this.actionRegions.skip = new Region(left+width*5, top, width, height);
-    this.actionRegions.scan = new Region(left+width*6, top, width, height);
-    this.actionRegions.duration = new Region(left+width*7, top, width, height);
-    this.actionRegions.region = new Region(left+region.width, region.top, width, height);
-    this.actionRegions.drag = new Region(left+region.width, region.top+height, width, height);
-    this.actionRegions.perspective = new Region(left+region.width, top-height, width, height);
+    this.region = region;
   }
 
-  getActionName({ x, y }: Point): string | null {
-    for (const name in this.actionRegions) {
-      const { left, top, width, height } = this.actionRegions[name];
-      if (x >= left && y >= top && x <= left+width && y <= top+height) {
-        return name;
-      }
+  setActive(value: boolean) {
+    if (this.active === value) {
+      return;
     }
-    return null;
+    this.active = value;
+    if (value) {
+      mouseEvents.on('mouseup', this.actionCallback);
+    } else {
+      mouseEvents.removeListener('mouseup', this.actionCallback);
+    }
+  }
+
+  isActive(): boolean {
+    return this.active;
+  }
+
+  addActionRegion(actionRegion: ActionRegion) {
+    this.actionRegions.push(actionRegion);
   }
 }
 

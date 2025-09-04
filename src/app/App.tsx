@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { Chessboard } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
-import type { RegionStatus } from './interface';
+import type { RegionStatus } from '../interface';
 import Gauge from './components/Gauge.tsx';
 import { useListSlider, Slider } from './components/Slider.tsx';
 import { analysisDurations, multiPVs, mouseSpeeds, defaultValues } from '../config.ts';
@@ -155,6 +155,7 @@ function App() {
                   type='checkbox'
                   checked={actionRegion}
                   onChange={(e) => handleActionRegion(e.target.checked)}
+                  disabled={regionStatus === 'selecting'}
                 />
                 <p>Invisible action regions</p>
               </label>

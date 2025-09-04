@@ -2,7 +2,7 @@
   "name": "chess-solver",
   "version": "1.0.0",
   "description": "",
-  "main": "index.ts",
+  "main": "src/core/main.ts",
   "scripts": {
     "start:react": "vite",
     "start:electron": "electron .",
