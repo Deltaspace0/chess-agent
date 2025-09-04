@@ -146,90 +146,98 @@ function App() {
             isWhitePerspective={isWhitePerspective}
           />}
         </div>
-        <p className='status'>{statusText}</p>
+        <div className='flex-row'>
+          <p className='status'>{statusText}</p>
+          <button onClick={() => setShowSettings(!showSettings)}>
+            {showSettings ? 'Close' : 'Open'} settings
+          </button>
+        </div>
         {showSettings ? (<>
-          <Slider {...durationProps}/>
-          <Slider {...multiPVProps}/>
-          <Slider {...mouseProps}/>
-          <div className='flex-row'>
-            <div className='flex-column'>
-              <label>
-                <input
-                  type='checkbox'
-                  checked={autoResponse}
-                  onChange={(e) => electron.autoResponseValue(e.target.checked)}
-                />
-                <p>Auto response</p>
-              </label>
-              <label>
-                <input
-                  type='checkbox'
-                  checked={autoScan}
-                  onChange={(e) => electron.autoScanValue(e.target.checked)}
-                />
-                <p>Auto scan</p>
-              </label>
-              <label>
-                <input
-                  type='checkbox'
-                  checked={actionRegion}
-                  onChange={(e) => handleActionRegion(e.target.checked)}
-                  disabled={regionStatus === 'selecting'}
-                />
-                <p>Invisible action regions</p>
-              </label>
+          <fieldset className='settings'>
+            <legend>Settings</legend>
+            <Slider {...durationProps}/>
+            <Slider {...multiPVProps}/>
+            <Slider {...mouseProps}/>
+            <div className='flex-row'>
+              <div className='flex-column'>
+                <label>
+                  <input
+                    type='checkbox'
+                    checked={autoResponse}
+                    onChange={(e) => electron.autoResponseValue(e.target.checked)}
+                  />
+                  <p>Auto response</p>
+                </label>
+                <label>
+                  <input
+                    type='checkbox'
+                    checked={autoScan}
+                    onChange={(e) => electron.autoScanValue(e.target.checked)}
+                  />
+                  <p>Auto scan</p>
+                </label>
+                <label>
+                  <input
+                    type='checkbox'
+                    checked={actionRegion}
+                    onChange={(e) => handleActionRegion(e.target.checked)}
+                    disabled={regionStatus === 'selecting'}
+                  />
+                  <p>Invisible action regions</p>
+                </label>
+              </div>
+              <div className='flex-column'>
+                <label>
+                  <input {...showEvalBarProps}/>
+                  <p>Show eval bar</p>
+                </label>
+                <label>
+                  <input {...showArrowsProps}/>
+                  <p>Show arrows</p>
+                </label>
+                <label>
+                  <input {...showLinesProps}/>
+                  <p>Show lines</p>
+                </label>
+              </div>
             </div>
-            <div className='flex-column'>
-              <label>
-                <input {...showEvalBarProps}/>
-                <p>Show eval bar</p>
-              </label>
-              <label>
-                <input {...showArrowsProps}/>
-                <p>Show arrows</p>
-              </label>
-              <label>
-                <input {...showLinesProps}/>
-                <p>Show lines</p>
-              </label>
-            </div>
-          </div>
-          <div className='flex-row'>
-            <button onClick={() => setShowSettings(false)}>Close settings</button>
-          </div>
+          </fieldset>
         </>) : (<>
-          <div className='flex-row'>
-            <button
-              onClick={() => electron.bestMove()}
-              disabled={regionStatus !== 'exist'}>
-                Best move
-            </button>
-            <button
-              onClick={() => electron.scanMove()}
-              disabled={regionStatus !== 'exist'}>
-                Scan move
-            </button>
-            <button onClick={() => electron.resetPosition()}>Reset</button>
-            <button onClick={() => electron.perspectiveValue(!isWhitePerspective)}>
-              {isWhitePerspective ? 'White' : 'Black'}
-            </button>
-          </div>
-          <div className='flex-row'>
-            <button
-              onClick={() => electron.recognizeBoard()}
-              disabled={regionStatus !== 'exist'}>
-                Recognize
-            </button>
-            <button onClick={() => electron.undoMove()}>Undo move</button>
-            <button onClick={() => electron.skipMove()}>Skip move</button>
-            <button onClick={() => electron.draggingValue(!draggingMode)}>
-              {draggingMode ? 'Dragging' : 'Clicking'}
-            </button>
-          </div>
-          <div className='flex-row'>
-            <button onClick={() => setShowSettings(true)}>Open settings</button>
-          </div>
-          {showLinesProps.checked && pvComponents}
+          <fieldset>
+            <legend>Actions</legend>
+            <div className='flex-row'>
+              <button
+                onClick={() => electron.bestMove()}
+                disabled={regionStatus !== 'exist'}>
+                  Best move
+              </button>
+              <button
+                onClick={() => electron.scanMove()}
+                disabled={regionStatus !== 'exist'}>
+                  Scan move
+              </button>
+              <button onClick={() => electron.resetPosition()}>Reset</button>
+              <button onClick={() => electron.perspectiveValue(!isWhitePerspective)}>
+                {isWhitePerspective ? 'White' : 'Black'} (flip)
+              </button>
+            </div>
+            <div className='flex-row'>
+              <button
+                onClick={() => electron.recognizeBoard()}
+                disabled={regionStatus !== 'exist'}>
+                  Recognize
+              </button>
+              <button onClick={() => electron.undoMove()}>Undo move</button>
+              <button onClick={() => electron.skipMove()}>Skip move</button>
+              <button onClick={() => electron.draggingValue(!draggingMode)}>
+                {draggingMode ? 'Dragging' : 'Clicking'}
+              </button>
+            </div>
+          </fieldset>
+          {showLinesProps.checked && <fieldset className='pv'>
+            <legend>Principal variations</legend>
+            {pvComponents}
+          </fieldset>}
         </>)}
       </div>
     </div>

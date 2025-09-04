@@ -109,6 +109,11 @@ class Solver {
       this.statusCallback('No new region');
       return;
     }
+    if (region.width < 10 || region.height < 10) {
+      this.setRegionStatus(previousStatus);
+      this.statusCallback('Region is too small');
+      return;
+    }
     this.setRegionStatus('exist');
     screen.highlight(region);
     this.setRegion(region);

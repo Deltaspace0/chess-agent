@@ -150,10 +150,12 @@ button {
 }
 
 fieldset {
-  margin: 6px;
-  min-width: 160px;
-  height: 180px;
-  overflow: auto;
+  margin: 0 6px;
+  min-width: 100px;
+}
+
+legend {
+  font-size: 12px;
 }
 
 li {
@@ -171,12 +173,24 @@ p {
   font-size: 12px;
 }
 
+.settings {
+  height: 128px;
+  overflow-y: scroll;
+}
+
+.pv {
+  height: 60px;
+  overflow-y: scroll;
+}
+
 .button-auto {
   width: auto;
 }
 
 .status {
+  text-align: center;
   margin: 4px auto;
+  min-width: 200px;
 }
 
 .variation {
