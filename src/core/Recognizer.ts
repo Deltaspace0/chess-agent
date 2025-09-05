@@ -154,7 +154,7 @@ class Recognizer {
     return minErrors;
   }
 
-  setRegion(region: Region) {
+  setRegion(region: Region | null) {
     this.region = region;
   }
 

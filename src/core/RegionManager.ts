@@ -16,7 +16,7 @@ class RegionManager extends StatusNotifier {
   private active: boolean = false;
   private stopDetection: (() => void) = () => {};
   private actionCallback: () => void = () => this.performAction();
-  private regionCallback: (region: Region) => void = () => {};
+  private regionCallback: (region: Region | null) => void = () => {};
   private regionStatusCallback: (value: RegionStatus) => void = () => {};
 
   constructor(region?: Region) {
@@ -71,7 +71,7 @@ class RegionManager extends StatusNotifier {
     this.regionStatusCallback(value);
   }
 
-  setRegion(region: Region) {
+  setRegion(region: Region | null) {
     this.region = region;
     this.regionCallback(region);
   }
@@ -108,6 +108,11 @@ class RegionManager extends StatusNotifier {
     }
   }
 
+  removeRegion() {
+    this.setRegionStatus('none');
+    this.setRegion(null);
+  }
+
   setActive(value: boolean) {
     if (this.active === value) {
       return;
@@ -128,7 +133,7 @@ class RegionManager extends StatusNotifier {
     this.actionRegions.push(actionRegion);
   }
 
-  onUpdateRegion(callback: (region: Region) => void) {
+  onUpdateRegion(callback: (region: Region | null) => void) {
     this.regionCallback = callback;
   }
 

@@ -136,6 +136,11 @@ function App() {
             disabled={regionStatus !== 'exist'}>
               Show region
           </button>
+          <button
+            onClick={() => electron.removeRegion()}
+            disabled={regionStatus !== 'exist'}>
+              Remove region
+          </button>
         </div>
         <div className='flex-row'>
           <div className='board'>

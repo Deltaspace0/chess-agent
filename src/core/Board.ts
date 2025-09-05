@@ -39,7 +39,7 @@ class Board implements PerspectiveProvider {
     return new Point(x, y);
   }
 
-  setRegion(region: Region) {
+  setRegion(region: Region | null) {
     this.region = region;
   }
 
