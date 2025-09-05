@@ -26,6 +26,7 @@ interface IElectronAPI {
   actionRegionValue: Value<boolean>;
   pieceDropped: Value<string>;
   newRegion: () => void;
+  showRegion: () => void;
   loadHashes: () => void;
   scanMove: () => void;
   skipMove: () => void;

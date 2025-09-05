@@ -165,6 +165,7 @@ async function createWindow(): Promise<BrowserWindow> {
   ipcMain.on('actionregion-value', (_event, value) => regionManager.setActive(value));
   ipcMain.on('piece-dropped', (_event, value) => solver.processMove(value));
   ipcMain.handle('new-region', () => regionManager.selectNewRegion());
+  ipcMain.handle('show-region', () => regionManager.showRegion());
   ipcMain.handle('load-hashes', () => {
     recognizer.load().then(
       () => updateStatus('Loaded piece hashes'),

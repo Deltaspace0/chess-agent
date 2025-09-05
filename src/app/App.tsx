@@ -131,6 +131,11 @@ function App() {
           <button onClick={() => electron.newRegion()}>
             {regionStatus === 'selecting' ? 'Cancel selection' : 'Select new region'}
           </button>
+          <button
+            onClick={() => electron.showRegion()}
+            disabled={regionStatus !== 'exist'}>
+              Show region
+          </button>
         </div>
         <div className='flex-row'>
           <div className='board'>

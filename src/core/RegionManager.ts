@@ -102,6 +102,12 @@ class RegionManager extends StatusNotifier {
     return region;
   }
 
+  async showRegion() {
+    if (this.region) {
+      return screen.highlight(this.region);
+    }
+  }
+
   setActive(value: boolean) {
     if (this.active === value) {
       return;
