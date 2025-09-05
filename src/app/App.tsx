@@ -5,7 +5,7 @@ import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import type { RegionStatus } from '../interface';
 import Gauge from './components/Gauge.tsx';
 import { useListSlider, Slider } from './components/Slider.tsx';
-import { analysisDurations, multiPVs, mouseSpeeds, defaultValues } from '../config.ts';
+import { sliders, defaultValues } from '../config.ts';
 
 function useCheckboxProps(initialValue: boolean) {
   const [value, setValue] = useState(initialValue);
@@ -86,20 +86,20 @@ function App() {
   const durationProps = useListSlider({
     label: 'Analysis duration (ms)',
     value: analysisDuration,
-    list: analysisDurations,
+    list: sliders.analysisDurations,
     callback: (value) => electron.durationValue(value),
     noState: true
   });
   const multiPVProps = useListSlider({
     label: 'Multiple lines',
     value: defaultValues.multiPV,
-    list: multiPVs,
+    list: sliders.multiPVs,
     callback: (value) => electron.multiPVValue(value)
   });
   const mouseProps = useListSlider({
     label: 'Mouse speed',
     value: defaultValues.mouseSpeed,
-    list: mouseSpeeds,
+    list: sliders.mouseSpeeds,
     callback: (value) => electron.mouseSpeedValue(value)
   });
   const handleActionRegion = (value: boolean) => {

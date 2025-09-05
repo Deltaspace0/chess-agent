@@ -1,6 +1,8 @@
-export const analysisDurations = [100, 300, 1000, 3000, 5000, 10000];
-export const multiPVs = [1, 2, 3, 4, 5, 10, 20];
-export const mouseSpeeds = [500, 1000, 3000, 5000, 10000];
+export const sliders = {
+  analysisDurations: [100, 300, 1000, 3000, 5000, 10000],
+  multiPVs: [1, 2, 3, 4, 5, 10, 20],
+  mouseSpeeds: [500, 1000, 3000, 5000, 10000]
+};
 export const defaultValues = {
   autoResponse: false,
   autoScan: false,

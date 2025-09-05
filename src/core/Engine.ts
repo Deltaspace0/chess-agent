@@ -1,5 +1,5 @@
 import Worker from 'web-worker';
-import { analysisDurations, defaultValues } from '../config.ts';
+import { sliders, defaultValues } from '../config.ts';
 
 class Engine {
   private engine: Worker;
@@ -136,9 +136,9 @@ class Engine {
   }
 
   switchAnalysisDuration(): number {
-    const i = analysisDurations.indexOf(this.analysisDuration);
-    const duration = analysisDurations[(i+1)%analysisDurations.length];
-    this.setAnalysisDuration(duration);
+    const index = sliders.analysisDurations.indexOf(this.analysisDuration);
+    const newIndex = (index+1)%sliders.analysisDurations.length;
+    this.setAnalysisDuration(sliders.analysisDurations[newIndex]);
     return this.analysisDuration;
   }
 
