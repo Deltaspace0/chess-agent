@@ -1,10 +1,10 @@
 import { mouse, sleep, straightTo, Point, Region } from '@nut-tree-fork/nut-js';
 import mouseEvents from 'global-mouse-events';
+import type { PerspectiveProvider } from './interfaces.ts';
 import { defaultValues } from '../config.ts';
+import { coordsToSquare, squareToCoords } from './util.ts';
 
-type Square = [number, number];
-
-class Board {
+class Board implements PerspectiveProvider {
   private region: Region | null = null;
   private isWhitePerspective: boolean = defaultValues.isWhitePerspective;
   private draggingMode: boolean = defaultValues.draggingMode;
@@ -17,7 +17,7 @@ class Board {
     }
   }
 
-  private getSquare(p: Point): Square | null {
+  private getSquare(p: Point): string | null {
     if (this.region === null) {
       return null;
     }
@@ -26,13 +26,14 @@ class Board {
     if (row < 0 || row > 7 || col < 0 || col > 7) {
       return null;
     }
-    return [row, col];
+    return coordsToSquare([row, col], this.isWhitePerspective);
   }
 
-  private getPoint([row, col]: Square): Point {
+  private getPoint(square: string): Point {
     if (this.region === null) {
       throw new Error('No region set');
     }
+    const [row, col] = squareToCoords(square, this.isWhitePerspective);
     const x = this.region.left+this.region.width/8*(col+0.5);
     const y = this.region.top+this.region.height/8*(row+0.5);
     return new Point(x, y);
@@ -40,20 +41,6 @@ class Board {
 
   setRegion(region: Region) {
     this.region = region;
-  }
-
-  squareToString([row, col]: Square): string {
-    if (this.isWhitePerspective) {
-      return `${'abcdefgh'[col]}${8-row}`;
-    }
-    return `${'hgfedcba'[col]}${1+row}`;
-  }
-
-  stringToSquare(squareString: string): Square {
-    if (this.isWhitePerspective) {
-      return [8-Number(squareString[1]), 'abcdefgh'.indexOf(squareString[0])];
-    }
-    return [Number(squareString[1])-1, 'hgfedcba'.indexOf(squareString[0])];
   }
 
   getPerspective(): boolean {
@@ -93,19 +80,17 @@ class Board {
   }
 
   async playMove(move: string) {
-    const startSquare = this.stringToSquare(move.substring(0, 2));
-    const endSquare = this.stringToSquare(move.substring(2));
-    await mouse.move(straightTo(this.getPoint(startSquare)));
+    await mouse.move(straightTo(this.getPoint(move.substring(0, 2))));
     await sleep(50);
     await (this.draggingMode ? mouse.pressButton(0) : mouse.click(0));
     await sleep(50);
-    await mouse.move(straightTo(this.getPoint(endSquare)));
+    await mouse.move(straightTo(this.getPoint(move.substring(2, 4))));
     await (this.draggingMode ? mouse.releaseButton(0) : mouse.click(0));
   }
 
   async detectMove(): Promise<string> {
     return new Promise((resolve) => {
-      let startSquare: Square | null = null;
+      let startSquare: string | null = null;
       const downCallback = async () => {
         const point = await mouse.getPosition();
         startSquare = this.getSquare(point);
@@ -117,14 +102,10 @@ class Board {
         const point = await mouse.getPosition();
         const endSquare = this.getSquare(point);
         if (endSquare !== null) {
-          const [startRow, startCol] = startSquare;
-          const [endRow, endCol] = endSquare;
-          if (startRow !== endRow || startCol !== endCol) {
-            const startString = this.squareToString(startSquare);
-            const endString = this.squareToString(endSquare);
-            mouseEvents.removeListener('mousedown', downCallback);
-            mouseEvents.removeListener('mouseup', upCallback);
-            resolve(startString+endString);
+          if (startSquare !== endSquare) {
+            mouseEvents.off('mousedown', downCallback);
+            mouseEvents.off('mouseup', upCallback);
+            resolve(startSquare+endSquare);
           }
         }
         startSquare = null;

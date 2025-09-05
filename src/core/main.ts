@@ -55,24 +55,22 @@ async function createWindow(): Promise<BrowserWindow> {
     win.webContents.send('update-duration', value);
   });
   engine.reset();
-  const game = new Game();
+  const game = new Game(board);
   game.onUpdatePosition((value) => {
     win.webContents.send('update-position', value);
   });
   game.reset();
   const recognizer = new Recognizer();
-  const regionManager = new RegionManager();
-  const solver = new Solver({ board, engine, game, recognizer, regionManager });
+  const solver = new Solver({ engine, game, recognizer });
   solver.onUpdateStatus(updateStatus);
+  solver.onBestMove((move) => board.playMove(move));
   solver.onUpdateAutoResponse((value) => {
     win.webContents.send('update-autoresponse', value);
   });
   solver.onUpdateAutoScan((value) => {
     win.webContents.send('update-autoscan', value);
   });
-  solver.onUpdateRegionStatus((value) => {
-    win.webContents.send('update-region', value);
-  });
+  const regionManager = new RegionManager();
   regionManager.addActionRegion({
     callback: () => solver.recognizeBoard(),
     regionSelector: ({ left, top, width, height }) => {
@@ -125,7 +123,7 @@ async function createWindow(): Promise<BrowserWindow> {
     }
   });
   regionManager.addActionRegion({
-    callback: () => solver.selectNewRegion(),
+    callback: () => void regionManager.selectNewRegion(),
     regionSelector: ({ left, top, width, height }) => {
       return new Region(left+width, top, width/16, height/8);
     }
@@ -149,6 +147,14 @@ async function createWindow(): Promise<BrowserWindow> {
     }
   });
   regionManager.setActive(defaultValues.actionRegion);
+  regionManager.onUpdateStatus(updateStatus);
+  regionManager.onUpdateRegion((region) => {
+    board.setRegion(region);
+    recognizer.setRegion(region);
+  });
+  regionManager.onUpdateRegionStatus((value) => {
+    win.webContents.send('update-region', value);
+  });
   ipcMain.on('autoresponse-value', (_event, value) => solver.setAutoResponse(value));
   ipcMain.on('autoscan-value', (_event, value) => solver.setAutoScan(value));
   ipcMain.on('perspective-value', (_event, value) => board.setPerspective(value));
@@ -158,7 +164,7 @@ async function createWindow(): Promise<BrowserWindow> {
   ipcMain.on('mousespeed-value', (_event, value) => mouse.config.mouseSpeed = value);
   ipcMain.on('actionregion-value', (_event, value) => regionManager.setActive(value));
   ipcMain.on('piece-dropped', (_event, value) => solver.processMove(value));
-  ipcMain.handle('new-region', () => solver.selectNewRegion());
+  ipcMain.handle('new-region', () => regionManager.selectNewRegion());
   ipcMain.handle('load-hashes', () => {
     recognizer.load().then(
       () => updateStatus('Loaded piece hashes'),
@@ -171,5 +177,8 @@ async function createWindow(): Promise<BrowserWindow> {
   ipcMain.handle('reset-position', () => solver.resetPosition());
   ipcMain.handle('recognize-board', () => solver.recognizeBoard());
   updateStatus('Ready');
-  await solver.observeMoves();
+  while (true) {
+    const move = await board.detectMove();
+    solver.processMove(move);
+  }
 })();

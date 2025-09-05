@@ -176,7 +176,6 @@ function App() {
                     type='checkbox'
                     checked={actionRegion}
                     onChange={(e) => handleActionRegion(e.target.checked)}
-                    disabled={regionStatus === 'selecting'}
                   />
                   <p>Invisible action regions</p>
                 </label>
