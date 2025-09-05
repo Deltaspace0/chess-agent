@@ -233,6 +233,9 @@ class Recognizer {
     }
     this.scanning = true;
     const changedSquares = await (async () => {
+      if (this.boardHashes.length === 0) {
+        this.boardHashes = await this.getBoardHashes(false);
+      }
       let prevBoardHashes = this.boardHashes;
       let scanStep = 0;
       while (this.scanning) {
