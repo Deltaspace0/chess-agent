@@ -28,7 +28,7 @@ class Solver extends StatusNotifier {
     this.recognizer = recognizer;
   }
 
-  processMove(move: string) {
+  processMove(move: string, scanned?: boolean) {
     const piece = this.game.get(move.substring(0, 2));
     if (move[3] === '1' || move[3] === '8') {
       if (piece && piece.type === 'p' && move.length < 5) {
@@ -51,6 +51,8 @@ class Solver extends StatusNotifier {
       this.statusCallback('Game is over');
       this.recognizer.stopScanning();
     } else if (this.autoScan && !isMyTurn && squareCount !== -1) {
+      this.scanMove(squareCount);
+    } else if (this.autoScan && !this.autoResponse && scanned) {
       this.scanMove(squareCount);
     } else if (this.autoResponse && isMyTurn) {
       this.playBestMove();
@@ -111,7 +113,7 @@ class Solver extends StatusNotifier {
       return;
     }
     this.statusCallback(`Found move: ${move}`);
-    this.processMove(move);
+    this.processMove(move, true);
   }
 
   async recognizeBoard() {
