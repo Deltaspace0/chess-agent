@@ -85,8 +85,8 @@ class Game {
     const evaluation = Number(words[1]);
     const evalText = words[0] === 'mate' ? `M${evaluation}` : evaluation/100;
     const chess = new Chess();
-    chess.load(this.chess.fen());
     try {
+      chess.load(this.chess.fen());
       for (const move of words.slice(2)) {
         chess.move(move);
       }
