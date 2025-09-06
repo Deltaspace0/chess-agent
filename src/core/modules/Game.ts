@@ -1,7 +1,7 @@
 import { Chess } from 'chess.js';
 import type { Color, Piece, Square } from 'chess.js';
-import type { BoardState, PerspectiveProvider } from './interfaces.ts';
-import { coordsToSquare, squareToCoords } from './util.ts';
+import type { BoardState, PerspectiveProvider } from '../interfaces.ts';
+import { coordsToSquare, squareToCoords } from '../util.ts';
 
 class Game {
   private chess: Chess;

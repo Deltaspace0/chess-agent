@@ -2,7 +2,7 @@ import Engine from './Engine.ts';
 import Game from './Game.ts';
 import Recognizer from './Recognizer.ts';
 import StatusNotifier from './StatusNotifier.ts';
-import { defaultValues } from '../config.ts';
+import { defaultValues } from '../../config.ts';
 
 interface SolverProps {
   engine: Engine;

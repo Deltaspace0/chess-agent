@@ -2,13 +2,13 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import { mouse, Region } from '@nut-tree-fork/nut-js';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import Board from './Board.ts';
-import Engine from './Engine.ts';
-import Game from './Game.ts';
-import PreferencesManager from './PreferencesManager.ts';
-import Recognizer from './Recognizer.ts';
-import RegionManager from './RegionManager.ts';
-import Solver from './Solver.ts';
+import Board from './modules/Board.ts';
+import Engine from './modules/Engine.ts';
+import Game from './modules/Game.ts';
+import PreferencesManager from './modules/PreferencesManager.ts';
+import Recognizer from './modules/Recognizer.ts';
+import RegionManager from './modules/RegionManager.ts';
+import Solver from './modules/Solver.ts';
 
 async function createWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({

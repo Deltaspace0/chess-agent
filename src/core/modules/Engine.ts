@@ -1,5 +1,5 @@
 import Worker from 'web-worker';
-import { sliders, defaultValues } from '../config.ts';
+import { sliders, defaultValues } from '../../config.ts';
 
 class Engine {
   private engine: Worker;
@@ -22,7 +22,7 @@ class Engine {
   private multiPVCallback: (value: number) => void = () => {};
 
   constructor() {
-    this.engine = new Worker(new URL('stockfish.js', import.meta.url), { type: 'module' });
+    this.engine = new Worker(new URL('../stockfish.js', import.meta.url), { type: 'module' });
     this.engine.addEventListener('message', (e) => {
       const words: string[] = e.data.split(' ');
       if (words.includes('pv')) {

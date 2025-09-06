@@ -1,6 +1,6 @@
 import { screen, sleep, Region } from '@nut-tree-fork/nut-js';
 import type { Color, Piece, PieceSymbol } from 'chess.js';
-import type { BoardState } from './interfaces.ts';
+import type { BoardState } from '../interfaces.ts';
 
 function getBufferSquare(bufferRows: Buffer[], region: Region): Buffer[] {
   const bufferSquare: Buffer[] = [];

@@ -1,8 +1,8 @@
 import { mouse, sleep, straightTo, Point, Region } from '@nut-tree-fork/nut-js';
 import mouseEvents from 'global-mouse-events';
-import type { PerspectiveProvider } from './interfaces.ts';
-import { defaultValues } from '../config.ts';
-import { coordsToSquare, squareToCoords } from './util.ts';
+import type { PerspectiveProvider } from '../interfaces.ts';
+import { defaultValues } from '../../config.ts';
+import { coordsToSquare, squareToCoords } from '../util.ts';
 
 class Board implements PerspectiveProvider {
   private region: Region | null = null;

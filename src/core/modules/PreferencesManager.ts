@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { defaultValues } from '../config.ts';
+import { defaultValues } from '../../config.ts';
 
 type Preference = keyof typeof defaultValues;
 
