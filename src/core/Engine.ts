@@ -19,6 +19,7 @@ class Engine {
   private ponderMoveCallback: (value: string) => void = () => {};
   private evaluationCallback: (value: string) => void = () => {};
   private durationCallback: (value: number) => void = () => {};
+  private multiPVCallback: (value: number) => void = () => {};
 
   constructor() {
     this.engine = new Worker(new URL('stockfish.js', import.meta.url), { type: 'module' });
@@ -145,6 +146,7 @@ class Engine {
   setMultiPV(value: number) {
     this.engine.postMessage(`setoption name MultiPV value ${value}`);
     this.analyzePosition();
+    this.multiPVCallback(value);
   }
 
   onPrincipalMoves(callback: (value: string[]) => void) {
@@ -165,6 +167,10 @@ class Engine {
 
   onUpdateDuration(callback: (value: number) => void) {
     this.durationCallback = callback;
+  }
+
+  onUpdateMultiPV(callback: (value: number) => void) {
+    this.multiPVCallback = callback;
   }
 
   reset(fen?: string) {

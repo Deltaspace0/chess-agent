@@ -16,6 +16,7 @@ class RegionManager extends StatusNotifier {
   private active: boolean = false;
   private stopDetection: (() => void) = () => {};
   private actionCallback: () => void = () => this.performAction();
+  private activeCallback: (value: boolean) => void = () => {};
   private regionCallback: (region: Region | null) => void = () => {};
   private regionStatusCallback: (value: RegionStatus) => void = () => {};
 
@@ -123,6 +124,7 @@ class RegionManager extends StatusNotifier {
     } else {
       mouseEvents.off('mouseup', this.actionCallback);
     }
+    this.activeCallback(value);
   }
 
   isActive(): boolean {
@@ -131,6 +133,10 @@ class RegionManager extends StatusNotifier {
 
   addActionRegion(actionRegion: ActionRegion) {
     this.actionRegions.push(actionRegion);
+  }
+
+  onUpdateActive(callback: (value: boolean) => void) {
+    this.activeCallback = callback;
   }
 
   onUpdateRegion(callback: (region: Region | null) => void) {

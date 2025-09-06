@@ -5,10 +5,10 @@ import { fileURLToPath } from 'url';
 import Board from './Board.ts';
 import Engine from './Engine.ts';
 import Game from './Game.ts';
+import PreferencesManager from './PreferencesManager.ts';
 import Recognizer from './Recognizer.ts';
 import RegionManager from './RegionManager.ts';
 import Solver from './Solver.ts';
-import { defaultValues } from '../config.ts';
 
 async function createWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({
@@ -26,10 +26,22 @@ async function createWindow(): Promise<BrowserWindow> {
 }
 
 (async () => {
-  mouse.config.mouseSpeed = defaultValues.mouseSpeed;
+  const preferencesManager = new PreferencesManager();
+  preferencesManager.loadFromFile('config.json');
+  mouse.config.mouseSpeed = preferencesManager.getPreference('mouseSpeed');
   await app.whenReady();
   const win = await createWindow();
+  win.webContents.send('update-mousespeed', mouse.config.mouseSpeed);
+  win.webContents.send('update-show-evalbar',
+    preferencesManager.getPreference('showEvalBar'));
+  win.webContents.send('update-show-arrows',
+    preferencesManager.getPreference('showArrows'));
+  win.webContents.send('update-show-lines',
+    preferencesManager.getPreference('showLines'));
+  win.webContents.send('update-show-notation',
+    preferencesManager.getPreference('showNotation'));
   app.on('window-all-closed', () => {
+    preferencesManager.saveToFile('config.json');
     app.quit();
   });
   const updateStatus = (status: string) => {
@@ -39,21 +51,34 @@ async function createWindow(): Promise<BrowserWindow> {
   const board = new Board();
   board.onUpdatePerspective((value) => {
     win.webContents.send('update-perspective', value);
+    preferencesManager.setPreference('isWhitePerspective', value);
   });
   board.onUpdateDragging((value) => {
     win.webContents.send('update-dragging', value);
+    preferencesManager.setPreference('draggingMode', value);
   });
+  board.setPerspective(preferencesManager.getPreference('isWhitePerspective'));
+  board.setDraggingMode(preferencesManager.getPreference('draggingMode'));
   const engine = new Engine();
   engine.onPrincipalMoves((value) => {
-    win.webContents.send('highlight-moves', value.map((x) => x.split(' ').slice(0, 3)));
-    win.webContents.send('principal-variations', value.map((x) => game.formatEvalMoves(x)));
+    const moves = value.map((x) => x.split(' ').slice(0, 3));
+    const variations = value.map((x) => game.formatEvalMoves(x));
+    win.webContents.send('highlight-moves', moves);
+    win.webContents.send('principal-variations', variations);
   });
   engine.onEvaluation((value) => {
     win.webContents.send('evaluation', value);
   });
   engine.onUpdateDuration((value) => {
     win.webContents.send('update-duration', value);
+    preferencesManager.setPreference('analysisDuration', value);
   });
+  engine.onUpdateMultiPV((value) => {
+    win.webContents.send('update-multipv', value);
+    preferencesManager.setPreference('multiPV', value);
+  });
+  engine.setAnalysisDuration(preferencesManager.getPreference('analysisDuration'));
+  engine.setMultiPV(preferencesManager.getPreference('multiPV'));
   engine.reset();
   const game = new Game(board);
   game.onUpdatePosition((value) => {
@@ -66,10 +91,14 @@ async function createWindow(): Promise<BrowserWindow> {
   solver.onBestMove((move) => board.playMove(move));
   solver.onUpdateAutoResponse((value) => {
     win.webContents.send('update-autoresponse', value);
+    preferencesManager.setPreference('autoResponse', value);
   });
   solver.onUpdateAutoScan((value) => {
     win.webContents.send('update-autoscan', value);
+    preferencesManager.setPreference('autoScan', value);
   });
+  solver.setAutoResponse(preferencesManager.getPreference('autoResponse'));
+  solver.setAutoScan(preferencesManager.getPreference('autoScan'));
   const regionManager = new RegionManager();
   regionManager.addActionRegion({
     callback: () => solver.recognizeBoard(),
@@ -146,8 +175,11 @@ async function createWindow(): Promise<BrowserWindow> {
       return new Region(left+width, top+height*7/8, width/16, height/8);
     }
   });
-  regionManager.setActive(defaultValues.actionRegion);
   regionManager.onUpdateStatus(updateStatus);
+  regionManager.onUpdateActive((value) => {
+    win.webContents.send('update-actionregion', value);
+    preferencesManager.setPreference('actionRegion', value);
+  });
   regionManager.onUpdateRegion((region) => {
     board.setRegion(region);
     recognizer.setRegion(region);
@@ -155,15 +187,36 @@ async function createWindow(): Promise<BrowserWindow> {
   regionManager.onUpdateRegionStatus((value) => {
     win.webContents.send('update-region', value);
   });
-  ipcMain.on('autoresponse-value', (_event, value) => solver.setAutoResponse(value));
-  ipcMain.on('autoscan-value', (_event, value) => solver.setAutoScan(value));
-  ipcMain.on('perspective-value', (_event, value) => board.setPerspective(value));
-  ipcMain.on('dragging-value', (_event, value) => board.setDraggingMode(value));
-  ipcMain.on('duration-value', (_event, value) => engine.setAnalysisDuration(value));
-  ipcMain.on('multipv-value', (_event, value) => engine.setMultiPV(value));
-  ipcMain.on('mousespeed-value', (_event, value) => mouse.config.mouseSpeed = value);
-  ipcMain.on('actionregion-value', (_event, value) => regionManager.setActive(value));
-  ipcMain.on('piece-dropped', (_event, value) => solver.processMove(value));
+  regionManager.setActive(preferencesManager.getPreference('actionRegion'));
+  ipcMain.on('autoresponse-value', (_, value) => solver.setAutoResponse(value));
+  ipcMain.on('autoscan-value', (_, value) => solver.setAutoScan(value));
+  ipcMain.on('perspective-value', (_, value) => board.setPerspective(value));
+  ipcMain.on('dragging-value', (_, value) => board.setDraggingMode(value));
+  ipcMain.on('actionregion-value', (_, value) => regionManager.setActive(value));
+  ipcMain.on('show-evalbar-value', (_, value) => {
+    preferencesManager.setPreference('showEvalBar', value);
+    win.webContents.send('update-show-evalbar', value);
+  });
+  ipcMain.on('show-arrows-value', (_, value) => {
+    preferencesManager.setPreference('showArrows', value);
+    win.webContents.send('update-show-arrows', value);
+  });
+  ipcMain.on('show-lines-value', (_, value) => {
+    preferencesManager.setPreference('showLines', value);
+    win.webContents.send('update-show-lines', value);
+  });
+  ipcMain.on('show-notation-value', (_, value) => {
+    preferencesManager.setPreference('showNotation', value);
+    win.webContents.send('update-show-notation', value);
+  });
+  ipcMain.on('duration-value', (_, value) => engine.setAnalysisDuration(value));
+  ipcMain.on('multipv-value', (_, value) => engine.setMultiPV(value));
+  ipcMain.on('mousespeed-value', (_, value) => {
+    mouse.config.mouseSpeed = value;
+    preferencesManager.setPreference('mouseSpeed', value);
+    win.webContents.send('update-mousespeed', value);
+  });
+  ipcMain.on('piece-dropped', (_, value) => solver.processMove(value));
   ipcMain.handle('new-region', () => regionManager.selectNewRegion());
   ipcMain.handle('show-region', () => regionManager.showRegion());
   ipcMain.handle('remove-region', () => regionManager.removeRegion());

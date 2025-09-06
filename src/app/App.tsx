@@ -5,47 +5,69 @@ import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import type { RegionStatus } from '../interface';
 import Gauge from './components/Gauge.tsx';
 import { useListSlider, Slider } from './components/Slider.tsx';
+import useCheckboxProps from './hooks/use-checkbox-props.ts';
 import { sliders, defaultValues } from '../config.ts';
 
-function useCheckboxProps(initialValue: boolean) {
-  const [value, setValue] = useState(initialValue);
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.checked);
-  }
-  return {
-    type: 'checkbox',
-    checked: value,
-    onChange: handleChange
-  };
-}
-
 function App() {
+  const electron = window.electronAPI;
   const [statusText, setStatusText] = useState('');
   const [showSettings, setShowSettings] = useState(false);
-  const [autoResponse, setAutoResponse] = useState(defaultValues.autoResponse);
-  const [autoScan, setAutoScan] = useState(defaultValues.autoScan);
   const [isWhitePerspective, setIsWhitePerspective] = useState(defaultValues.isWhitePerspective);
-  const [draggingMode, setDraggingMode] = useState(defaultValues.draggingMode);
-  const [actionRegion, setActionRegion] = useState(defaultValues.actionRegion);
-  const showEvalBarProps = useCheckboxProps(defaultValues.showEvalBar);
-  const showArrowsProps = useCheckboxProps(defaultValues.showArrows);
-  const showLinesProps = useCheckboxProps(defaultValues.showLines);
-  const showNotationProps = useCheckboxProps(defaultValues.showNotation);
+  const autoResponseProps = useCheckboxProps({
+    initialValue: defaultValues.autoResponse,
+    sendValue: electron.autoResponseValue,
+    onUpdateValue: electron.onUpdateAutoResponse
+  });
+  const autoScanProps = useCheckboxProps({
+    initialValue: defaultValues.autoScan,
+    sendValue: electron.autoScanValue,
+    onUpdateValue: electron.onUpdateAutoScan
+  });
+  const draggingModeProps = useCheckboxProps({
+    initialValue: defaultValues.draggingMode,
+    sendValue: electron.draggingValue,
+    onUpdateValue: electron.onUpdateDragging
+  });
+  const actionRegionProps = useCheckboxProps({
+    initialValue: defaultValues.actionRegion,
+    sendValue: electron.actionRegionValue,
+    onUpdateValue: electron.onUpdateActionRegion
+  });
+  const showEvalBarProps = useCheckboxProps({
+    initialValue: defaultValues.showEvalBar,
+    sendValue: electron.showEvalBarValue,
+    onUpdateValue: electron.onUpdateShowEvalBar
+  });
+  const showArrowsProps = useCheckboxProps({
+    initialValue: defaultValues.showArrows,
+    sendValue: electron.showArrowsValue,
+    onUpdateValue: electron.onUpdateShowArrows
+  });
+  const showLinesProps = useCheckboxProps({
+    initialValue: defaultValues.showLines,
+    sendValue: electron.showLinesValue,
+    onUpdateValue: electron.onUpdateShowLines
+  });
+  const showNotationProps = useCheckboxProps({
+    initialValue: defaultValues.showNotation,
+    sendValue: electron.showNotationValue,
+    onUpdateValue: electron.onUpdateShowNotation
+  });
   const [regionStatus, setRegionStatus] = useState<RegionStatus>('none');
   const [analysisDuration, setAnalysisDuration] = useState(defaultValues.analysisDuration);
+  const [multiPV, setMultiPV] = useState(defaultValues.multiPV);
+  const [mouseSpeed, setMouseSpeed] = useState(defaultValues.mouseSpeed);
   const [positionFEN, setPositionFEN] = useState('');
   const [evaluation, setEvaluation] = useState('cp 0');
   const [arrows, setArrows] = useState<Arrow[]>([]);
   const [principalVariations, setPrincipalVariations] = useState<string[]>([]);
-  const electron = window.electronAPI;
   useEffect(() => {
     electron.onUpdateStatus(setStatusText);
-    electron.onUpdateAutoResponse(setAutoResponse);
-    electron.onUpdateAutoScan(setAutoScan);
     electron.onUpdatePerspective(setIsWhitePerspective);
-    electron.onUpdateDragging(setDraggingMode);
     electron.onUpdateRegion(setRegionStatus);
     electron.onUpdateDuration(setAnalysisDuration);
+    electron.onUpdateMultiPV(setMultiPV);
+    electron.onUpdateMouseSpeed(setMouseSpeed);
     electron.onUpdatePosition(setPositionFEN);
     electron.onEvaluation(setEvaluation);
     electron.onHighlightMoves((evalMoves) => {
@@ -92,20 +114,18 @@ function App() {
   });
   const multiPVProps = useListSlider({
     label: 'Multiple lines',
-    value: defaultValues.multiPV,
+    value: multiPV,
     list: sliders.multiPVs,
-    callback: (value) => electron.multiPVValue(value)
+    callback: (value) => electron.multiPVValue(value),
+    noState: true
   });
   const mouseProps = useListSlider({
     label: 'Mouse speed',
-    value: defaultValues.mouseSpeed,
+    value: mouseSpeed,
     list: sliders.mouseSpeeds,
-    callback: (value) => electron.mouseSpeedValue(value)
+    callback: (value) => electron.mouseSpeedValue(value),
+    noState: true
   });
-  const handleActionRegion = (value: boolean) => {
-    setActionRegion(value);
-    electron.actionRegionValue(value);
-  }
   const pvComponents = [];
   for (const variation of principalVariations) {
     pvComponents.push(<p className='variation'>{variation}</p>);
@@ -166,35 +186,19 @@ function App() {
             <div className='flex-row'>
               <div className='flex-column'>
                 <label>
-                  <input
-                    type='checkbox'
-                    checked={autoResponse}
-                    onChange={(e) => electron.autoResponseValue(e.target.checked)}
-                  />
+                  <input {...autoResponseProps}/>
                   <p>Auto response</p>
                 </label>
                 <label>
-                  <input
-                    type='checkbox'
-                    checked={autoScan}
-                    onChange={(e) => electron.autoScanValue(e.target.checked)}
-                  />
+                  <input {...autoScanProps}/>
                   <p>Auto scan</p>
                 </label>
                 <label>
-                  <input
-                    type='checkbox'
-                    checked={actionRegion}
-                    onChange={(e) => handleActionRegion(e.target.checked)}
-                  />
+                  <input {...actionRegionProps}/>
                   <p>Invisible action regions</p>
                 </label>
                 <label>
-                  <input
-                    type='checkbox'
-                    checked={draggingMode}
-                    onChange={(e) => electron.draggingValue(e.target.checked)}
-                  />
+                  <input {...draggingModeProps}/>
                   <p>Dragging mode</p>
                 </label>
               </div>
