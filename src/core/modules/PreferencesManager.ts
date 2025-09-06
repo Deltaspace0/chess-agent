@@ -4,21 +4,21 @@ import { defaultValues } from '../../config.ts';
 type Preference = keyof typeof defaultValues;
 
 class PreferencesManager {
-  private preferences: Record<string, string> = {};
+  private preferences: Record<string, unknown> = {};
 
   constructor() {
     for (const key in defaultValues) {
-      this.preferences[key] = JSON.stringify(defaultValues[key as Preference]);
+      this.preferences[key] = defaultValues[key as Preference];
     }
   }
 
   setPreference<T>(name: Preference, value: T) {
-    this.preferences[name] = JSON.stringify(value);
+    this.preferences[name] = value;
   }
 
   getPreference<T>(name: Preference): T {
     try {
-      return JSON.parse(this.preferences[name]);
+      return this.preferences[name] as T;
     } catch (e) {
       console.log(e);
       return defaultValues[name] as T;
