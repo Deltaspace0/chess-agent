@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 interface CheckboxHookOptions {
+  label: string;
   initialValue: boolean;
   sendValue?: (value: boolean) => void;
   onUpdateValue?: (callback: (value: boolean) => void) => void;
@@ -8,19 +9,14 @@ interface CheckboxHookOptions {
 
 function useCheckboxProps(options: CheckboxHookOptions) {
   const [value, setValue] = useState(options.initialValue);
-  let handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  if (options.sendValue) {
-    handleChange = (e) => options.sendValue?.(e.target.checked);
-  } else {
-    handleChange = (e) => setValue(e.target.checked);
-  }
   useEffect(() => {
     options.onUpdateValue?.(setValue);
   }, [options]);
   return {
+    label: options.label,
     type: 'checkbox',
     checked: value,
-    onChange: handleChange
+    onChange: options.sendValue ?? setValue
   };
 }
 

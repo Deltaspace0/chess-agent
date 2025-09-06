@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Chessboard } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import type { RegionStatus } from '../interface';
+import Checkbox from './components/Checkbox.tsx';
 import Gauge from './components/Gauge.tsx';
 import Slider from './components/Slider.tsx';
 import useCheckboxProps from './hooks/use-checkbox-props.ts';
@@ -12,41 +13,49 @@ import { sliders, defaultValues } from '../config.ts';
 function App() {
   const electron = window.electronAPI;
   const autoResponseProps = useCheckboxProps({
+    label: 'Auto response',
     initialValue: defaultValues.autoResponse,
     sendValue: electron.autoResponseValue,
     onUpdateValue: electron.onUpdateAutoResponse
   });
   const autoScanProps = useCheckboxProps({
+    label: 'Auto scan',
     initialValue: defaultValues.autoScan,
     sendValue: electron.autoScanValue,
     onUpdateValue: electron.onUpdateAutoScan
   });
   const draggingModeProps = useCheckboxProps({
+    label: 'Dragging mode',
     initialValue: defaultValues.draggingMode,
     sendValue: electron.draggingValue,
     onUpdateValue: electron.onUpdateDragging
   });
   const actionRegionProps = useCheckboxProps({
+    label: 'Invisible action regions',
     initialValue: defaultValues.actionRegion,
     sendValue: electron.actionRegionValue,
     onUpdateValue: electron.onUpdateActionRegion
   });
   const showEvalBarProps = useCheckboxProps({
+    label: 'Show eval bar',
     initialValue: defaultValues.showEvalBar,
     sendValue: electron.showEvalBarValue,
     onUpdateValue: electron.onUpdateShowEvalBar
   });
   const showArrowsProps = useCheckboxProps({
+    label: 'Show arrows',
     initialValue: defaultValues.showArrows,
     sendValue: electron.showArrowsValue,
     onUpdateValue: electron.onUpdateShowArrows
   });
   const showLinesProps = useCheckboxProps({
+    label: 'Show lines',
     initialValue: defaultValues.showLines,
     sendValue: electron.showLinesValue,
     onUpdateValue: electron.onUpdateShowLines
   });
   const showNotationProps = useCheckboxProps({
+    label: 'Show notation',
     initialValue: defaultValues.showNotation,
     sendValue: electron.showNotationValue,
     onUpdateValue: electron.onUpdateShowNotation
@@ -180,40 +189,16 @@ function App() {
             <Slider {...mouseProps}/>
             <div className='flex-row'>
               <div className='flex-column'>
-                <label>
-                  <input {...autoResponseProps}/>
-                  <p>Auto response</p>
-                </label>
-                <label>
-                  <input {...autoScanProps}/>
-                  <p>Auto scan</p>
-                </label>
-                <label>
-                  <input {...actionRegionProps}/>
-                  <p>Invisible action regions</p>
-                </label>
-                <label>
-                  <input {...draggingModeProps}/>
-                  <p>Dragging mode</p>
-                </label>
+                <Checkbox {...autoResponseProps}/>
+                <Checkbox {...autoScanProps}/>
+                <Checkbox {...actionRegionProps}/>
+                <Checkbox {...draggingModeProps}/>
               </div>
               <div className='flex-column'>
-                <label>
-                  <input {...showEvalBarProps}/>
-                  <p>Show eval bar</p>
-                </label>
-                <label>
-                  <input {...showArrowsProps}/>
-                  <p>Show arrows</p>
-                </label>
-                <label>
-                  <input {...showLinesProps}/>
-                  <p>Show lines</p>
-                </label>
-                <label>
-                  <input {...showNotationProps}/>
-                  <p>Show notation</p>
-                </label>
+                <Checkbox {...showEvalBarProps}/>
+                <Checkbox {...showArrowsProps}/>
+                <Checkbox {...showLinesProps}/>
+                <Checkbox {...showNotationProps}/>
               </div>
             </div>
           </fieldset>
