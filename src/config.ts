@@ -15,5 +15,6 @@ export const defaultValues = {
   showNotation: true,
   analysisDuration: 1000,
   multiPV: 1,
-  mouseSpeed: 3000
+  mouseSpeed: 3000,
+  region: null
 };

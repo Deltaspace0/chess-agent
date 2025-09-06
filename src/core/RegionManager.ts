@@ -74,6 +74,7 @@ class RegionManager extends StatusNotifier {
 
   setRegion(region: Region | null) {
     this.region = region;
+    this.setRegionStatus(region ? 'exist' : 'none');
     this.regionCallback(region);
   }
 
@@ -96,7 +97,6 @@ class RegionManager extends StatusNotifier {
       this.statusCallback('Region is too small');
       return null;
     }
-    this.setRegionStatus('exist');
     screen.highlight(region);
     this.setRegion(region);
     this.statusCallback('Ready');

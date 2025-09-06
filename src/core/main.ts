@@ -183,11 +183,13 @@ async function createWindow(): Promise<BrowserWindow> {
   regionManager.onUpdateRegion((region) => {
     board.setRegion(region);
     recognizer.setRegion(region);
+    preferencesManager.setPreference('region', region);
   });
   regionManager.onUpdateRegionStatus((value) => {
     win.webContents.send('update-region', value);
   });
   regionManager.setActive(preferencesManager.getPreference('actionRegion'));
+  regionManager.setRegion(preferencesManager.getPreference('region'));
   ipcMain.on('autoresponse-value', (_, value) => solver.setAutoResponse(value));
   ipcMain.on('autoscan-value', (_, value) => solver.setAutoScan(value));
   ipcMain.on('perspective-value', (_, value) => board.setPerspective(value));

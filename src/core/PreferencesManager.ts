@@ -17,7 +17,12 @@ class PreferencesManager {
   }
 
   getPreference<T>(name: Preference): T {
-    return JSON.parse(this.preferences[name]);
+    try {
+      return JSON.parse(this.preferences[name]);
+    } catch (e) {
+      console.log(e);
+      return defaultValues[name] as T;
+    }
   }
 
   saveToFile(path: string) {
