@@ -4,15 +4,13 @@ import { Chessboard } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import type { RegionStatus } from '../interface';
 import Gauge from './components/Gauge.tsx';
-import { useListSlider, Slider } from './components/Slider.tsx';
+import Slider from './components/Slider.tsx';
 import useCheckboxProps from './hooks/use-checkbox-props.ts';
+import useSliderProps from './hooks/use-slider-props.ts';
 import { sliders, defaultValues } from '../config.ts';
 
 function App() {
   const electron = window.electronAPI;
-  const [statusText, setStatusText] = useState('');
-  const [showSettings, setShowSettings] = useState(false);
-  const [isWhitePerspective, setIsWhitePerspective] = useState(defaultValues.isWhitePerspective);
   const autoResponseProps = useCheckboxProps({
     initialValue: defaultValues.autoResponse,
     sendValue: electron.autoResponseValue,
@@ -53,10 +51,31 @@ function App() {
     sendValue: electron.showNotationValue,
     onUpdateValue: electron.onUpdateShowNotation
   });
+  const durationProps = useSliderProps({
+    label: 'Analysis duration (ms)',
+    initialValue: defaultValues.analysisDuration,
+    list: sliders.analysisDurations,
+    sendValue: electron.durationValue,
+    onUpdateValue: electron.onUpdateDuration
+  });
+  const multiPVProps = useSliderProps({
+    label: 'Multiple lines',
+    initialValue: defaultValues.multiPV,
+    list: sliders.multiPVs,
+    sendValue: electron.multiPVValue,
+    onUpdateValue: electron.onUpdateMultiPV
+  });
+  const mouseProps = useSliderProps({
+    label: 'Mouse speed',
+    initialValue: defaultValues.mouseSpeed,
+    list: sliders.mouseSpeeds,
+    sendValue: electron.mouseSpeedValue,
+    onUpdateValue: electron.onUpdateMouseSpeed
+  });
+  const [statusText, setStatusText] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
+  const [isWhitePerspective, setIsWhitePerspective] = useState(defaultValues.isWhitePerspective);
   const [regionStatus, setRegionStatus] = useState<RegionStatus>('none');
-  const [analysisDuration, setAnalysisDuration] = useState(defaultValues.analysisDuration);
-  const [multiPV, setMultiPV] = useState(defaultValues.multiPV);
-  const [mouseSpeed, setMouseSpeed] = useState(defaultValues.mouseSpeed);
   const [positionFEN, setPositionFEN] = useState('');
   const [evaluation, setEvaluation] = useState('cp 0');
   const [arrows, setArrows] = useState<Arrow[]>([]);
@@ -65,9 +84,6 @@ function App() {
     electron.onUpdateStatus(setStatusText);
     electron.onUpdatePerspective(setIsWhitePerspective);
     electron.onUpdateRegion(setRegionStatus);
-    electron.onUpdateDuration(setAnalysisDuration);
-    electron.onUpdateMultiPV(setMultiPV);
-    electron.onUpdateMouseSpeed(setMouseSpeed);
     electron.onUpdatePosition(setPositionFEN);
     electron.onEvaluation(setEvaluation);
     electron.onHighlightMoves((evalMoves) => {
@@ -105,27 +121,6 @@ function App() {
     });
     electron.onPrincipalVariations(setPrincipalVariations);
   }, [electron]);
-  const durationProps = useListSlider({
-    label: 'Analysis duration (ms)',
-    value: analysisDuration,
-    list: sliders.analysisDurations,
-    callback: (value) => electron.durationValue(value),
-    noState: true
-  });
-  const multiPVProps = useListSlider({
-    label: 'Multiple lines',
-    value: multiPV,
-    list: sliders.multiPVs,
-    callback: (value) => electron.multiPVValue(value),
-    noState: true
-  });
-  const mouseProps = useListSlider({
-    label: 'Mouse speed',
-    value: mouseSpeed,
-    list: sliders.mouseSpeeds,
-    callback: (value) => electron.mouseSpeedValue(value),
-    noState: true
-  });
   const pvComponents = [];
   for (const variation of principalVariations) {
     pvComponents.push(<p className='variation'>{variation}</p>);

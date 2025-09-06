@@ -1,14 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
-import { useState } from 'react';
-
-interface SliderHookProps {
-  label: string;
-  value: number;
-  list: number[];
-  callback: (i: number) => void;
-  noState?: boolean;
-}
-
 interface SliderProps {
   label: string;
   value: number;
@@ -20,24 +9,7 @@ interface SliderProps {
   disabled?: boolean;
 }
 
-export function useListSlider(props: SliderHookProps): SliderProps {
-  let [value, setValue] = useState(props.value);
-  if (props.noState) {
-    value = props.value;
-    setValue = () => {};
-  }
-  return {
-    label: props.label,
-    value: props.list.indexOf(value),
-    setValue: (value) => {setValue(value); props.callback(value)},
-    min: 0,
-    max: props.list.length-1,
-    step: 1,
-    map: (x) => props.list[x]
-  };
-}
-
-export function Slider({ label, value, setValue, min, max, step, map, disabled }: SliderProps) {
+function Slider({ label, value, setValue, min, max, step, map, disabled }: SliderProps) {
   map = map || ((x) => x);
   return (
     <div className='flex-center'>
@@ -54,3 +26,5 @@ export function Slider({ label, value, setValue, min, max, step, map, disabled }
     </div>
   );
 }
+
+export default Slider;
