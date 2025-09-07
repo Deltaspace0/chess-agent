@@ -32,6 +32,11 @@ function App() {
     initialValue: defaultValues.actionRegion,
     preferenceName: 'actionRegion'
   });
+  const saveConfigToFileProps = useCheckboxProps({
+    label: 'Save config on exit',
+    initialValue: defaultValues.saveConfigToFile,
+    preferenceName: 'saveConfigToFile'
+  });
   const showEvalBarProps = useCheckboxProps({
     label: 'Show eval bar',
     initialValue: defaultValues.showEvalBar,
@@ -182,6 +187,7 @@ function App() {
                 <Checkbox {...autoScanProps}/>
                 <Checkbox {...actionRegionProps}/>
                 <Checkbox {...draggingModeProps}/>
+                <Checkbox {...saveConfigToFileProps}/>
               </div>
               <div className='flex-column'>
                 <Checkbox {...showEvalBarProps}/>

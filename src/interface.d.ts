@@ -17,6 +17,7 @@ interface Preferences {
   multiPV: number;
   mouseSpeed: number;
   region: Region | null;
+  saveConfigToFile: boolean;
 }
 
 interface BoardState {

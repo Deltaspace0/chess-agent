@@ -55,7 +55,9 @@ function getRegionSelector(position: string): (region: Region) => Region {
   await app.whenReady();
   const win = await createWindow();
   app.on('window-all-closed', () => {
-    preferencesManager.saveToFile('config.json');
+    if (preferencesManager.getPreference('saveConfigToFile')) {
+      preferencesManager.saveToFile('config.json');
+    }
     app.quit();
   });
   const updateStatus = (status: string) => {

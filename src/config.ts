@@ -19,7 +19,8 @@ export const defaultValues: Preferences = {
   analysisDuration: 1000,
   multiPV: 1,
   mouseSpeed: 3000,
-  region: null
+  region: null,
+  saveConfigToFile: false
 };
 
 export const actionRegions = {
