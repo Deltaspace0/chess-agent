@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
+import usePreference from './use-preference.ts';
 import type { Preference, Preferences } from '../../interface';
-import { defaultValues } from '../../config.ts';
 
 type NumberPreference = {
   [T in Preference]: Preferences[T] extends number ? T : never;
@@ -13,16 +12,11 @@ interface SliderHookOptions {
 }
 
 function useSliderProps({ label, list, preferenceName }: SliderHookOptions) {
-  const [value, setValue] = useState(defaultValues[preferenceName]);
-  useEffect(() => {
-    window.electronAPI.onUpdatePreference(preferenceName, setValue);
-  }, [preferenceName]);
+  const [value, sendValue] = usePreference(preferenceName);
   return {
     label,
     value: list.indexOf(value),
-    setValue: (value: number) => {
-      window.electronAPI.preferenceValue(preferenceName, value);
-    },
+    setValue: sendValue,
     min: 0,
     max: list.length-1,
     step: 1,

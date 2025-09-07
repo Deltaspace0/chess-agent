@@ -7,8 +7,9 @@ import Checkbox from './components/Checkbox.tsx';
 import Gauge from './components/Gauge.tsx';
 import Slider from './components/Slider.tsx';
 import useCheckboxProps from './hooks/use-checkbox-props.ts';
+import usePreference from './hooks/use-preference.ts';
 import useSliderProps from './hooks/use-slider-props.ts';
-import { sliders, defaultValues } from '../config.ts';
+import { sliders } from '../config.ts';
 
 function App() {
   const electron = window.electronAPI;
@@ -63,16 +64,15 @@ function App() {
     list: sliders.mouseSpeeds,
     preferenceName: 'mouseSpeed'
   });
+  const [isWhitePerspective, sendPerspective] = usePreference('isWhitePerspective');
   const [statusText, setStatusText] = useState('');
   const [showSettings, setShowSettings] = useState(false);
-  const [isWhitePerspective, setIsWhitePerspective] = useState(defaultValues.isWhitePerspective);
   const [regionStatus, setRegionStatus] = useState<RegionStatus>('none');
   const [positionFEN, setPositionFEN] = useState('');
   const [evaluation, setEvaluation] = useState('cp 0');
   const [arrows, setArrows] = useState<Arrow[]>([]);
   const [principalVariations, setPrincipalVariations] = useState<string[]>([]);
   useEffect(() => {
-    electron.onUpdatePreference('isWhitePerspective', setIsWhitePerspective);
     electron.onUpdateStatus(setStatusText);
     electron.onUpdateRegion(setRegionStatus);
     electron.onUpdatePosition(setPositionFEN);
@@ -200,9 +200,8 @@ function App() {
                   Scan move
               </button>
               <button onClick={() => electron.resetPosition()}>Reset</button>
-              <button onClick={() => {
-                electron.preferenceValue('isWhitePerspective', !isWhitePerspective);}}>
-                  {isWhitePerspective ? 'White' : 'Black'} (flip)
+              <button onClick={() => sendPerspective(!isWhitePerspective)}>
+                {isWhitePerspective ? 'White' : 'Black'} (flip)
               </button>
             </div>
             <div className='flex-row'>

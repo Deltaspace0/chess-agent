@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
+import usePreference from './use-preference.ts';
 import type { Preference, Preferences } from '../../interface';
-import { defaultValues } from '../../config.ts';
 
 type BooleanPreference = {
   [T in Preference]: Preferences[T] extends boolean ? T : never;
@@ -12,17 +11,12 @@ interface CheckboxHookOptions {
 }
 
 function useCheckboxProps({ label, preferenceName }: CheckboxHookOptions) {
-  const [value, setValue] = useState(defaultValues[preferenceName]);
-  useEffect(() => {
-    window.electronAPI.onUpdatePreference(preferenceName, setValue);
-  }, [preferenceName]);
+  const [value, sendValue] = usePreference(preferenceName);
   return {
     label,
     type: 'checkbox',
     checked: value,
-    onChange: (value: boolean) => {
-      window.electronAPI.preferenceValue(preferenceName, value);
-    }
+    onChange: sendValue
   };
 }
 
