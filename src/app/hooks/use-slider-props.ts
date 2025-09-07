@@ -1,28 +1,32 @@
 import { useEffect, useState } from 'react';
-import type { Preference } from '../../interface';
+import type { Preference, Preferences } from '../../interface';
+import { defaultValues } from '../../config.ts';
+
+type NumberPreference = {
+  [T in Preference]: Preferences[T] extends number ? T : never;
+}[Preference];
 
 interface SliderHookOptions {
   label: string;
-  initialValue: number;
   list: number[];
-  preferenceName: Preference;
+  preferenceName: NumberPreference;
 }
 
-function useSliderProps(options: SliderHookOptions) {
-  const [value, setValue] = useState(options.initialValue);
+function useSliderProps({ label, list, preferenceName }: SliderHookOptions) {
+  const [value, setValue] = useState(defaultValues[preferenceName]);
   useEffect(() => {
-    window.electronAPI.onUpdatePreference(options.preferenceName, setValue);
-  }, [options]);
+    window.electronAPI.onUpdatePreference(preferenceName, setValue);
+  }, [preferenceName]);
   return {
-    label: options.label,
-    value: options.list.indexOf(value),
+    label,
+    value: list.indexOf(value),
     setValue: (value: number) => {
-      window.electronAPI.preferenceValue(options.preferenceName, value);
+      window.electronAPI.preferenceValue(preferenceName, value);
     },
     min: 0,
-    max: options.list.length-1,
+    max: list.length-1,
     step: 1,
-    map: (x: number) => options.list[x]
+    map: (x: number) => list[x]
   };
 }
 

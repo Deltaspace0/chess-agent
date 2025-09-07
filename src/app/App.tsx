@@ -14,64 +14,52 @@ function App() {
   const electron = window.electronAPI;
   const autoResponseProps = useCheckboxProps({
     label: 'Auto response',
-    initialValue: defaultValues.autoResponse,
     preferenceName: 'autoResponse'
   });
   const autoScanProps = useCheckboxProps({
     label: 'Auto scan',
-    initialValue: defaultValues.autoScan,
     preferenceName: 'autoScan'
   });
   const draggingModeProps = useCheckboxProps({
     label: 'Dragging mode',
-    initialValue: defaultValues.draggingMode,
     preferenceName: 'draggingMode'
   });
   const actionRegionProps = useCheckboxProps({
     label: 'Invisible action regions',
-    initialValue: defaultValues.actionRegion,
     preferenceName: 'actionRegion'
   });
   const saveConfigToFileProps = useCheckboxProps({
     label: 'Save config on exit',
-    initialValue: defaultValues.saveConfigToFile,
     preferenceName: 'saveConfigToFile'
   });
   const showEvalBarProps = useCheckboxProps({
     label: 'Show eval bar',
-    initialValue: defaultValues.showEvalBar,
     preferenceName: 'showEvalBar'
   });
   const showArrowsProps = useCheckboxProps({
     label: 'Show arrows',
-    initialValue: defaultValues.showArrows,
     preferenceName: 'showArrows'
   });
   const showLinesProps = useCheckboxProps({
     label: 'Show lines',
-    initialValue: defaultValues.showLines,
     preferenceName: 'showLines'
   });
   const showNotationProps = useCheckboxProps({
     label: 'Show notation',
-    initialValue: defaultValues.showNotation,
     preferenceName: 'showNotation'
   });
   const durationProps = useSliderProps({
     label: 'Analysis duration (ms)',
-    initialValue: defaultValues.analysisDuration,
     list: sliders.analysisDurations,
     preferenceName: 'analysisDuration'
   });
   const multiPVProps = useSliderProps({
     label: 'Multiple lines',
-    initialValue: defaultValues.multiPV,
     list: sliders.multiPVs,
     preferenceName: 'multiPV'
   });
   const mouseProps = useSliderProps({
     label: 'Mouse speed',
-    initialValue: defaultValues.mouseSpeed,
     list: sliders.mouseSpeeds,
     preferenceName: 'mouseSpeed'
   });
