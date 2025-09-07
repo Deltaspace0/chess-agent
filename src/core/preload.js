@@ -6,44 +6,30 @@ function addListener(channel) {
 }
 
 function sendValue(channel) {
-  return (value) => ipcRenderer.send(channel, value);
+  return (...value) => ipcRenderer.send(channel, ...value);
 }
 
 function invoke(channel) {
   return () => ipcRenderer.invoke(channel);
 }
 
+const preferenceListeners = {};
+ipcRenderer.on('update-preference', (_, name, value) => {
+  if (name in preferenceListeners) {
+    preferenceListeners[name](value);
+  }
+});
 contextBridge.exposeInMainWorld('electronAPI', {
+  onUpdatePreference: (name, listener) => {
+    preferenceListeners[name] = listener;
+  },
   onUpdateStatus: addListener('update-status'),
-  onUpdateAutoResponse: addListener('update-autoresponse'),
-  onUpdateAutoScan: addListener('update-autoscan'),
-  onUpdatePerspective: addListener('update-perspective'),
-  onUpdateDragging: addListener('update-dragging'),
-  onUpdateActionRegion: addListener('update-actionregion'),
-  onUpdateShowEvalBar: addListener('update-show-evalbar'),
-  onUpdateShowArrows: addListener('update-show-arrows'),
-  onUpdateShowLines: addListener('update-show-lines'),
-  onUpdateShowNotation: addListener('update-show-notation'),
   onUpdateRegion: addListener('update-region'),
-  onUpdateDuration: addListener('update-duration'),
-  onUpdateMultiPV: addListener('update-multipv'),
-  onUpdateMouseSpeed: addListener('update-mousespeed'),
   onUpdatePosition: addListener('update-position'),
   onEvaluation: addListener('evaluation'),
   onHighlightMoves: addListener('highlight-moves'),
   onPrincipalVariations: addListener('principal-variations'),
-  autoResponseValue: sendValue('autoresponse-value'),
-  autoScanValue: sendValue('autoscan-value'),
-  perspectiveValue: sendValue('perspective-value'),
-  draggingValue: sendValue('dragging-value'),
-  actionRegionValue: sendValue('actionregion-value'),
-  showEvalBarValue: sendValue('show-evalbar-value'),
-  showArrowsValue: sendValue('show-arrows-value'),
-  showLinesValue: sendValue('show-lines-value'),
-  showNotationValue: sendValue('show-notation-value'),
-  durationValue: sendValue('duration-value'),
-  multiPVValue: sendValue('multipv-value'),
-  mouseSpeedValue: sendValue('mousespeed-value'),
+  preferenceValue: sendValue('preference-value'),
   pieceDropped: sendValue('piece-dropped'),
   newRegion: invoke('new-region'),
   showRegion: invoke('show-region'),

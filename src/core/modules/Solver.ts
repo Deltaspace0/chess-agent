@@ -4,28 +4,30 @@ import Recognizer from './Recognizer.ts';
 import StatusNotifier from './StatusNotifier.ts';
 import { defaultValues } from '../../config.ts';
 
-interface SolverProps {
+interface SolverOptions {
   engine: Engine;
   game: Game;
   recognizer: Recognizer;
+  autoResponse?: boolean;
+  autoScan?: boolean;
 }
 
 class Solver extends StatusNotifier {
   private engine: Engine;
   private game: Game;
   private recognizer: Recognizer;
-  private autoResponse: boolean = defaultValues.autoResponse;
-  private autoScan: boolean = defaultValues.autoScan;
+  private autoResponse: boolean;
+  private autoScan: boolean;
   private stopBestMove: (() => void) | null = null;
   private bestMoveCallback: (value: string) => void = () => {};
-  private autoResponseCallback: (value: boolean) => void = () => {};
-  private autoScanCallback: (value: boolean) => void = () => {};
 
-  constructor({ engine, game, recognizer }: SolverProps) {
+  constructor(options: SolverOptions) {
     super();
-    this.engine = engine;
-    this.game = game;
-    this.recognizer = recognizer;
+    this.engine = options.engine;
+    this.game = options.game;
+    this.recognizer = options.recognizer;
+    this.autoResponse = options.autoResponse ?? defaultValues.autoResponse;
+    this.autoScan = options.autoScan ?? defaultValues.autoScan;
   }
 
   processMove(move: string, scanned?: boolean) {
@@ -160,24 +162,14 @@ class Solver extends StatusNotifier {
 
   setAutoResponse(value: boolean) {
     this.autoResponse = value;
-    this.autoResponseCallback(value);
     const enabledString = value ? 'enabled' : 'disabled';
-    console.log(`Autoresponse is ${enabledString}`);
-  }
-
-  toggleAutoResponse() {
-    this.setAutoResponse(!this.autoResponse);
+    this.statusCallback(`Autoresponse is ${enabledString}`);
   }
 
   setAutoScan(value: boolean) {
     this.autoScan = value;
-    this.autoScanCallback(value);
     const enabledString = value ? 'enabled' : 'disabled';
-    console.log(`Autoscan is ${enabledString}`);
-  }
-
-  toggleAutoScan() {
-    this.setAutoScan(!this.autoScan);
+    this.statusCallback(`Autoscan is ${enabledString}`);
   }
 
   resetPosition() {
@@ -188,14 +180,6 @@ class Solver extends StatusNotifier {
 
   onBestMove(callback: (value: string) => void) {
     this.bestMoveCallback = callback;
-  }
-
-  onUpdateAutoResponse(callback: (value: boolean) => void) {
-    this.autoResponseCallback = callback;
-  }
-
-  onUpdateAutoScan(callback: (value: boolean) => void) {
-    this.autoScanCallback = callback;
   }
 }
 

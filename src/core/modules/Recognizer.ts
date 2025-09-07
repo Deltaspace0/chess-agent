@@ -1,6 +1,11 @@
 import { screen, sleep, Region } from '@nut-tree-fork/nut-js';
 import type { Color, Piece, PieceSymbol } from 'chess.js';
-import type { BoardState } from '../interfaces.ts';
+import type { BoardState } from '../../interface';
+import { defaultValues } from '../../config.ts';
+
+interface RecognizerOptions {
+  region?: Region | null;
+}
 
 function getBufferSquare(bufferRows: Buffer[], region: Region): Buffer[] {
   const bufferSquare: Buffer[] = [];
@@ -36,17 +41,15 @@ function compareHashes(hash1: string, hash2: string): number {
 }
 
 class Recognizer {
-  private region: Region | null = null;
+  private region: Region | null;
   private scanning: boolean = false;
   private boardHashes: string[][] = [];
   private pieceHashes: Record<string, string> = {};
   private whiteGrid: Buffer[] = [];
   private blackGrid: Buffer[] = [];
 
-  constructor(region?: Region) {
-    if (region) {
-      this.region = region;
-    }
+  constructor(options?: RecognizerOptions) {
+    this.region = options?.region ?? defaultValues.region;
   }
 
   private async grabBoard(): Promise<Buffer[][][]> {
@@ -152,10 +155,6 @@ class Recognizer {
       }
     }
     return minErrors;
-  }
-
-  setRegion(region: Region | null) {
-    this.region = region;
   }
 
   async load() {
@@ -305,6 +304,10 @@ class Recognizer {
       }
     }
     return probableMove;
+  }
+
+  setRegion(region: Region | null) {
+    this.region = region;
   }
 }
 

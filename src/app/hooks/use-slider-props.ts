@@ -1,22 +1,24 @@
 import { useEffect, useState } from 'react';
+import type { Preference } from '../../interface';
 
 interface SliderHookOptions {
   label: string;
   initialValue: number;
   list: number[];
-  sendValue: (value: number) => void;
-  onUpdateValue: (callback: (value: number) => void) => void;
+  preferenceName: Preference;
 }
 
 function useSliderProps(options: SliderHookOptions) {
   const [value, setValue] = useState(options.initialValue);
   useEffect(() => {
-    options.onUpdateValue(setValue);
+    window.electronAPI.onUpdatePreference(options.preferenceName, setValue);
   }, [options]);
   return {
     label: options.label,
     value: options.list.indexOf(value),
-    setValue: (value: number) => options.sendValue(value),
+    setValue: (value: number) => {
+      window.electronAPI.preferenceValue(options.preferenceName, value);
+    },
     min: 0,
     max: options.list.length-1,
     step: 1,

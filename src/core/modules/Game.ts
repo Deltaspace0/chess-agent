@@ -1,25 +1,25 @@
 import { Chess } from 'chess.js';
 import type { Color, Piece, Square } from 'chess.js';
-import type { BoardState, PerspectiveProvider } from '../interfaces.ts';
+import type { BoardState } from '../../interface';
 import { coordsToSquare, squareToCoords } from '../util.ts';
+import { defaultValues } from '../../config.ts';
+
+interface GameOptions {
+  perspective?: boolean;
+}
 
 class Game {
   private chess: Chess;
-  private perspectiveProvider: PerspectiveProvider | null = null;
+  private perspective: boolean;
   private positionCallback = () => {};
 
-  constructor(perspectiveProvider?: PerspectiveProvider) {
+  constructor(options?: GameOptions) {
     this.chess = new Chess();
-    if (perspectiveProvider) {
-      this.perspectiveProvider = perspectiveProvider;
-    }
+    this.perspective = options?.perspective ?? defaultValues.isWhitePerspective;
   }
 
   private getPerspectiveColor(): Color {
-    if (!this.perspectiveProvider) {
-      throw new Error('No perspective provider');
-    }
-    return 'bw'[Number(this.perspectiveProvider.getPerspective())] as Color;
+    return 'bw'[Number(this.perspective)] as Color;
   }
 
   private setTurn(color: Color): boolean {
@@ -102,27 +102,23 @@ class Game {
 
   printBoard() {
     const ascii = this.chess.ascii()+'  ';
-    if (!(this.perspectiveProvider?.getPerspective())) {
-      console.log(ascii.split('').reverse().join(''));
+    if (this.perspective) {
+      console.log(ascii);
       return;
     }
-    console.log(ascii);
+    console.log(ascii.split('').reverse().join(''));
   }
 
   getNextBoardStates(): BoardState[] {
-    if (!this.perspectiveProvider) {
-      throw new Error('No perspective provider');
-    }
     const boardStates = [];
     const moves = this.chess.moves({ verbose: true }).map((x) => x.lan);
-    const isWhite = this.perspectiveProvider.getPerspective();
     for (const move of moves) {
       this.chess.move(move);
       boardStates.push({
         move: move,
         squares: [
-          squareToCoords(move.substring(0, 2), isWhite),
-          squareToCoords(move.substring(2), isWhite)
+          squareToCoords(move.substring(0, 2), this.perspective),
+          squareToCoords(move.substring(2), this.perspective)
         ],
         grid: this.chess.board()
       });
@@ -137,13 +133,9 @@ class Game {
   }
 
   putPieces(pieces: [Piece, number, number][]) {
-    if (!this.perspectiveProvider) {
-      throw new Error('No perspective provider');
-    }
     this.chess.clear();
-    const isWhite = this.perspectiveProvider.getPerspective();
     for (const [piece, row, col] of pieces) {
-      const square = coordsToSquare([row, col], isWhite);
+      const square = coordsToSquare([row, col], this.perspective);
       const result = this.chess.put(piece, square as Square);
       if (!result) {
         const { type, color } = piece;
@@ -161,6 +153,10 @@ class Game {
 
   onUpdatePosition(callback: (fen: string) => void) {
     this.positionCallback = () => callback(this.chess.fen());
+  }
+
+  setPerspective(perspective: boolean) {
+    this.perspective = perspective;
   }
 }
 

@@ -1,43 +1,17 @@
 import { mouse, screen, Point, Region } from '@nut-tree-fork/nut-js';
 import mouseEvents from 'global-mouse-events';
 import StatusNotifier from './StatusNotifier.ts';
-
-interface ActionRegion {
-  callback: () => Promise<void> | void;
-  regionSelector: (region: Region) => Region;
-}
-
-type RegionStatus = 'none' | 'exist' | 'selecting';
+import type { RegionStatus } from '../../interface';
 
 class RegionManager extends StatusNotifier {
   private region: Region | null = null;
   private regionStatus: RegionStatus = 'none';
-  private actionRegions: ActionRegion[] = [];
-  private active: boolean = false;
   private stopDetection: (() => void) = () => {};
-  private actionCallback: () => void = () => this.performAction();
-  private activeCallback: (value: boolean) => void = () => {};
   private regionCallback: (region: Region | null) => void = () => {};
   private regionStatusCallback: (value: RegionStatus) => void = () => {};
 
-  constructor(region?: Region) {
+  constructor() {
     super();
-    if (region) {
-      this.region = region;
-    }
-  }
-
-  private async performAction() {
-    if (this.region === null || this.regionStatus === 'selecting') {
-      return;
-    }
-    const { x, y } = await mouse.getPosition();
-    for (const { callback, regionSelector } of this.actionRegions) {
-      const { left, top, width, height } = regionSelector(this.region);
-      if (x >= left && y >= top && x <= left+width && y <= top+height) {
-        callback();
-      }
-    }
   }
 
   private async detectRegion(): Promise<Region | null> {
@@ -72,12 +46,6 @@ class RegionManager extends StatusNotifier {
     this.regionStatusCallback(value);
   }
 
-  setRegion(region: Region | null) {
-    this.region = region;
-    this.setRegionStatus(region ? 'exist' : 'none');
-    this.regionCallback(region);
-  }
-
   async selectNewRegion(): Promise<Region | null> {
     if (this.regionStatus === 'selecting') {
       this.stopDetection();
@@ -103,40 +71,16 @@ class RegionManager extends StatusNotifier {
     return region;
   }
 
+  setRegion(region: Region | null) {
+    this.region = region;
+    this.setRegionStatus(region ? 'exist' : 'none');
+    this.regionCallback(region);
+  }
+
   async showRegion() {
     if (this.region) {
       return screen.highlight(this.region);
     }
-  }
-
-  removeRegion() {
-    this.setRegionStatus('none');
-    this.setRegion(null);
-  }
-
-  setActive(value: boolean) {
-    if (this.active === value) {
-      return;
-    }
-    this.active = value;
-    if (value) {
-      mouseEvents.on('mouseup', this.actionCallback);
-    } else {
-      mouseEvents.off('mouseup', this.actionCallback);
-    }
-    this.activeCallback(value);
-  }
-
-  isActive(): boolean {
-    return this.active;
-  }
-
-  addActionRegion(actionRegion: ActionRegion) {
-    this.actionRegions.push(actionRegion);
-  }
-
-  onUpdateActive(callback: (value: boolean) => void) {
-    this.activeCallback = callback;
   }
 
   onUpdateRegion(callback: (region: Region | null) => void) {

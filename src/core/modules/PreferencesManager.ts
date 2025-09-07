@@ -1,27 +1,44 @@
 import fs from 'fs';
+import type { Preference, Preferences, PreferenceListeners } from '../../interface';
 import { defaultValues } from '../../config.ts';
 
-type Preference = keyof typeof defaultValues;
-
 class PreferencesManager {
-  private preferences: Record<string, unknown> = {};
+  private preferences: Preferences;
+  private generalListener: typeof this.setPreference = () => {};
+  private listeners: Partial<PreferenceListeners> = {};
 
   constructor() {
-    for (const key in defaultValues) {
-      this.preferences[key] = defaultValues[key as Preference];
+    this.preferences = {...defaultValues};
+  }
+
+  setPreference<T extends Preference>(name: T, value: Preferences[T]) {
+    this.preferences[name] = value;
+    this.generalListener(name, value);
+    this.listeners[name]?.(value);
+  }
+
+  getPreference<T extends Preference>(name: T): Preferences[T] {
+    try {
+      return this.preferences[name];
+    } catch (e) {
+      console.log(e);
+      return defaultValues[name];
     }
   }
 
-  setPreference<T>(name: Preference, value: T) {
-    this.preferences[name] = value;
+  onUpdate(listener: typeof this.generalListener) {
+    this.generalListener = listener;
+    for (const name of Object.keys(this.preferences) as Preference[]) {
+      listener(name, this.preferences[name]);
+    }
   }
 
-  getPreference<T>(name: Preference): T {
+  onUpdatePreference<T extends Preference>(name: T, listener: PreferenceListeners[T]) {
+    this.listeners[name] = listener;
     try {
-      return this.preferences[name] as T;
+      listener(this.preferences[name]);
     } catch (e) {
       console.log(e);
-      return defaultValues[name] as T;
     }
   }
 

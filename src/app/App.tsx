@@ -15,71 +15,60 @@ function App() {
   const autoResponseProps = useCheckboxProps({
     label: 'Auto response',
     initialValue: defaultValues.autoResponse,
-    sendValue: electron.autoResponseValue,
-    onUpdateValue: electron.onUpdateAutoResponse
+    preferenceName: 'autoResponse'
   });
   const autoScanProps = useCheckboxProps({
     label: 'Auto scan',
     initialValue: defaultValues.autoScan,
-    sendValue: electron.autoScanValue,
-    onUpdateValue: electron.onUpdateAutoScan
+    preferenceName: 'autoScan'
   });
   const draggingModeProps = useCheckboxProps({
     label: 'Dragging mode',
     initialValue: defaultValues.draggingMode,
-    sendValue: electron.draggingValue,
-    onUpdateValue: electron.onUpdateDragging
+    preferenceName: 'draggingMode'
   });
   const actionRegionProps = useCheckboxProps({
     label: 'Invisible action regions',
     initialValue: defaultValues.actionRegion,
-    sendValue: electron.actionRegionValue,
-    onUpdateValue: electron.onUpdateActionRegion
+    preferenceName: 'actionRegion'
   });
   const showEvalBarProps = useCheckboxProps({
     label: 'Show eval bar',
     initialValue: defaultValues.showEvalBar,
-    sendValue: electron.showEvalBarValue,
-    onUpdateValue: electron.onUpdateShowEvalBar
+    preferenceName: 'showEvalBar'
   });
   const showArrowsProps = useCheckboxProps({
     label: 'Show arrows',
     initialValue: defaultValues.showArrows,
-    sendValue: electron.showArrowsValue,
-    onUpdateValue: electron.onUpdateShowArrows
+    preferenceName: 'showArrows'
   });
   const showLinesProps = useCheckboxProps({
     label: 'Show lines',
     initialValue: defaultValues.showLines,
-    sendValue: electron.showLinesValue,
-    onUpdateValue: electron.onUpdateShowLines
+    preferenceName: 'showLines'
   });
   const showNotationProps = useCheckboxProps({
     label: 'Show notation',
     initialValue: defaultValues.showNotation,
-    sendValue: electron.showNotationValue,
-    onUpdateValue: electron.onUpdateShowNotation
+    preferenceName: 'showNotation'
   });
   const durationProps = useSliderProps({
     label: 'Analysis duration (ms)',
     initialValue: defaultValues.analysisDuration,
     list: sliders.analysisDurations,
-    sendValue: electron.durationValue,
-    onUpdateValue: electron.onUpdateDuration
+    preferenceName: 'analysisDuration'
   });
   const multiPVProps = useSliderProps({
     label: 'Multiple lines',
     initialValue: defaultValues.multiPV,
     list: sliders.multiPVs,
-    sendValue: electron.multiPVValue,
-    onUpdateValue: electron.onUpdateMultiPV
+    preferenceName: 'multiPV'
   });
   const mouseProps = useSliderProps({
     label: 'Mouse speed',
     initialValue: defaultValues.mouseSpeed,
     list: sliders.mouseSpeeds,
-    sendValue: electron.mouseSpeedValue,
-    onUpdateValue: electron.onUpdateMouseSpeed
+    preferenceName: 'mouseSpeed'
   });
   const [statusText, setStatusText] = useState('');
   const [showSettings, setShowSettings] = useState(false);
@@ -90,8 +79,8 @@ function App() {
   const [arrows, setArrows] = useState<Arrow[]>([]);
   const [principalVariations, setPrincipalVariations] = useState<string[]>([]);
   useEffect(() => {
+    electron.onUpdatePreference('isWhitePerspective', setIsWhitePerspective);
     electron.onUpdateStatus(setStatusText);
-    electron.onUpdatePerspective(setIsWhitePerspective);
     electron.onUpdateRegion(setRegionStatus);
     electron.onUpdatePosition(setPositionFEN);
     electron.onEvaluation(setEvaluation);
@@ -217,8 +206,9 @@ function App() {
                   Scan move
               </button>
               <button onClick={() => electron.resetPosition()}>Reset</button>
-              <button onClick={() => electron.perspectiveValue(!isWhitePerspective)}>
-                {isWhitePerspective ? 'White' : 'Black'} (flip)
+              <button onClick={() => {
+                electron.preferenceValue('isWhitePerspective', !isWhitePerspective);}}>
+                  {isWhitePerspective ? 'White' : 'Black'} (flip)
               </button>
             </div>
             <div className='flex-row'>

@@ -1,5 +1,5 @@
 import Worker from 'web-worker';
-import { sliders, defaultValues } from '../../config.ts';
+import { defaultValues } from '../../config.ts';
 
 class Engine {
   private engine: Worker;
@@ -16,10 +16,7 @@ class Engine {
   private sendingPrincipalMoves: boolean = false;
   private principalMovesCallback: (value: string[]) => void = () => {};
   private bestMoveCallback: (value: string) => void = () => {};
-  private ponderMoveCallback: (value: string) => void = () => {};
   private evaluationCallback: (value: string) => void = () => {};
-  private durationCallback: (value: number) => void = () => {};
-  private multiPVCallback: (value: number) => void = () => {};
 
   constructor() {
     this.engine = new Worker(new URL('../stockfish.js', import.meta.url), { type: 'module' });
@@ -44,8 +41,10 @@ class Engine {
         if (this.needSearch) {
           this.search();
         } else {
-          this.setBestMove(words[words.indexOf('bestmove')+1]);
-          this.setPonderMove(words[words.indexOf('ponder')+1]);
+          const move = words[words.indexOf('bestmove')+1];
+          this.bestMove = move;
+          this.ponderMove = words[words.indexOf('ponder')+1];
+          this.bestMoveCallback(move);
         }
       }
     });
@@ -69,16 +68,6 @@ class Engine {
         this.sendingPrincipalMoves = false;
       }, 50);
     }
-  }
-
-  private setBestMove(value: string) {
-    this.bestMove = value;
-    this.bestMoveCallback(value);
-  }
-
-  private setPonderMove(value: string) {
-    this.ponderMove = value;
-    this.ponderMoveCallback(value);
   }
 
   private setEvaluation(value: string) {
@@ -127,26 +116,13 @@ class Engine {
     return this.moves.join(' ');
   }
 
-  getAnalysisDuration(): number {
-    return this.analysisDuration;
-  }
-
   setAnalysisDuration(value: number) {
     this.analysisDuration = value;
-    this.durationCallback(value);
-  }
-
-  switchAnalysisDuration(): number {
-    const index = sliders.analysisDurations.indexOf(this.analysisDuration);
-    const newIndex = (index+1)%sliders.analysisDurations.length;
-    this.setAnalysisDuration(sliders.analysisDurations[newIndex]);
-    return this.analysisDuration;
   }
 
   setMultiPV(value: number) {
     this.engine.postMessage(`setoption name MultiPV value ${value}`);
     this.analyzePosition();
-    this.multiPVCallback(value);
   }
 
   onPrincipalMoves(callback: (value: string[]) => void) {
@@ -157,20 +133,8 @@ class Engine {
     this.bestMoveCallback = callback;
   }
 
-  onPonderMove(callback: (value: string) => void) {
-    this.ponderMoveCallback = callback;
-  }
-
   onEvaluation(callback: (value: string) => void) {
     this.evaluationCallback = callback;
-  }
-
-  onUpdateDuration(callback: (value: number) => void) {
-    this.durationCallback = callback;
-  }
-
-  onUpdateMultiPV(callback: (value: number) => void) {
-    this.multiPVCallback = callback;
   }
 
   reset(fen?: string) {
