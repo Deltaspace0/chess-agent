@@ -16,6 +16,7 @@ async function createWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({
     width: 400,
     height: 600,
+    icon: 'images/chess-icon.png',
     resizable: false,
     webPreferences: {
       preload: path.join(path.dirname(fileURLToPath(import.meta.url)), 'preload.js')
