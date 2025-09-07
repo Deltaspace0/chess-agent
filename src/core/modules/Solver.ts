@@ -144,6 +144,7 @@ class Solver extends StatusNotifier {
   }
 
   skipMove() {
+    this.recognizer.stopScanning();
     const result = this.game.skipMove();
     if (!result) {
       this.statusCallback(`Failed to skip turn`);
@@ -154,6 +155,7 @@ class Solver extends StatusNotifier {
   }
 
   undoMove() {
+    this.recognizer.stopScanning();
     this.game.undo();
     const moves = this.engine.undo();
     console.log(`Moves: ${moves}`);
@@ -173,6 +175,7 @@ class Solver extends StatusNotifier {
   }
 
   resetPosition() {
+    this.recognizer.stopScanning();
     this.game.reset();
     this.engine.reset();
     this.statusCallback('Reset');
