@@ -151,7 +151,7 @@ class Solver extends StatusNotifier {
       return;
     }
     this.engine.reset(this.game.fen());
-    this.statusCallback(result === 'w' ? 'White' : 'Black');
+    this.statusCallback(`${result === 'w' ? 'White' : 'Black'} to move`);
   }
 
   undoMove() {
