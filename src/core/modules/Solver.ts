@@ -53,7 +53,14 @@ class Solver extends StatusNotifier {
       this.statusCallback('Game is over');
       this.recognizer.stopScanning();
     } else if (this.autoScan && !isMyTurn && squareCount !== -1) {
-      this.scanMove(squareCount);
+      (async () => {
+        while (true) {
+          const move = await this.scanMove(squareCount);
+          if (move !== null) {
+            break;
+          }
+        }
+      })();
     } else if (this.autoScan && !this.autoResponse && scanned) {
       this.scanMove(squareCount);
     } else if (this.autoResponse && isMyTurn) {
@@ -91,10 +98,10 @@ class Solver extends StatusNotifier {
     }
   }
 
-  async scanMove(squareCount?: number) {
+  async scanMove(squareCount?: number): Promise<string | null> {
     if (this.recognizer.isScanning()) {
       this.recognizer.stopScanning();
-      return;
+      return null;
     }
     this.statusCallback('Scanning move');
     let move;
@@ -103,7 +110,7 @@ class Solver extends StatusNotifier {
       move = await this.recognizer.scanMove(boardStates, squareCount);
       if (move === null) {
         this.statusCallback('No move found');
-        return;
+        return null;
       }
     } catch (e) {
       if (e instanceof Error && e.message === 'no hashes') {
@@ -112,10 +119,11 @@ class Solver extends StatusNotifier {
         console.log(e);
         this.statusCallback('Failed to scan move');
       }
-      return;
+      return null;
     }
     this.statusCallback(`Found move: ${move}`);
     this.processMove(move, true);
+    return move;
   }
 
   async recognizeBoard() {

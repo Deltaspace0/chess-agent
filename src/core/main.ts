@@ -118,7 +118,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
     regionSelector: getRegionSelector(actionRegions.skipMove)
   });
   actionRegionManager.addActionRegion({
-    callback: () => solver.scanMove(),
+    callback: () => void solver.scanMove(),
     regionSelector: getRegionSelector(actionRegions.scanMove)
   });
   actionRegionManager.addActionRegion({
