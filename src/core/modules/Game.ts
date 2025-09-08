@@ -126,12 +126,17 @@ class Game {
         move: move,
         squares: [
           squareToCoords(move.substring(0, 2), this.perspective),
-          squareToCoords(move.substring(2), this.perspective)
+          squareToCoords(move.substring(2, 4), this.perspective)
         ],
         grid: this.board()
       });
       this.chess.undo();
     }
+    boardStates.push({
+      move: null,
+      squares: [],
+      grid: this.board()
+    });
     return boardStates;
   }
 
