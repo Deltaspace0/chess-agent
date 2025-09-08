@@ -157,8 +157,8 @@ class Recognizer {
     return minErrors;
   }
 
-  async load() {
-    const pieces = [['rb1', 'nb1', 'bb1', 'qb1', 'kb1', 'bb2', 'nb2', 'rb2'],
+  async load(isWhitePerspective: boolean) {
+    const pieces1 = [['rb1', 'nb1', 'bb1', 'qb1', 'kb1', 'bb2', 'nb2', 'rb2'],
                     ['pb1', 'pb2', 'pb3', 'pb4', 'pb5', 'pb6', 'pb7', 'pb8'],
                     ['e11', 'e12', 'e13', 'e14', 'e15', 'e16', 'e17', 'e18'],
                     ['e21', 'e22', 'e23', 'e24', 'e25', 'e26', 'e27', 'e28'],
@@ -166,6 +166,9 @@ class Recognizer {
                     ['e41', 'e42', 'e43', 'e44', 'e45', 'e46', 'e47', 'e48'],
                     ['pw1', 'pw2', 'pw3', 'pw4', 'pw5', 'pw6', 'pw7', 'pw8'],
                     ['rw1', 'nw1', 'bw1', 'qw1', 'kw1', 'bw2', 'nw2', 'rw2']];
+    const pieces = isWhitePerspective
+      ? pieces1
+      : pieces1.reverse().map((x) => x.reverse());
     const grid = await this.grabBoard();
     this.whiteGrid = grid[2][2];
     this.blackGrid = grid[2][1];

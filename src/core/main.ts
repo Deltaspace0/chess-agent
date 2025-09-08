@@ -201,7 +201,8 @@ function getRegionSelector(position: string): (region: Region) => Region {
   ipcMain.handle('show-region', () => regionManager.showRegion());
   ipcMain.handle('remove-region', () => regionManager.setRegion(null));
   ipcMain.handle('load-hashes', () => {
-    recognizer.load().then(
+    const perspective = preferencesManager.getPreference('isWhitePerspective');
+    recognizer.load(perspective).then(
       () => updateStatus('Loaded piece hashes'),
       () => updateStatus('Failed to load piece hashes'));
   });
