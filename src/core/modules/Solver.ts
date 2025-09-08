@@ -30,7 +30,7 @@ class Solver extends StatusNotifier {
     this.autoScan = options.autoScan ?? defaultValues.autoScan;
   }
 
-  processMove(move: string, scanned?: boolean) {
+  processMove(move: string) {
     const piece = this.game.get(move.substring(0, 2));
     if (move[3] === '1' || move[3] === '8') {
       if (piece && piece.type === 'p' && move.length < 5) {
@@ -48,23 +48,15 @@ class Solver extends StatusNotifier {
     const moves = this.engine.sendMove(move, gameOver);
     console.log(`Moves: ${moves}`);
     this.game.printBoard();
-    const isMyTurn = this.game.isMyTurn();
     if (gameOver) {
       this.statusCallback('Game is over');
       this.recognizer.stopScanning();
-    } else if (this.autoScan && !isMyTurn && squareCount !== -1) {
-      (async () => {
-        while (true) {
-          const move = await this.scanMove(squareCount);
-          if (move !== null) {
-            break;
-          }
-        }
-      })();
-    } else if (this.autoScan && !this.autoResponse && scanned) {
-      this.scanMove(squareCount);
-    } else if (this.autoResponse && isMyTurn) {
+      return;
+    }
+    if (this.autoResponse && this.game.isMyTurn()) {
       this.playBestMove();
+    } else if (this.autoScan && squareCount !== -1) {
+      this.scanMove(squareCount);
     }
   }
 
@@ -94,7 +86,6 @@ class Solver extends StatusNotifier {
     if (move !== null) {
       await this.recognizer.rememberBoard();
       this.bestMoveCallback(move);
-      this.processMove(move);
     }
   }
 
@@ -122,7 +113,7 @@ class Solver extends StatusNotifier {
       return null;
     }
     this.statusCallback(`Found move: ${move}`);
-    this.processMove(move, true);
+    this.processMove(move);
     return move;
   }
 

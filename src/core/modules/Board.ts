@@ -11,6 +11,7 @@ interface BoardOptions {
 class Board {
   private region: Region | null;
   private perspective: boolean;
+  private downCallback: (() => Promise<void>) | null = null;
 
   constructor(options?: BoardOptions) {
     this.region = options?.region ?? defaultValues.region;
@@ -73,6 +74,20 @@ class Board {
       mouseEvents.on('mousedown', downCallback);
       mouseEvents.on('mouseup', upCallback);
     });
+  }
+
+  onMouseDownSquare(callback: (square: string) => void) {
+    if (this.downCallback) {
+      mouseEvents.off('mousedown', this.downCallback);
+    }
+    this.downCallback = async () => {
+      const point = await mouse.getPosition();
+      const square = this.getSquare(point);
+      if (square !== null) {
+        callback(square);
+      }
+    };
+    mouseEvents.on('mousedown', this.downCallback);
   }
 
   setRegion(region: Region | null) {

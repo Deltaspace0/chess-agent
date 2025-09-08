@@ -66,6 +66,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
     win.webContents.send('update-status', status);
   };
   const board = new Board();
+  board.onMouseDownSquare(() => recognizer.stopScanning());
   const engine = new Engine();
   engine.onPrincipalMoves((value) => {
     const moves = value.map((x) => x.split(' ').slice(0, 3));
