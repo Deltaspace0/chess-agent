@@ -6,9 +6,7 @@ import type { RegionStatus } from '../interface';
 import Checkbox from './components/Checkbox.tsx';
 import Gauge from './components/Gauge.tsx';
 import Slider from './components/Slider.tsx';
-import useCheckboxProps from './hooks/use-checkbox-props.ts';
-import usePreference from './hooks/use-preference.ts';
-import useSliderProps from './hooks/use-slider-props.ts';
+import { useCheckboxProps, useElectronValue, usePreference, useSliderProps } from './hooks.ts';
 import { sliders } from '../config.ts';
 
 function App() {
@@ -65,18 +63,14 @@ function App() {
     preferenceName: 'mouseSpeed'
   });
   const [isWhitePerspective, sendPerspective] = usePreference('isWhitePerspective');
-  const [statusText, setStatusText] = useState('');
-  const [showSettings, setShowSettings] = useState(false);
-  const [regionStatus, setRegionStatus] = useState<RegionStatus>('none');
-  const [positionFEN, setPositionFEN] = useState('');
-  const [evaluation, setEvaluation] = useState('cp 0');
+  const statusText = useElectronValue('', electron.onUpdateStatus);
+  const regionStatus = useElectronValue<RegionStatus>('none', electron.onUpdateRegion);
+  const positionFEN = useElectronValue('', electron.onUpdatePosition);
+  const evaluation = useElectronValue('cp 0', electron.onEvaluation);
+  const principalVariations = useElectronValue([], electron.onPrincipalVariations);
   const [arrows, setArrows] = useState<Arrow[]>([]);
-  const [principalVariations, setPrincipalVariations] = useState<string[]>([]);
+  const [showSettings, setShowSettings] = useState(false);
   useEffect(() => {
-    electron.onUpdateStatus(setStatusText);
-    electron.onUpdateRegion(setRegionStatus);
-    electron.onUpdatePosition(setPositionFEN);
-    electron.onEvaluation(setEvaluation);
     electron.onHighlightMoves((evalMoves) => {
       const newArrows: Arrow[] = [];
       for (let i = evalMoves.length-1; i >= 0; i--) {
@@ -110,7 +104,6 @@ function App() {
       }
       setArrows(newArrows);
     });
-    electron.onPrincipalVariations(setPrincipalVariations);
   }, [electron]);
   const pvComponents = [];
   for (const variation of principalVariations) {
