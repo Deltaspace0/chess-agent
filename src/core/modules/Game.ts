@@ -31,6 +31,14 @@ class Game {
     return true;
   }
 
+  board(): (Piece | null)[][] {
+    const board = this.chess.board();
+    if (this.perspective) {
+      return board;
+    }
+    return board.reverse().map((x) => x.reverse());
+  }
+
   fen(): string {
     return this.chess.fen();
   }
@@ -120,15 +128,10 @@ class Game {
           squareToCoords(move.substring(0, 2), this.perspective),
           squareToCoords(move.substring(2), this.perspective)
         ],
-        grid: this.chess.board()
+        grid: this.board()
       });
       this.chess.undo();
     }
-    boardStates.push({
-      move: null,
-      squares: [],
-      grid: this.chess.board()
-    });
     return boardStates;
   }
 

@@ -108,7 +108,7 @@ class Recognizer {
                 const backPixel = backGrid[backRow][backCol*4+m];
                 backErrors += Math.abs(squareGrid[k][l*4+m]-backPixel);
               }
-              if (backErrors < 30) {
+              if (backErrors < 10) {
                 continue;
               }
             }
