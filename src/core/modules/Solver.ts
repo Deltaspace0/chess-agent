@@ -84,7 +84,6 @@ class Solver extends StatusNotifier {
     const ponderMove = this.engine.getPonderMove();
     this.statusCallback(`Best move: ${move}, ponder: ${ponderMove}`);
     if (move !== null) {
-      await this.recognizer.rememberBoard();
       this.bestMoveCallback(move);
     }
   }

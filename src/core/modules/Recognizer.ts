@@ -21,11 +21,12 @@ function getChangedSquares(oldHashes: string[][], newHashes: string[][]): [numbe
   const changedSquares: [number, number][] = [];
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
+      let errorCount = 0;
       for (let k = 0; k < newHashes[i][j].length; k++) {
-        if (newHashes[i][j][k] !== oldHashes[i][j][k]) {
-          changedSquares.push([i, j]);
-          break;
-        }
+        errorCount += Number(newHashes[i][j][k] !== oldHashes[i][j][k]);
+      }
+      if (errorCount > 10) {
+        changedSquares.push([i, j]);
       }
     }
   }
