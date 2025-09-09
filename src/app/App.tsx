@@ -68,29 +68,28 @@ function App() {
   const positionFEN = useElectronValue('', electron.onUpdatePosition);
   const evaluation = useElectronValue('cp 0', electron.onEvaluation);
   const principalVariations = useElectronValue([], electron.onPrincipalVariations);
-  const [arrows, setArrows] = useState<Arrow[]>([]);
+  const [arrows1, setArrows1] = useState<Arrow[]>([]);
+  const [arrows2, setArrows2] = useState<Arrow[]>([]);
   const [showSettings, setShowSettings] = useState(false);
   useEffect(() => {
     electron.onHighlightMoves((evalMoves) => {
-      const newArrows: Arrow[] = [];
+      const newArrows1: Arrow[] = [];
+      const newArrows2: Arrow[] = [];
       for (let i = evalMoves.length-1; i >= 0; i--) {
         const [type, evaluation, move] = evalMoves[i];
-        const opacity = i === 0 ? 0.8 : 0.5;
+        const opacity = i === 0 ? 1 : 0.5;
         const n = Math.tanh(Number(evaluation)/300);
+        const colorN = 255*(1-Math.abs(n));
+        const mateColor1 = `rgba(0, 255, 238, ${opacity})`;
+        const mateColor2 = `rgba(255, 98, 0, ${opacity})`;
+        const evalColor1 = `rgba(${colorN}, 255, ${colorN}, ${opacity})`;
+        const evalColor2 = `rgba(255, ${colorN}, ${colorN}, ${opacity})`;
         const newArrow = {
           startSquare: move.substring(0, 2),
-          endSquare: move.substring(2, 4),
-          color: type === 'mate'
-            ? (n > 0
-              ? `rgba(0, 255, 238, ${opacity})`
-              : `rgba(255, 98, 0, ${opacity})`
-            ) : (n > 0
-              ? `rgba(${255*(1-n)}, ${255*(1-n)}, 255, ${opacity})`
-              : `rgba(255, ${255*(1+n)}, ${255*(1+n)}, ${opacity})`
-            )
+          endSquare: move.substring(2, 4)
         };
         let exists = false;
-        for (const arrow of newArrows) {
+        for (const arrow of newArrows1) {
           let same = arrow.startSquare === newArrow.startSquare;
           same &&= arrow.endSquare === newArrow.endSquare;
           if (same) {
@@ -99,10 +98,22 @@ function App() {
           }
         }
         if (!exists) {
-          newArrows.push(newArrow);
+          newArrows1.push({
+            ...newArrow,
+            color: type === 'mate'
+              ? (n > 0 ? mateColor1 : mateColor2)
+              : (n > 0 ? evalColor1 : evalColor2)
+          });
+          newArrows2.push({
+            ...newArrow,
+            color: type === 'mate'
+              ? (n > 0 ? mateColor2 : mateColor1)
+              : (n > 0 ? evalColor2 : evalColor1)
+          });
         }
       }
-      setArrows(newArrows);
+      setArrows1(newArrows1);
+      setArrows2(newArrows2);
     });
   }, [electron]);
   const pvComponents = [];
@@ -111,7 +122,9 @@ function App() {
   }
   const chessboardOptions: ChessboardOptions = {
     showNotation: showNotationProps.checked,
-    arrows: showArrowsProps.checked ? arrows : [],
+    arrows: showArrowsProps.checked
+      ? (isWhitePerspective ? arrows1 : arrows2)
+      : [],
     allowDrawingArrows: false,
     boardOrientation: isWhitePerspective ? 'white' : 'black',
     position: positionFEN,
