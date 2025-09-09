@@ -143,6 +143,7 @@ class Engine {
       this.whiteFirst = fen.split(' ')[1] === 'w';
     } else {
       this.fen = null;
+      this.whiteFirst = true;
     }
     this.moves = [];
     this.analyzePosition();
