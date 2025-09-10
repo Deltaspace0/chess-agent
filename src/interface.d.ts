@@ -22,7 +22,6 @@ interface Preferences {
 
 interface BoardState {
   move: string | null;
-  squares: [number, number][];
   grid: (Piece | null)[][];
 }
 

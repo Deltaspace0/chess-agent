@@ -1,7 +1,7 @@
 import { Chess } from 'chess.js';
 import type { Color, Piece, Square } from 'chess.js';
 import type { BoardState } from '../../interface';
-import { coordsToSquare, squareToCoords } from '../util.ts';
+import { coordsToSquare } from '../util.ts';
 import { defaultValues } from '../../config.ts';
 
 interface GameOptions {
@@ -122,21 +122,10 @@ class Game {
     const moves = this.chess.moves({ verbose: true }).map((x) => x.lan);
     for (const move of moves) {
       this.chess.move(move);
-      boardStates.push({
-        move: move,
-        squares: [
-          squareToCoords(move.substring(0, 2), this.perspective),
-          squareToCoords(move.substring(2, 4), this.perspective)
-        ],
-        grid: this.board()
-      });
+      boardStates.push({ move, grid: this.board() });
       this.chess.undo();
     }
-    boardStates.push({
-      move: null,
-      squares: [],
-      grid: this.board()
-    });
+    boardStates.push({ move: null, grid: this.board() });
     return boardStates;
   }
 
