@@ -18,7 +18,7 @@
     "chess.js": "^1.4.0",
     "global-mouse-events": "^1.2.0",
     "react": "^19.1.1",
-    "react-chessboard": "^5.5.0",
+    "react-chessboard": "^5.6.1",
     "react-dom": "^19.1.1",
     "web-worker": "^1.5.0"
   },
