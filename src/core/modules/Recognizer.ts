@@ -7,6 +7,11 @@ interface RecognizerOptions {
   region?: Region | null;
 }
 
+interface MoveError {
+  move: string | null;
+  error: number;
+}
+
 function getBufferSquare(bufferRows: Buffer[], region: Region): Buffer[] {
   const bufferSquare: Buffer[] = [];
   for (let i = region.top; i < region.top+region.height; i++) {
@@ -27,7 +32,7 @@ function getChangedSquares(oldHashes: string[][], newHashes: string[][]): [numbe
       for (let k = 0; k < newHash.length; k++) {
         errorCount += Math.abs(Number(newHash[k])-Number(oldHash[k]));
       }
-      if (errorCount > 20) {
+      if (errorCount > 10) {
         changedSquares.push([i, j]);
       }
     }
@@ -46,7 +51,6 @@ function compareHashes(hash1: string, hash2: string): number {
 class Recognizer {
   private region: Region | null;
   private scanning: boolean = false;
-  private boardHashes: string[][] = [];
   private pieceHashes: Record<string, string> = {};
 
   constructor(options?: RecognizerOptions) {
@@ -155,6 +159,21 @@ class Recognizer {
     return minErrors;
   }
 
+  private getMoveErrors(hashes: string[][], states: BoardState[]): MoveError[] {
+    const moveErrors: MoveError[] = [];
+    for (const { move, grid } of states) {
+      let error = 0;
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+          const hash = hashes[i][j];
+          error += this.getPieceHashErrors(grid[i][j], hash);
+        }
+      }
+      moveErrors.push({ move, error });
+    }
+    return moveErrors;
+  }
+
   async load(isWhitePerspective: boolean) {
     const pieces1 = [['rb1', 'nb1', 'bb1', 'qb1', 'kb1', 'bb2', 'nb2', 'rb2'],
                     ['pb1', 'pb2', 'pb3', 'pb4', 'pb5', 'pb6', 'pb7', 'pb8'],
@@ -206,14 +225,6 @@ class Recognizer {
     return pieces;
   }
 
-  async rememberBoard() {
-    try {
-      this.boardHashes = await this.getBoardHashes();
-    } catch (e) {
-      this.boardHashes = [];
-    }
-  }
-
   isScanning(): boolean {
     return this.scanning;
   }
@@ -222,7 +233,7 @@ class Recognizer {
     this.scanning = false;
   }
 
-  async scanMove(boardStates: BoardState[], squareCount?: number): Promise<string | null> {
+  async scanMove(boardStates: BoardState[]): Promise<string> {
     if (!this.pieceHashes['rb1']) {
       throw new Error('no hashes');
     }
@@ -230,66 +241,28 @@ class Recognizer {
       throw new Error('already scanning');
     }
     this.scanning = true;
-    const changedSquares = await (async () => {
-      if (this.boardHashes.length === 0) {
-        this.boardHashes = await this.getBoardHashes();
+    let prevBoardHashes = await this.getBoardHashes();
+    let waitingForMovement = false;
+    while (this.scanning) {
+      await sleep(50);
+      const boardHashes = await this.getBoardHashes();
+      const changedSquares = getChangedSquares(prevBoardHashes, boardHashes);
+      if (changedSquares.length > 0) {
+        waitingForMovement = false;
       }
-      let prevBoardHashes = this.boardHashes;
-      let scanStep = 0;
-      while (this.scanning) {
-        await sleep(50);
-        const boardHashes = await this.getBoardHashes();
-        const changedSquares = getChangedSquares(prevBoardHashes, boardHashes);
-        if (scanStep === 0) {
-          if (changedSquares.length === 0) {
-            scanStep++;
-          }
+      if (changedSquares.length === 0 && !waitingForMovement) {
+        const moveErrors = this.getMoveErrors(boardHashes, boardStates);
+        moveErrors.sort((a, b) => a.error-b.error);
+        const { move, error } = moveErrors[0];
+        if (move !== null && error < moveErrors[1].error*0.9) {
+          this.scanning = false;
+          return move;
         }
-        if (scanStep === 1) {
-          if (squareCount) {
-            const changedSquares = getChangedSquares(this.boardHashes, boardHashes);
-            if (changedSquares.length > squareCount) {
-              return changedSquares;
-            }
-            this.boardHashes = boardHashes;
-            squareCount = 0;
-          }
-          if (changedSquares.length > 0) {
-            scanStep++;
-          }
-        }
-        if (scanStep === 2) {
-          if (changedSquares.length === 0) {
-            return getChangedSquares(this.boardHashes, boardHashes);
-          }
-        }
-        prevBoardHashes = boardHashes;
+        waitingForMovement = true;
       }
-      return [];
-    })();
-    this.boardHashes = [];
-    this.scanning = false;
-    console.log('changed squares', changedSquares);
-    if (changedSquares.length < 2 || changedSquares.length > 9) {
-      return null;
+      prevBoardHashes = boardHashes;
     }
-    const boardHashes = await this.getBoardHashes();
-    let minErrors = Infinity;
-    let probableMove = null;
-    for (const { move, grid } of boardStates) {
-      let errors = 0;
-      for (let i = 0; i < 8; i++) {
-        for (let j = 0; j < 8; j++) {
-          const hash = boardHashes[i][j];
-          errors += this.getPieceHashErrors(grid[i][j], hash);
-        }
-      }
-      if (errors < minErrors) {
-        minErrors = errors;
-        probableMove = move;
-      }
-    }
-    return probableMove;
+    throw new Error('stop');
   }
 
   setRegion(region: Region | null) {

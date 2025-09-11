@@ -61,22 +61,13 @@ class Game {
     this.positionCallback();
   }
 
-  move(move: string): number | null {
+  move(move: string): boolean {
     try {
-      const moveObject = this.chess.move(move);
+      this.chess.move(move);
       this.positionCallback();
-      if (moveObject.isPromotion()) {
-        return -1;
-      }
-      if (moveObject.isEnPassant()) {
-        return 3;
-      }
-      if (moveObject.isKingsideCastle() || moveObject.isQueensideCastle()) {
-        return 4;
-      }
-      return 2;
+      return true;
     } catch (e) {
-      return null;
+      return false;
     }
   }
 

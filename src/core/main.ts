@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
-import { mouse, Region } from '@nut-tree-fork/nut-js';
+import { mouse, sleep, Region } from '@nut-tree-fork/nut-js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ActionRegionManager from './modules/ActionRegionManager.ts';
@@ -66,10 +66,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
     win.webContents.send('update-status', status);
   };
   const board = new Board();
-  board.onMouseDownSquare(() => {
-    recognizer.stopScanning();
-    recognizer.rememberBoard();
-  });
+  board.onMouseDownSquare(() => recognizer.stopScanning());
   const engine = new Engine();
   engine.onPrincipalMoves((value) => {
     const moves = value.map((x) => x.split(' ').slice(0, 3));
@@ -89,9 +86,13 @@ function getRegionSelector(position: string): (region: Region) => Region {
   const recognizer = new Recognizer();
   const solver = new Solver({ engine, game, recognizer });
   solver.onUpdateStatus(updateStatus);
-  solver.onBestMove((move) => {
+  solver.onBestMove(async (move) => {
     const draggingMode = preferencesManager.getPreference('draggingMode');
-    board.playMove(move, draggingMode);
+    await board.playMove(move, draggingMode);
+    await sleep(50);
+    if (!draggingMode) {
+      solver.processMove(move);
+    }
   });
   const actionRegionManager = new ActionRegionManager();
   actionRegionManager.addActionRegion({

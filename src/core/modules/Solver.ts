@@ -32,13 +32,12 @@ class Solver extends StatusNotifier {
 
   processMove(move: string) {
     const piece = this.game.get(move.substring(0, 2));
-    if (move[3] === '1' || move[3] === '8') {
-      if (piece && piece.type === 'p' && move.length < 5) {
-        move += 'q';
-      }
+    const isPromotion = '18'.includes(move[3]) && piece?.type === 'p';
+    if (isPromotion && move.length < 5) {
+      move += 'q'
     }
-    const squareCount = this.game.move(move);
-    if (squareCount === null) {
+    const result = this.game.move(move);
+    if (!result) {
       if (piece) {
         this.statusCallback(`Illegal move: ${move}`);
       }
@@ -55,8 +54,8 @@ class Solver extends StatusNotifier {
     }
     if (this.autoResponse && this.game.isMyTurn()) {
       this.playBestMove();
-    } else if (this.autoScan && squareCount !== -1) {
-      this.scanMove(squareCount);
+    } else if (this.autoScan && !isPromotion) {
+      this.scanMove();
     }
   }
 
@@ -88,7 +87,7 @@ class Solver extends StatusNotifier {
     }
   }
 
-  async scanMove(squareCount?: number): Promise<string | null> {
+  async scanMove(): Promise<string | null> {
     if (this.recognizer.isScanning()) {
       this.recognizer.stopScanning();
       return null;
@@ -97,14 +96,12 @@ class Solver extends StatusNotifier {
     let move;
     try {
       const boardStates = this.game.getNextBoardStates();
-      move = await this.recognizer.scanMove(boardStates, squareCount);
-      if (move === null) {
-        this.statusCallback('No move found');
-        return null;
-      }
+      move = await this.recognizer.scanMove(boardStates);
     } catch (e) {
       if (e instanceof Error && e.message === 'no hashes') {
         this.statusCallback('Load hashes first');
+      } else if (e instanceof Error && e.message === 'stop') {
+        this.statusCallback('Stopped scanning');
       } else {
         console.log(e);
         this.statusCallback('Failed to scan move');
