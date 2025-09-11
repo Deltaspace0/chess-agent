@@ -80,37 +80,28 @@ function App() {
         const opacity = i === 0 ? 1 : 0.5;
         const n = Math.tanh(Number(evaluation)/300);
         const colorN = 255*(1-Math.abs(n));
-        const mateColor1 = `rgba(0, 255, 238, ${opacity})`;
-        const mateColor2 = `rgba(255, 98, 0, ${opacity})`;
-        const evalColor1 = `rgba(${colorN}, 255, ${colorN}, ${opacity})`;
-        const evalColor2 = `rgba(255, ${colorN}, ${colorN}, ${opacity})`;
+        const color1 = type === 'mate'
+          ? `rgba(0, 255, 238, ${opacity})`
+          : `rgba(${colorN}, 255, ${colorN}, ${opacity})`;
+        const color2 = type === 'mate'
+          ? `rgba(255, 98, 0, ${opacity})`
+          : `rgba(255, ${colorN}, ${colorN}, ${opacity})`;
         const newArrow = {
           startSquare: move.substring(0, 2),
           endSquare: move.substring(2, 4)
         };
-        let exists = false;
-        for (const arrow of newArrows1) {
-          let same = arrow.startSquare === newArrow.startSquare;
-          same &&= arrow.endSquare === newArrow.endSquare;
+        let index = newArrows1.length;
+        for (let j = 0; j < newArrows1.length; j++) {
+          const { startSquare, endSquare } = newArrows1[j];
+          let same = startSquare === newArrow.startSquare;
+          same &&= endSquare === newArrow.endSquare;
           if (same) {
-            exists = true;
+            index = j;
             break;
           }
         }
-        if (!exists) {
-          newArrows1.push({
-            ...newArrow,
-            color: type === 'mate'
-              ? (n > 0 ? mateColor1 : mateColor2)
-              : (n > 0 ? evalColor1 : evalColor2)
-          });
-          newArrows2.push({
-            ...newArrow,
-            color: type === 'mate'
-              ? (n > 0 ? mateColor2 : mateColor1)
-              : (n > 0 ? evalColor2 : evalColor1)
-          });
-        }
+        newArrows1[index] = { ...newArrow, color: n > 0 ? color1 : color2 };
+        newArrows2[index] = { ...newArrow, color: n > 0 ? color2 : color1 };
       }
       setArrows1(newArrows1);
       setArrows2(newArrows2);
