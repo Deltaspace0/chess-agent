@@ -94,6 +94,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
       solver.processMove(move);
     }
   });
+  solver.onPromotion(() => win.webContents.send('promotion'));
   const actionRegionManager = new ActionRegionManager();
   actionRegionManager.addActionRegion({
     callback: () => solver.recognizeBoard(),
@@ -157,6 +158,22 @@ function getRegionSelector(position: string): (region: Region) => Region {
     },
     regionSelector: getRegionSelector(actionRegions.perspective)
   });
+  actionRegionManager.addActionRegion({
+    callback: () => solver.promoteTo('q'),
+    regionSelector: getRegionSelector(actionRegions.promoteQueen)
+  });
+  actionRegionManager.addActionRegion({
+    callback: () => solver.promoteTo('r'),
+    regionSelector: getRegionSelector(actionRegions.promoteRook)
+  });
+  actionRegionManager.addActionRegion({
+    callback: () => solver.promoteTo('b'),
+    regionSelector: getRegionSelector(actionRegions.promoteBishop)
+  });
+  actionRegionManager.addActionRegion({
+    callback: () => solver.promoteTo('n'),
+    regionSelector: getRegionSelector(actionRegions.promoteKnight)
+  });
   const regionManager = new RegionManager();
   regionManager.onUpdateStatus(updateStatus);
   regionManager.onUpdateRegion((region) => {
@@ -202,6 +219,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
     preferencesManager.setPreference(name, value);
   });
   ipcMain.on('piece-dropped', (_, value) => solver.processMove(value));
+  ipcMain.on('promote-to', (_, value) => solver.promoteTo(value));
   ipcMain.handle('new-region', () => regionManager.selectNewRegion());
   ipcMain.handle('show-region', () => regionManager.showRegion());
   ipcMain.handle('remove-region', () => regionManager.setRegion(null));

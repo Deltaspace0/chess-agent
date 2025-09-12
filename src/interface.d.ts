@@ -37,8 +37,10 @@ interface IElectronAPI {
   onEvaluation: Listener<string>;
   onHighlightMoves: Listener<string[][]>;
   onPrincipalVariations: Listener<string[]>;
+  onPromotion: Listener<void>;
   preferenceValue<T extends Preference>(name: T, value: Preferences[T]);
   pieceDropped(value: string);
+  promoteTo(value: string);
   newRegion();
   showRegion();
   removeRegion();

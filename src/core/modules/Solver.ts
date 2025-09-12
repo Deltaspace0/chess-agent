@@ -18,8 +18,10 @@ class Solver extends StatusNotifier {
   private recognizer: Recognizer;
   private autoResponse: boolean;
   private autoScan: boolean;
+  private promotionMove: string = '';
   private stopBestMove: (() => void) | null = null;
   private bestMoveCallback: (value: string) => void = () => {};
+  private promotionCallback: () => void = () => {};
 
   constructor(options: SolverOptions) {
     super();
@@ -34,8 +36,15 @@ class Solver extends StatusNotifier {
     const piece = this.game.get(move.substring(0, 2));
     const isPromotion = '18'.includes(move[3]) && piece?.type === 'p';
     if (isPromotion && move.length < 5) {
-      move += 'q'
+      if (this.promotionMove.length === 5) {
+        move = this.promotionMove;
+      } else {
+        this.promotionMove = move;
+        this.promotionCallback();
+        return;
+      }
     }
+    this.promotionMove = '';
     const result = this.game.move(move);
     if (!result) {
       if (piece) {
@@ -54,7 +63,7 @@ class Solver extends StatusNotifier {
     }
     if (this.autoResponse && this.game.isMyTurn()) {
       this.playBestMove();
-    } else if (this.autoScan && !isPromotion) {
+    } else if (this.autoScan) {
       this.scanMove();
     }
   }
@@ -83,6 +92,7 @@ class Solver extends StatusNotifier {
     const ponderMove = this.engine.getPonderMove();
     this.statusCallback(`Best move: ${move}, ponder: ${ponderMove}`);
     if (move !== null) {
+      this.promotionMove = move;
       this.bestMoveCallback(move);
     }
   }
@@ -176,8 +186,18 @@ class Solver extends StatusNotifier {
     this.statusCallback('Reset');
   }
 
+  promoteTo(piece: string) {
+    if (this.promotionMove) {
+      this.processMove(this.promotionMove+piece);
+    }
+  }
+
   onBestMove(callback: (value: string) => void) {
     this.bestMoveCallback = callback;
+  }
+
+  onPromotion(callback: () => void) {
+    this.promotionCallback = callback;
   }
 }
 
