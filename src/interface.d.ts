@@ -6,6 +6,7 @@ type RegionStatus = 'none' | 'exist' | 'selecting';
 interface Preferences {
   autoResponse: boolean;
   autoScan: boolean;
+  autoQueen: boolean;
   isWhitePerspective: boolean;
   draggingMode: boolean;
   actionRegion: boolean;

@@ -9,6 +9,7 @@ export const sliders = {
 export const defaultValues: Preferences = {
   autoResponse: false,
   autoScan: false,
+  autoQueen: true,
   isWhitePerspective: true,
   draggingMode: true,
   actionRegion: false,

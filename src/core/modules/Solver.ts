@@ -10,6 +10,7 @@ interface SolverOptions {
   recognizer: Recognizer;
   autoResponse?: boolean;
   autoScan?: boolean;
+  autoQueen?: boolean;
 }
 
 class Solver extends StatusNotifier {
@@ -18,6 +19,7 @@ class Solver extends StatusNotifier {
   private recognizer: Recognizer;
   private autoResponse: boolean;
   private autoScan: boolean;
+  private autoQueen: boolean;
   private promotionMove: string = '';
   private stopBestMove: (() => void) | null = null;
   private bestMoveCallback: (value: string) => void = () => {};
@@ -30,6 +32,7 @@ class Solver extends StatusNotifier {
     this.recognizer = options.recognizer;
     this.autoResponse = options.autoResponse ?? defaultValues.autoResponse;
     this.autoScan = options.autoScan ?? defaultValues.autoScan;
+    this.autoQueen = options.autoQueen ?? defaultValues.autoQueen;
   }
 
   processMove(move: string) {
@@ -38,6 +41,8 @@ class Solver extends StatusNotifier {
     if (isPromotion && move.length < 5) {
       if (this.promotionMove.length === 5) {
         move = this.promotionMove;
+      } else if (this.autoQueen) {
+        move += 'q';
       } else {
         this.promotionMove = move;
         this.promotionCallback();
@@ -169,14 +174,17 @@ class Solver extends StatusNotifier {
 
   setAutoResponse(value: boolean) {
     this.autoResponse = value;
-    const enabledString = value ? 'enabled' : 'disabled';
-    this.statusCallback(`Autoresponse is ${enabledString}`);
+    this.statusCallback(`Auto response is ${value ? 'enabled' : 'disabled'}`);
   }
 
   setAutoScan(value: boolean) {
     this.autoScan = value;
-    const enabledString = value ? 'enabled' : 'disabled';
-    this.statusCallback(`Autoscan is ${enabledString}`);
+    this.statusCallback(`Auto scan is ${value ? 'enabled' : 'disabled'}`);
+  }
+
+  setAutoQueen(value: boolean) {
+    this.autoQueen = value;
+    this.statusCallback(`Auto queen is ${value ? 'enabled' : 'disabled'}`);
   }
 
   resetPosition() {

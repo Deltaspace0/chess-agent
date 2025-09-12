@@ -21,6 +21,10 @@ function App() {
     label: 'Auto scan',
     preferenceName: 'autoScan'
   });
+  const autoQueenProps = useCheckboxProps({
+    label: 'Auto queen',
+    preferenceName: 'autoQueen'
+  });
   const draggingModeProps = useCheckboxProps({
     label: 'Dragging mode',
     preferenceName: 'draggingMode'
@@ -184,6 +188,7 @@ function App() {
           <div className='flex-column'>
             <Checkbox {...autoResponseProps}/>
             <Checkbox {...autoScanProps}/>
+            <Checkbox {...autoQueenProps}/>
             <Checkbox {...actionRegionProps}/>
             <Checkbox {...draggingModeProps}/>
             <Checkbox {...saveConfigToFileProps}/>

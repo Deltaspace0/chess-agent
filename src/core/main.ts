@@ -194,6 +194,9 @@ function getRegionSelector(position: string): (region: Region) => Region {
   preferencesManager.onUpdatePreference('autoScan', (value) => {
     solver.setAutoScan(value);
   });
+  preferencesManager.onUpdatePreference('autoQueen', (value) => {
+    solver.setAutoQueen(value);
+  });
   preferencesManager.onUpdatePreference('isWhitePerspective', (value) => {
     board.setPerspective(value);
     game.setPerspective(value);
