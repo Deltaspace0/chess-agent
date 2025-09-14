@@ -21,7 +21,8 @@ export const defaultValues: Preferences = {
   multiPV: 1,
   mouseSpeed: 3000,
   region: null,
-  saveConfigToFile: false
+  saveConfigToFile: false,
+  enginePath: null
 };
 
 export const actionRegions = {

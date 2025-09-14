@@ -49,6 +49,7 @@ class PreferencesManager {
   loadFromFile(path: string) {
     try {
       this.preferences = JSON.parse(fs.readFileSync(path, {encoding: 'ascii'}));
+      this.preferences = {...defaultValues, ...this.preferences};
     } catch (e) {
       console.log(e);
     }

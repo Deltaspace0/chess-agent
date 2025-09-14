@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import { mouse, sleep, Region } from '@nut-tree-fork/nut-js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -69,7 +69,6 @@ function getRegionSelector(position: string): (region: Region) => Region {
   const board = new Board();
   board.onMouseDownSquare(() => recognizer.stopScanning());
   const engineProcess = new EngineProcess();
-  engineProcess.spawn('./stockfish.exe');
   const engine = new Engine(engineProcess);
   engine.onPrincipalMoves((value) => {
     const moves = value.map((x) => x.split(' ').slice(0, 3));
@@ -80,7 +79,6 @@ function getRegionSelector(position: string): (region: Region) => Region {
   engine.onEvaluation((value) => {
     win.webContents.send('evaluation', value);
   });
-  engine.reset();
   const game = new Game();
   game.onUpdatePosition((value) => {
     win.webContents.send('update-position', value);
@@ -221,6 +219,15 @@ function getRegionSelector(position: string): (region: Region) => Region {
     board.setRegion(value);
     recognizer.setRegion(value);
   });
+  preferencesManager.onUpdatePreference('enginePath', async (value) => {
+    const result = engineProcess.spawn(value);
+    if (result) {
+      engine.start();
+      updateStatus('Ready');
+    } else {
+      updateStatus('Failed to load external engine');
+    }
+  });
   ipcMain.on('preference-value', (_, name, value) => {
     preferencesManager.setPreference(name, value);
   });
@@ -241,6 +248,12 @@ function getRegionSelector(position: string): (region: Region) => Region {
   ipcMain.handle('best-move', () => solver.playBestMove());
   ipcMain.handle('reset-position', () => solver.resetPosition());
   ipcMain.handle('recognize-board', () => solver.recognizeBoard());
+  ipcMain.handle('dialog-engine', async () => {
+    const result = await dialog.showOpenDialog({ properties: ['openFile'] });
+    if (result.filePaths.length > 0) {
+      preferencesManager.setPreference('enginePath', result.filePaths[0]);
+    }
+  });
   updateStatus('Ready');
   while (true) {
     const move = await board.detectMove();

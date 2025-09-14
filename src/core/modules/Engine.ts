@@ -12,6 +12,7 @@ class Engine {
   private ponderMove: string | null = null;
   private evaluation: string | null = null;
   private analysisDuration: number = defaultValues.analysisDuration;
+  private multiPV: number = defaultValues.multiPV;
   private principalMoves: string[] = [];
   private sendingPrincipalMoves: boolean = false;
   private principalMovesCallback: (value: string[]) => void = () => {};
@@ -48,7 +49,6 @@ class Engine {
         }
       }
     });
-    this.process.send('uci');
   }
 
   private signEvaluation(evaluation: string) {
@@ -100,6 +100,10 @@ class Engine {
     this.search();
   }
 
+  private sendMultiPV() {
+    this.process.send(`setoption name MultiPV value ${this.multiPV}`);
+  }
+
   getBestMove(): string | null {
     return this.bestMove;
   }
@@ -121,7 +125,8 @@ class Engine {
   }
 
   setMultiPV(value: number) {
-    this.process.send(`setoption name MultiPV value ${value}`);
+    this.multiPV = value;
+    this.sendMultiPV();
     this.analyzePosition();
   }
 
@@ -135,6 +140,13 @@ class Engine {
 
   onEvaluation(callback: (value: string) => void) {
     this.evaluationCallback = callback;
+  }
+
+  start() {
+    this.searching = false;
+    this.process.send('uci');
+    this.sendMultiPV();
+    this.analyzePosition();
   }
 
   reset(fen?: string) {

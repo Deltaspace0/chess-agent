@@ -19,6 +19,7 @@ interface Preferences {
   mouseSpeed: number;
   region: Region | null;
   saveConfigToFile: boolean;
+  enginePath: string | null;
 }
 
 interface BoardState {
@@ -52,6 +53,7 @@ interface IElectronAPI {
   bestMove();
   resetPosition();
   recognizeBoard();
+  dialogEngine();
 }
 
 declare global {

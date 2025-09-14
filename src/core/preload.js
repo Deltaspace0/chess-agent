@@ -42,5 +42,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   undoMove: invoke('undo-move'),
   bestMove: invoke('best-move'),
   resetPosition: invoke('reset-position'),
-  recognizeBoard: invoke('recognize-board')
+  recognizeBoard: invoke('recognize-board'),
+  dialogEngine: invoke('dialog-engine')
 });

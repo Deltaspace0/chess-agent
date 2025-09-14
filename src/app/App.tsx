@@ -69,6 +69,7 @@ function App() {
     preferenceName: 'mouseSpeed'
   });
   const [isWhitePerspective, sendPerspective] = usePreference('isWhitePerspective');
+  const [enginePath, sendEnginePath] = usePreference('enginePath');
   const statusText = useElectronValue('', electron.onUpdateStatus);
   const regionStatus = useElectronValue<RegionStatus>('none', electron.onUpdateRegion);
   const evaluation = useElectronValue('cp 0', electron.onEvaluation);
@@ -181,6 +182,15 @@ function App() {
     settings: <>
       <fieldset className='settings'>
         <legend>Settings</legend>
+        <div className='flex-row'>
+          <button onClick={() => electron.dialogEngine()}>Load external engine</button>
+          <button
+            onClick={() => sendEnginePath(null)}
+            disabled={enginePath === null}>
+              Remove external engine
+          </button>
+        </div>
+        {enginePath !== null && <p className='status'>{enginePath}</p>}
         <Slider {...durationProps}/>
         <Slider {...multiPVProps}/>
         <Slider {...mouseProps}/>
