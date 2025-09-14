@@ -1,8 +1,8 @@
-import Worker from 'web-worker';
+import EngineProcess from './EngineProcess.ts';
 import { defaultValues } from '../../config.ts';
 
 class Engine {
-  private engine: Worker;
+  private process: EngineProcess;
   private searching: boolean = false;
   private needSearch: boolean = false;
   private moves: string[] = [];
@@ -18,10 +18,10 @@ class Engine {
   private bestMoveCallback: (value: string) => void = () => {};
   private evaluationCallback: (value: string) => void = () => {};
 
-  constructor() {
-    this.engine = new Worker(new URL('../stockfish.js', import.meta.url), { type: 'module' });
-    this.engine.addEventListener('message', (e) => {
-      const words: string[] = e.data.split(' ');
+  constructor(process: EngineProcess) {
+    this.process = process;
+    this.process.onMessage((data) => {
+      const words: string[] = data.split(' ');
       if (words.includes('pv')) {
         const depth = words[words.indexOf('depth')+1];
         if (this.principalMoves.length === 0 && depth !== '1') {
@@ -48,7 +48,7 @@ class Engine {
         }
       }
     });
-    this.engine.postMessage('uci');
+    this.process.send('uci');
   }
 
   private signEvaluation(evaluation: string) {
@@ -80,14 +80,14 @@ class Engine {
     this.bestMove = null;
     this.ponderMove = null;
     this.evaluation = null;
-    this.engine.postMessage('stop');
+    this.process.send('stop');
   }
 
   private search() {
     if (!this.searching) {
       const pos = this.fen === null ? 'startpos' : `fen ${this.fen}`;
-      this.engine.postMessage(`position ${pos} moves ${this.moves.join(' ')}`);
-      this.engine.postMessage(`go movetime ${this.analysisDuration}`);
+      this.process.send(`position ${pos} moves ${this.moves.join(' ')}`);
+      this.process.send(`go movetime ${this.analysisDuration}`);
       this.searching = true;
       this.needSearch = false;
     } else {
@@ -121,7 +121,7 @@ class Engine {
   }
 
   setMultiPV(value: number) {
-    this.engine.postMessage(`setoption name MultiPV value ${value}`);
+    this.process.send(`setoption name MultiPV value ${value}`);
     this.analyzePosition();
   }
 

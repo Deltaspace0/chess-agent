@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import ActionRegionManager from './modules/ActionRegionManager.ts';
 import Board from './modules/Board.ts';
 import Engine from './modules/Engine.ts';
+import EngineProcess from './modules/EngineProcess.ts';
 import Game from './modules/Game.ts';
 import PreferencesManager from './modules/PreferencesManager.ts';
 import Recognizer from './modules/Recognizer.ts';
@@ -67,7 +68,9 @@ function getRegionSelector(position: string): (region: Region) => Region {
   };
   const board = new Board();
   board.onMouseDownSquare(() => recognizer.stopScanning());
-  const engine = new Engine();
+  const engineProcess = new EngineProcess();
+  engineProcess.spawn('./stockfish.exe');
+  const engine = new Engine(engineProcess);
   engine.onPrincipalMoves((value) => {
     const moves = value.map((x) => x.split(' ').slice(0, 3));
     const variations = value.map((x) => game.formatEvalMoves(x));
