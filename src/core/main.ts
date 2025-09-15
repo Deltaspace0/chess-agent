@@ -8,7 +8,7 @@ import Engine from './modules/Engine.ts';
 import EngineExternal from './modules/EngineExternal.ts';
 import EngineWorker from './modules/EngineWorker.ts';
 import Game from './modules/Game.ts';
-import PreferencesManager from './modules/PreferencesManager.ts';
+import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
 import RegionManager from './modules/RegionManager.ts';
 import Solver from './modules/Solver.ts';
@@ -53,13 +53,13 @@ function getRegionSelector(position: string): (region: Region) => Region {
 }
 
 (async () => {
-  const preferencesManager = new PreferencesManager();
-  preferencesManager.loadFromFile('config.json');
+  const preferenceManager = new PreferenceManager();
+  preferenceManager.loadFromFile('config.json');
   await app.whenReady();
   const win = await createWindow();
   app.on('window-all-closed', () => {
-    if (preferencesManager.getPreference('saveConfigToFile')) {
-      preferencesManager.saveToFile('config.json');
+    if (preferenceManager.getPreference('saveConfigToFile')) {
+      preferenceManager.saveToFile('config.json');
     }
     app.quit();
   });
@@ -90,7 +90,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
   const solver = new Solver({ engine, game, recognizer });
   solver.onUpdateStatus(updateStatus);
   solver.onBestMove(async (move) => {
-    const draggingMode = preferencesManager.getPreference('draggingMode');
+    const draggingMode = preferenceManager.getPreference('draggingMode');
     await board.playMove(move, draggingMode);
     await sleep(50);
     if (!draggingMode) {
@@ -113,8 +113,8 @@ function getRegionSelector(position: string): (region: Region) => Region {
   });
   actionRegionManager.addActionRegion({
     callback: () => {
-      const autoResponse = preferencesManager.getPreference('autoResponse');
-      preferencesManager.setPreference('autoResponse', !autoResponse);
+      const autoResponse = preferenceManager.getPreference('autoResponse');
+      preferenceManager.setPreference('autoResponse', !autoResponse);
     },
     regionSelector: getRegionSelector(actionRegions.autoResponse)
   });
@@ -132,11 +132,11 @@ function getRegionSelector(position: string): (region: Region) => Region {
   });
   actionRegionManager.addActionRegion({
     callback: () => {
-      const duration = preferencesManager.getPreference('analysisDuration');
+      const duration = preferenceManager.getPreference('analysisDuration');
       const index = sliders.analysisDurations.indexOf(duration);
       const newIndex = (index+1)%sliders.analysisDurations.length;
       const newDuration = sliders.analysisDurations[newIndex];
-      preferencesManager.setPreference('analysisDuration', newDuration);
+      preferenceManager.setPreference('analysisDuration', newDuration);
       updateStatus(`Analysis duration: ${newDuration} ms`);
     },
     regionSelector: getRegionSelector(actionRegions.analysisDuration)
@@ -147,16 +147,16 @@ function getRegionSelector(position: string): (region: Region) => Region {
   });
   actionRegionManager.addActionRegion({
     callback: () => {
-      const draggingMode = !preferencesManager.getPreference('draggingMode');
-      preferencesManager.setPreference('draggingMode', draggingMode);
+      const draggingMode = !preferenceManager.getPreference('draggingMode');
+      preferenceManager.setPreference('draggingMode', draggingMode);
       console.log(`${draggingMode ? 'Dragging' : 'Clicking'} mode`);
     },
     regionSelector: getRegionSelector(actionRegions.draggingMode)
   });
   actionRegionManager.addActionRegion({
     callback: () => {
-      const isWhite = !preferencesManager.getPreference('isWhitePerspective');
-      preferencesManager.setPreference('isWhitePerspective', isWhite);
+      const isWhite = !preferenceManager.getPreference('isWhitePerspective');
+      preferenceManager.setPreference('isWhitePerspective', isWhite);
       console.log(`${isWhite ? 'White' : 'Black'} perspective`);
     },
     regionSelector: getRegionSelector(actionRegions.perspective)
@@ -180,48 +180,48 @@ function getRegionSelector(position: string): (region: Region) => Region {
   const regionManager = new RegionManager();
   regionManager.onUpdateStatus(updateStatus);
   regionManager.onUpdateRegion((region) => {
-    preferencesManager.setPreference('region', region);
+    preferenceManager.setPreference('region', region);
   });
   regionManager.onUpdateRegionStatus((value) => {
-    const region = preferencesManager.getPreference('region');
+    const region = preferenceManager.getPreference('region');
     actionRegionManager.setRegion(value === 'selecting' ? null : region);
     win.webContents.send('update-region', value);
   });
-  regionManager.setRegion(preferencesManager.getPreference('region'));
-  preferencesManager.onUpdate((name, value) => {
+  regionManager.setRegion(preferenceManager.getPreference('region'));
+  preferenceManager.onUpdate((name, value) => {
     win.webContents.send('update-preference', name, value);
   });
-  preferencesManager.onUpdatePreference('autoResponse', (value) => {
+  preferenceManager.onUpdatePreference('autoResponse', (value) => {
     solver.setAutoResponse(value);
   });
-  preferencesManager.onUpdatePreference('autoScan', (value) => {
+  preferenceManager.onUpdatePreference('autoScan', (value) => {
     solver.setAutoScan(value);
   });
-  preferencesManager.onUpdatePreference('autoQueen', (value) => {
+  preferenceManager.onUpdatePreference('autoQueen', (value) => {
     solver.setAutoQueen(value);
   });
-  preferencesManager.onUpdatePreference('isWhitePerspective', (value) => {
+  preferenceManager.onUpdatePreference('isWhitePerspective', (value) => {
     board.setPerspective(value);
     game.setPerspective(value);
   });
-  preferencesManager.onUpdatePreference('actionRegion', (value) => {
+  preferenceManager.onUpdatePreference('actionRegion', (value) => {
     actionRegionManager.setActive(value);
   });
-  preferencesManager.onUpdatePreference('analysisDuration', (value) => {
+  preferenceManager.onUpdatePreference('analysisDuration', (value) => {
     engine.setAnalysisDuration(value);
   });
-  preferencesManager.onUpdatePreference('multiPV', (value) => {
+  preferenceManager.onUpdatePreference('multiPV', (value) => {
     engine.setMultiPV(value);
   });
-  preferencesManager.onUpdatePreference('mouseSpeed', (value) => {
+  preferenceManager.onUpdatePreference('mouseSpeed', (value) => {
     mouse.config.mouseSpeed = value;
   });
-  preferencesManager.onUpdatePreference('region', (value) => {
+  preferenceManager.onUpdatePreference('region', (value) => {
     actionRegionManager.setRegion(value);
     board.setRegion(value);
     recognizer.setRegion(value);
   });
-  preferencesManager.onUpdatePreference('enginePath', async (value) => {
+  preferenceManager.onUpdatePreference('enginePath', async (value) => {
     if (!value) {
       engine.setProcess(engineWorker);
       engineExternal.kill();
@@ -237,7 +237,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
     }
   });
   ipcMain.on('preference-value', (_, name, value) => {
-    preferencesManager.setPreference(name, value);
+    preferenceManager.setPreference(name, value);
   });
   ipcMain.on('piece-dropped', (_, value) => solver.processMove(value));
   ipcMain.on('promote-to', (_, value) => solver.promoteTo(value));
@@ -245,7 +245,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
   ipcMain.handle('show-region', () => regionManager.showRegion());
   ipcMain.handle('remove-region', () => regionManager.setRegion(null));
   ipcMain.handle('load-hashes', () => {
-    const perspective = preferencesManager.getPreference('isWhitePerspective');
+    const perspective = preferenceManager.getPreference('isWhitePerspective');
     recognizer.load(perspective).then(
       () => updateStatus('Loaded piece hashes'),
       () => updateStatus('Failed to load piece hashes'));
@@ -259,7 +259,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
   ipcMain.handle('dialog-engine', async () => {
     const result = await dialog.showOpenDialog({ properties: ['openFile'] });
     if (result.filePaths.length > 0) {
-      preferencesManager.setPreference('enginePath', result.filePaths[0]);
+      preferenceManager.setPreference('enginePath', result.filePaths[0]);
     }
   });
   updateStatus('Ready');

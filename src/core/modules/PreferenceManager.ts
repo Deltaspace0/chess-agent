@@ -2,7 +2,7 @@ import fs from 'fs';
 import type { Preference, Preferences, PreferenceListeners } from '../../interface';
 import { defaultValues } from '../../config.ts';
 
-class PreferencesManager {
+class PreferenceManager {
   private preferences: Preferences;
   private generalListener: typeof this.setPreference = () => {};
   private listeners: Partial<PreferenceListeners> = {};
@@ -56,4 +56,4 @@ class PreferencesManager {
   }
 }
 
-export default PreferencesManager;
+export default PreferenceManager;
