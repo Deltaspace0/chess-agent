@@ -69,7 +69,25 @@ function getRegionSelector(position: string): (region: Region) => Region {
   const board = new Board();
   board.onMouseDownSquare(() => recognizer.stopScanning());
   const engineExternal = new EngineExternal();
+  engineExternal.addListener('stdin', (data) => {
+    win.webContents.send('engine-data', 'external', '<<< '+data);
+  });
+  engineExternal.addListener('stdout', (data) => {
+    win.webContents.send('engine-data', 'external', '>>> '+data);
+  });
+  engineExternal.addListener('stderr', (data) => {
+    win.webContents.send('engine-data', 'external', '!>> '+data);
+  });
   const engineWorker = new EngineWorker();
+  engineWorker.addListener('stdin', (data) => {
+    win.webContents.send('engine-data', 'internal', '<<< '+data);
+  });
+  engineWorker.addListener('stdout', (data) => {
+    win.webContents.send('engine-data', 'internal', '>>> '+data);
+  });
+  engineWorker.addListener('stderr', (data) => {
+    win.webContents.send('engine-data', 'internal', '!>> '+data);
+  });
   const engine = new Engine(engineWorker);
   engine.onPrincipalMoves((value) => {
     const moves = value.map((x) => x.split(' ').slice(0, 3));

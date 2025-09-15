@@ -2,7 +2,14 @@ const { contextBridge } = require('electron');
 const { ipcRenderer } = require('electron/renderer');
 
 function addListener(channel) {
-  return (listener) => ipcRenderer.on(channel, (_, value) => listener(value));
+  let ipcListener = null;
+  return (listener) => {
+    if (ipcListener) {
+      ipcRenderer.off(channel, ipcListener);
+    }
+    ipcListener = (_, ...value) => listener(...value);
+    ipcRenderer.on(channel, ipcListener);
+  };
 }
 
 function sendValue(channel) {
@@ -30,6 +37,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onHighlightMoves: addListener('highlight-moves'),
   onPrincipalVariations: addListener('principal-variations'),
   onPromotion: addListener('promotion'),
+  onEngineData: addListener('engine-data'),
   preferenceValue: sendValue('preference-value'),
   pieceDropped: sendValue('piece-dropped'),
   promoteTo: sendValue('promote-to'),

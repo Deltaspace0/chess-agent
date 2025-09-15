@@ -1,15 +1,17 @@
 import './App.css';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Chessboard } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import type { RegionStatus } from '../interface';
+import Canvas from './components/Canvas.tsx';
 import Checkbox from './components/Checkbox.tsx';
 import Gauge from './components/Gauge.tsx';
 import Slider from './components/Slider.tsx';
 import { useCheckboxProps, useElectronValue, usePreference, useSliderProps } from './hooks.ts';
 import { sliders } from '../config.ts';
 
-type Panel = 'main' | 'settings' | 'promotion';
+type Panel = 'main' | 'settings' | 'engine' | 'promotion';
+type EngineType = 'internal' | 'external';
 
 function App() {
   const electron = window.electronAPI;
@@ -82,6 +84,21 @@ function App() {
   const [arrows1, setArrows1] = useState<Arrow[]>([]);
   const [arrows2, setArrows2] = useState<Arrow[]>([]);
   const [panelType, setPanelType] = useState<Panel>('main');
+  const engineDataRef = useRef<Record<EngineType, string[]>>(null);
+  if (engineDataRef.current === null) {
+    engineDataRef.current = { internal: [], external: [] };
+  }
+  const engineData = engineDataRef.current;
+  const draw = useCallback((ctx: CanvasRenderingContext2D) => {
+    ctx.clearRect(0, 0, 4000, 4000);
+    ctx.font = `11px Courier New`;
+    ctx.fillStyle = '#fff';
+    const engineLines = engineData[enginePath ? 'external' : 'internal'];
+    for (let i = 0; i < engineLines.length; i++) {
+      const y = 4000-10*(engineLines.length-i);
+      ctx.fillText(engineLines[i], 10, y);
+    }
+  }, [engineData, enginePath]);
   useEffect(() => {
     electron.onUpdatePosition((value) => {
       setPositionFEN(value);
@@ -122,7 +139,16 @@ function App() {
       setArrows2(newArrows2);
     });
     electron.onPromotion(() => setPanelType('promotion'));
-  }, [electron]);
+    electron.onEngineData((name, data) => {
+      if (name in engineData) {
+        const engineLines = engineData[name as EngineType];
+        engineLines.push(data);
+        if (engineLines.length > 1000) {
+          engineLines.splice(0, 1);
+        }
+      }
+    });
+  }, [electron, engineData]);
   const pvComponents = [];
   for (const variation of principalVariations) {
     pvComponents.push(<p className='variation'>{variation}</p>);
@@ -142,6 +168,16 @@ function App() {
       electron.pieceDropped(sourceSquare+targetSquare);
       return true;
     }
+  };
+  const mainStatusButtons = <>
+    <button onClick={() => setPanelType('settings')}>Settings</button>
+    <button onClick={() => setPanelType('engine')}>Engine</button>
+  </>;
+  const statusButtons = {
+    main: mainStatusButtons,
+    settings: <button onClick={() => setPanelType('main')}>Close settings</button>,
+    engine: <button onClick={() => setPanelType('main')}>Close engine</button>,
+    promotion: mainStatusButtons
   };
   const panels = {
     main: <>
@@ -186,15 +222,6 @@ function App() {
     settings: <>
       <fieldset className='settings'>
         <legend>Settings</legend>
-        <div className='flex-row'>
-          <button onClick={() => electron.dialogEngine()}>Load external engine</button>
-          <button
-            onClick={() => sendEnginePath(null)}
-            disabled={enginePath === null}>
-              Remove external engine
-          </button>
-        </div>
-        {enginePath !== null && <p className='status'>{enginePath}</p>}
         <Slider {...durationProps}/>
         <Slider {...multiPVProps}/>
         <Slider {...mouseProps}/>
@@ -215,6 +242,21 @@ function App() {
             <Checkbox {...showNotationProps}/>
           </div>
         </div>
+      </fieldset>
+    </>,
+    engine: <>
+      <fieldset className='engine'>
+        <legend>Engine</legend>
+        {enginePath !== null && <p className='status'>{enginePath}</p>}
+        <div className='flex-row'>
+          <button onClick={() => electron.dialogEngine()}>Load external engine</button>
+          <button
+            onClick={() => sendEnginePath(null)}
+            disabled={enginePath === null}>
+              Remove external engine
+          </button>
+        </div>
+        <Canvas draw={draw} className='engine-canvas'/>
       </fieldset>
     </>,
     promotion: <>
@@ -261,11 +303,7 @@ function App() {
         </div>
         <div className='flex-row'>
           <p className='status'>{statusText}</p>
-          {panelType === 'settings' ? (
-            <button onClick={() => setPanelType('main')}>Close settings</button>
-          ) : (
-            <button onClick={() => setPanelType('settings')}>Show settings</button>
-          )}
+          {statusButtons[panelType]}
         </div>
         {panels[panelType]}
       </div>

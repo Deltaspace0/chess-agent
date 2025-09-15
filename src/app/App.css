@@ -173,9 +173,22 @@ p {
   font-size: 12px;
 }
 
+.engine-canvas {
+  min-width: 4000px;
+  min-height: 4000px;
+  margin: 6px;
+}
+
 .settings {
-  height: 128px;
+  height: 150px;
   overflow-y: scroll;
+}
+
+.engine {
+  height: 150px;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column-reverse;
 }
 
 .pv {

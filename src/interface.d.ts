@@ -41,6 +41,7 @@ interface IElectronAPI {
   onHighlightMoves: Listener<string[][]>;
   onPrincipalVariations: Listener<string[]>;
   onPromotion: Listener<void>;
+  onEngineData(listener: (name: string, data: string) => void);
   preferenceValue<T extends Preference>(name: T, value: Preferences[T]);
   pieceDropped(value: string);
   promoteTo(value: string);
