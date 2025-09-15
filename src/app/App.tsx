@@ -84,6 +84,7 @@ function App() {
   const [arrows1, setArrows1] = useState<Arrow[]>([]);
   const [arrows2, setArrows2] = useState<Arrow[]>([]);
   const [panelType, setPanelType] = useState<Panel>('main');
+  const [showEngineData, setShowEngineData] = useState(false);
   const engineDataRef = useRef<Record<EngineType, string[]>>(null);
   if (engineDataRef.current === null) {
     engineDataRef.current = { internal: [], external: [] };
@@ -247,7 +248,6 @@ function App() {
     engine: <>
       <fieldset className='engine'>
         <legend>Engine</legend>
-        {enginePath !== null && <p className='status'>{enginePath}</p>}
         <div className='flex-row'>
           <button onClick={() => electron.dialogEngine()}>Load external engine</button>
           <button
@@ -256,7 +256,12 @@ function App() {
               Remove external engine
           </button>
         </div>
-        <Canvas draw={draw} className='engine-canvas'/>
+        {enginePath !== null && <p className='status'>{enginePath}</p>}
+        <div className='flex-row'>
+          <button onClick={() => setShowEngineData(!showEngineData)}>
+            {showEngineData ? 'Close engine UCI' : 'Show engine UCI'}
+          </button>
+        </div>
       </fieldset>
     </>,
     promotion: <>
@@ -293,13 +298,19 @@ function App() {
           </button>
         </div>
         <div className='flex-row'>
-          <div className='board'>
-            <Chessboard options={chessboardOptions}/>
-          </div>
-          {showEvalBarProps.checked && <Gauge
-            evaluation={evaluation}
-            isWhitePerspective={isWhitePerspective}
-          />}
+          {(panelType === 'engine' && showEngineData) ? (<>
+            <div className='engine-canvas-div'>
+              <Canvas draw={draw} className='engine-canvas'/>
+            </div>
+          </>) : (<>
+            <div className='board'>
+              <Chessboard options={chessboardOptions}/>
+            </div>
+            {showEvalBarProps.checked && <Gauge
+              evaluation={evaluation}
+              isWhitePerspective={isWhitePerspective}
+            />}
+          </>)}
         </div>
         <div className='flex-row'>
           <p className='status'>{statusText}</p>
