@@ -11,17 +11,16 @@ class EngineExternal extends EngineProcess {
     } catch (e) {
       return false;
     }
-    this.process.stdout.on('data', (data) => {
-      const dataLines = data.toString().split('\n').slice(0, -1);
-      for (const listener of this.listeners) {
-        for (const line of dataLines) {
-          listener(line);
+    for (const t of ['stdout', 'stderr'] as const) {
+      this.process[t].on('data', (data) => {
+        const dataLines = data.toString().split('\n').slice(0, -1);
+        for (const listener of this.listeners[t]) {
+          for (const line of dataLines) {
+            listener(line);
+          }
         }
-      }
-    });
-    this.process.stderr.on('data', (data) => {
-      console.error(`Engine stderr: ${data}`);
-    });
+      });
+    }
     return true;
   }
 
@@ -35,6 +34,9 @@ class EngineExternal extends EngineProcess {
   send(message: string) {
     if (this.process) {
       this.process.stdin.write(message+'\n');
+      for (const listener of this.listeners.stdin) {
+        listener(message);
+      }
     }
   }
 }

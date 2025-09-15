@@ -22,7 +22,7 @@ class Engine {
 
   constructor(process: EngineProcess) {
     this.process = process;
-    this.process.addListener(this.processListener);
+    this.process.addListener('stdout', this.processListener);
   }
 
   private processData(data: string) {
@@ -108,9 +108,9 @@ class Engine {
   }
 
   setProcess(process: EngineProcess) {
-    this.process.removeListener(this.processListener);
+    this.process.removeListener('stdout', this.processListener);
     this.process = process;
-    this.process.addListener(this.processListener);
+    this.process.addListener('stdout', this.processListener);
     this.process.send('uci');
     this.searching = false;
     this.sendMultiPV();

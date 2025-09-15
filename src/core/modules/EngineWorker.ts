@@ -9,7 +9,7 @@ class EngineWorker extends EngineProcess {
     const url = new URL('../stockfish.js', import.meta.url);
     this.worker = new Worker(url, { type: 'module' });
     this.worker.addEventListener('message', (e) => {
-      for (const listener of this.listeners) {
+      for (const listener of this.listeners.stdout) {
         listener(e.data);
       }
     });
@@ -17,6 +17,9 @@ class EngineWorker extends EngineProcess {
 
   send(message: string) {
     this.worker.postMessage(message);
+    for (const listener of this.listeners.stdin) {
+      listener(message);
+    }
   }
 }
 
