@@ -7,6 +7,7 @@ export const sliders = {
 };
 
 export const defaultValues: Preferences = {
+  alwaysOnTop: true,
   autoResponse: false,
   autoScan: false,
   autoQueen: true,

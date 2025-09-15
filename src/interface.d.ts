@@ -4,6 +4,7 @@ import type { Square, Piece, PieceSymbol, Color } from 'chess.js';
 type RegionStatus = 'none' | 'exist' | 'selecting';
 
 interface Preferences {
+  alwaysOnTop: boolean;
   autoResponse: boolean;
   autoScan: boolean;
   autoQueen: boolean;

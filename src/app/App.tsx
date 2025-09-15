@@ -13,6 +13,10 @@ type Panel = 'main' | 'settings' | 'promotion';
 
 function App() {
   const electron = window.electronAPI;
+  const alwaysOnTopProps = useCheckboxProps({
+    label: 'Always on top',
+    preferenceName: 'alwaysOnTop'
+  });
   const autoResponseProps = useCheckboxProps({
     label: 'Auto response',
     preferenceName: 'autoResponse'
@@ -204,6 +208,7 @@ function App() {
             <Checkbox {...saveConfigToFileProps}/>
           </div>
           <div className='flex-column'>
+            <Checkbox {...alwaysOnTopProps}/>
             <Checkbox {...showEvalBarProps}/>
             <Checkbox {...showArrowsProps}/>
             <Checkbox {...showLinesProps}/>

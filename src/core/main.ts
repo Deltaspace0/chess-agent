@@ -25,7 +25,6 @@ async function createWindow(): Promise<BrowserWindow> {
     }
   });
   win.removeMenu();
-  win.setAlwaysOnTop(true, 'normal');
   await win.loadURL('http://localhost:5173');
   return win;
 }
@@ -190,6 +189,9 @@ function getRegionSelector(position: string): (region: Region) => Region {
   regionManager.setRegion(preferenceManager.getPreference('region'));
   preferenceManager.onUpdate((name, value) => {
     win.webContents.send('update-preference', name, value);
+  });
+  preferenceManager.onUpdatePreference('alwaysOnTop', (value) => {
+    win.setAlwaysOnTop(value, 'normal');
   });
   preferenceManager.onUpdatePreference('autoResponse', (value) => {
     solver.setAutoResponse(value);
