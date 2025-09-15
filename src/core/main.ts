@@ -13,6 +13,9 @@ import Recognizer from './modules/Recognizer.ts';
 import RegionManager from './modules/RegionManager.ts';
 import Solver from './modules/Solver.ts';
 import { sliders, actionRegions } from '../config.ts';
+import type { Preference, PreferenceListeners } from '../interface';
+
+type ActionName = keyof typeof actionRegions;
 
 async function createWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({
@@ -115,40 +118,18 @@ function getRegionSelector(position: string): (region: Region) => Region {
     }
   });
   solver.onPromotion(() => win.webContents.send('promotion'));
-  const actionRegionManager = new ActionRegionManager();
-  actionRegionManager.addActionRegion({
-    callback: () => solver.recognizeBoard(),
-    regionSelector: getRegionSelector(actionRegions.recognizeBoard)
-  });
-  actionRegionManager.addActionRegion({
-    callback: () => solver.playBestMove(),
-    regionSelector: getRegionSelector(actionRegions.playBestMove)
-  });
-  actionRegionManager.addActionRegion({
-    callback: () => solver.resetPosition(),
-    regionSelector: getRegionSelector(actionRegions.resetPosition)
-  });
-  actionRegionManager.addActionRegion({
-    callback: () => {
+  const actionCallbacks: Record<ActionName, () => void> = {
+    recognizeBoard: () => solver.recognizeBoard(),
+    playBestMove: () => solver.playBestMove(),
+    resetPosition: () => solver.resetPosition(),
+    autoResponse: () => {
       const autoResponse = preferenceManager.getPreference('autoResponse');
       preferenceManager.setPreference('autoResponse', !autoResponse);
     },
-    regionSelector: getRegionSelector(actionRegions.autoResponse)
-  });
-  actionRegionManager.addActionRegion({
-    callback: () => solver.undoMove(),
-    regionSelector: getRegionSelector(actionRegions.undoMove)
-  });
-  actionRegionManager.addActionRegion({
-    callback: () => solver.skipMove(),
-    regionSelector: getRegionSelector(actionRegions.skipMove)
-  });
-  actionRegionManager.addActionRegion({
-    callback: () => void solver.scanMove(),
-    regionSelector: getRegionSelector(actionRegions.scanMove)
-  });
-  actionRegionManager.addActionRegion({
-    callback: () => {
+    undoMove: () => solver.undoMove(),
+    skipMove: () => solver.skipMove(),
+    scanMove: () => void solver.scanMove(),
+    analysisDuration: () => {
       const duration = preferenceManager.getPreference('analysisDuration');
       const index = sliders.analysisDurations.indexOf(duration);
       const newIndex = (index+1)%sliders.analysisDurations.length;
@@ -156,44 +137,29 @@ function getRegionSelector(position: string): (region: Region) => Region {
       preferenceManager.setPreference('analysisDuration', newDuration);
       updateStatus(`Analysis duration: ${newDuration} ms`);
     },
-    regionSelector: getRegionSelector(actionRegions.analysisDuration)
-  });
-  actionRegionManager.addActionRegion({
-    callback: () => void regionManager.selectNewRegion(),
-    regionSelector: getRegionSelector(actionRegions.selectNewRegion)
-  });
-  actionRegionManager.addActionRegion({
-    callback: () => {
+    selectNewRegion: () => void regionManager.selectNewRegion(),
+    draggingMode: () => {
       const draggingMode = !preferenceManager.getPreference('draggingMode');
       preferenceManager.setPreference('draggingMode', draggingMode);
       console.log(`${draggingMode ? 'Dragging' : 'Clicking'} mode`);
     },
-    regionSelector: getRegionSelector(actionRegions.draggingMode)
-  });
-  actionRegionManager.addActionRegion({
-    callback: () => {
+    perspective: () => {
       const isWhite = !preferenceManager.getPreference('isWhitePerspective');
       preferenceManager.setPreference('isWhitePerspective', isWhite);
       console.log(`${isWhite ? 'White' : 'Black'} perspective`);
     },
-    regionSelector: getRegionSelector(actionRegions.perspective)
-  });
-  actionRegionManager.addActionRegion({
-    callback: () => solver.promoteTo('q'),
-    regionSelector: getRegionSelector(actionRegions.promoteQueen)
-  });
-  actionRegionManager.addActionRegion({
-    callback: () => solver.promoteTo('r'),
-    regionSelector: getRegionSelector(actionRegions.promoteRook)
-  });
-  actionRegionManager.addActionRegion({
-    callback: () => solver.promoteTo('b'),
-    regionSelector: getRegionSelector(actionRegions.promoteBishop)
-  });
-  actionRegionManager.addActionRegion({
-    callback: () => solver.promoteTo('n'),
-    regionSelector: getRegionSelector(actionRegions.promoteKnight)
-  });
+    promoteQueen: () => solver.promoteTo('q'),
+    promoteRook: () => solver.promoteTo('r'),
+    promoteBishop: () => solver.promoteTo('b'),
+    promoteKnight: () => solver.promoteTo('n')
+  };
+  const actionRegionManager = new ActionRegionManager();
+  for (const name of Object.keys(actionCallbacks) as ActionName[]) {
+    actionRegionManager.addActionRegion({
+      callback: actionCallbacks[name],
+      regionSelector: getRegionSelector(actionRegions[name])
+    });
+  }
   const regionManager = new RegionManager();
   regionManager.onUpdateStatus(updateStatus);
   regionManager.onUpdateRegion((region) => {
@@ -208,54 +174,43 @@ function getRegionSelector(position: string): (region: Region) => Region {
   preferenceManager.onUpdate((name, value) => {
     win.webContents.send('update-preference', name, value);
   });
-  preferenceManager.onUpdatePreference('alwaysOnTop', (value) => {
-    win.setAlwaysOnTop(value, 'normal');
-  });
-  preferenceManager.onUpdatePreference('autoResponse', (value) => {
-    solver.setAutoResponse(value);
-  });
-  preferenceManager.onUpdatePreference('autoScan', (value) => {
-    solver.setAutoScan(value);
-  });
-  preferenceManager.onUpdatePreference('autoQueen', (value) => {
-    solver.setAutoQueen(value);
-  });
-  preferenceManager.onUpdatePreference('isWhitePerspective', (value) => {
-    board.setPerspective(value);
-    game.setPerspective(value);
-  });
-  preferenceManager.onUpdatePreference('actionRegion', (value) => {
-    actionRegionManager.setActive(value);
-  });
-  preferenceManager.onUpdatePreference('analysisDuration', (value) => {
-    engine.setAnalysisDuration(value);
-  });
-  preferenceManager.onUpdatePreference('multiPV', (value) => {
-    engine.setMultiPV(value);
-  });
-  preferenceManager.onUpdatePreference('mouseSpeed', (value) => {
-    mouse.config.mouseSpeed = value;
-  });
-  preferenceManager.onUpdatePreference('region', (value) => {
-    actionRegionManager.setRegion(value);
-    board.setRegion(value);
-    recognizer.setRegion(value);
-  });
-  preferenceManager.onUpdatePreference('enginePath', async (value) => {
-    if (!value) {
-      engine.setProcess(engineWorker);
-      engineExternal.kill();
-      updateStatus('Ready');
-    } else {
-      const result = engineExternal.spawn(value);
-      if (result) {
-        engine.setProcess(engineExternal);
+  const preferenceListeners: Partial<PreferenceListeners> = {
+    alwaysOnTop: (value) => win.setAlwaysOnTop(value, 'normal'),
+    autoResponse: (value) => solver.setAutoResponse(value),
+    autoScan: (value) => solver.setAutoScan(value),
+    autoQueen: (value) => solver.setAutoQueen(value),
+    isWhitePerspective: (value) => {
+      board.setPerspective(value);
+      game.setPerspective(value);
+    },
+    actionRegion: (value) => actionRegionManager.setActive(value),
+    analysisDuration: (value) => engine.setAnalysisDuration(value),
+    multiPV: (value) => engine.setMultiPV(value),
+    mouseSpeed: (value) => { mouse.config.mouseSpeed = value; },
+    region: (value) => {
+      actionRegionManager.setRegion(value);
+      board.setRegion(value);
+      recognizer.setRegion(value);
+    },
+    enginePath: (value) => {
+      if (!value) {
+        engine.setProcess(engineWorker);
+        engineExternal.kill();
         updateStatus('Ready');
       } else {
-        updateStatus('Failed to load external engine');
+        const result = engineExternal.spawn(value);
+        if (result) {
+          engine.setProcess(engineExternal);
+          updateStatus('Ready');
+        } else {
+          updateStatus('Failed to load external engine');
+        }
       }
     }
-  });
+  };
+  for (const [name, listener] of Object.entries(preferenceListeners)) {
+    preferenceManager.onUpdatePreference(name as Preference, listener);
+  }
   ipcMain.on('preference-value', (_, name, value) => {
     preferenceManager.setPreference(name, value);
   });
