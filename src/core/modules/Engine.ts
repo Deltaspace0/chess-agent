@@ -15,40 +15,43 @@ class Engine {
   private multiPV: number = defaultValues.multiPV;
   private principalMoves: string[] = [];
   private sendingPrincipalMoves: boolean = false;
+  private processListener: (data: string) => void = this.processData.bind(this);
   private principalMovesCallback: (value: string[]) => void = () => {};
   private bestMoveCallback: (value: string) => void = () => {};
   private evaluationCallback: (value: string) => void = () => {};
 
   constructor(process: EngineProcess) {
     this.process = process;
-    this.process.onMessage((data) => {
-      const words: string[] = data.split(' ');
-      if (words.includes('pv')) {
-        const depth = words[words.indexOf('depth')+1];
-        if (this.principalMoves.length === 0 && depth !== '1') {
-          return;
-        }
-        const i = words.indexOf('score');
-        const evaluation = this.signEvaluation(words[i+1]+' '+words[i+2]);
-        const pv = Number(words[words.indexOf('multipv')+1])-1;
-        if (pv === 0) {
-          this.setEvaluation(evaluation);
-        }
-        const moves = words.slice(words.indexOf('pv')+1).join(' ');
-        this.setPrincipalMove(pv, evaluation+' '+moves);
+    this.process.addListener(this.processListener);
+  }
+
+  private processData(data: string) {
+    const words: string[] = data.split(' ');
+    if (words.includes('pv')) {
+      const depth = words[words.indexOf('depth')+1];
+      if (this.principalMoves.length === 0 && depth !== '1') {
+        return;
       }
-      if (words.includes('bestmove')) {
-        this.searching = false;
-        if (this.needSearch) {
-          this.search();
-        } else {
-          const move = words[words.indexOf('bestmove')+1];
-          this.bestMove = move;
-          this.ponderMove = words[words.indexOf('ponder')+1];
-          this.bestMoveCallback(move);
-        }
+      const i = words.indexOf('score');
+      const evaluation = this.signEvaluation(words[i+1]+' '+words[i+2]);
+      const pv = Number(words[words.indexOf('multipv')+1])-1;
+      if (pv === 0) {
+        this.setEvaluation(evaluation);
       }
-    });
+      const moves = words.slice(words.indexOf('pv')+1).join(' ');
+      this.setPrincipalMove(pv, evaluation+' '+moves);
+    }
+    if (words.includes('bestmove')) {
+      this.searching = false;
+      if (this.needSearch) {
+        this.search();
+      } else {
+        const move = words[words.indexOf('bestmove')+1];
+        this.bestMove = move;
+        this.ponderMove = words[words.indexOf('ponder')+1];
+        this.bestMoveCallback(move);
+      }
+    }
   }
 
   private signEvaluation(evaluation: string) {
@@ -104,6 +107,16 @@ class Engine {
     this.process.send(`setoption name MultiPV value ${this.multiPV}`);
   }
 
+  setProcess(process: EngineProcess) {
+    this.process.removeListener(this.processListener);
+    this.process = process;
+    this.process.addListener(this.processListener);
+    this.process.send('uci');
+    this.searching = false;
+    this.sendMultiPV();
+    this.analyzePosition();
+  }
+
   getBestMove(): string | null {
     return this.bestMove;
   }
@@ -140,13 +153,6 @@ class Engine {
 
   onEvaluation(callback: (value: string) => void) {
     this.evaluationCallback = callback;
-  }
-
-  start() {
-    this.searching = false;
-    this.process.send('uci');
-    this.sendMultiPV();
-    this.analyzePosition();
   }
 
   reset(fen?: string) {

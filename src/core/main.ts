@@ -5,7 +5,8 @@ import { fileURLToPath } from 'url';
 import ActionRegionManager from './modules/ActionRegionManager.ts';
 import Board from './modules/Board.ts';
 import Engine from './modules/Engine.ts';
-import EngineProcess from './modules/EngineProcess.ts';
+import EngineExternal from './modules/EngineExternal.ts';
+import EngineWorker from './modules/EngineWorker.ts';
 import Game from './modules/Game.ts';
 import PreferencesManager from './modules/PreferencesManager.ts';
 import Recognizer from './modules/Recognizer.ts';
@@ -68,8 +69,9 @@ function getRegionSelector(position: string): (region: Region) => Region {
   };
   const board = new Board();
   board.onMouseDownSquare(() => recognizer.stopScanning());
-  const engineProcess = new EngineProcess();
-  const engine = new Engine(engineProcess);
+  const engineExternal = new EngineExternal();
+  const engineWorker = new EngineWorker();
+  const engine = new Engine(engineWorker);
   engine.onPrincipalMoves((value) => {
     const moves = value.map((x) => x.split(' ').slice(0, 3));
     const variations = value.map((x) => game.formatEvalMoves(x));
@@ -220,12 +222,18 @@ function getRegionSelector(position: string): (region: Region) => Region {
     recognizer.setRegion(value);
   });
   preferencesManager.onUpdatePreference('enginePath', async (value) => {
-    const result = engineProcess.spawn(value);
-    if (result) {
-      engine.start();
+    if (!value) {
+      engine.setProcess(engineWorker);
+      engineExternal.kill();
       updateStatus('Ready');
     } else {
-      updateStatus('Failed to load external engine');
+      const result = engineExternal.spawn(value);
+      if (result) {
+        engine.setProcess(engineExternal);
+        updateStatus('Ready');
+      } else {
+        updateStatus('Failed to load external engine');
+      }
     }
   });
   ipcMain.on('preference-value', (_, name, value) => {
