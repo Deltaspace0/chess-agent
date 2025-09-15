@@ -45,6 +45,7 @@ interface IElectronAPI {
   preferenceValue<T extends Preference>(name: T, value: Preferences[T]);
   pieceDropped(value: string);
   promoteTo(value: string);
+  sendToEngine(name: string, data: string);
   newRegion();
   showRegion();
   removeRegion();

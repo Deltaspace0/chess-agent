@@ -174,13 +174,17 @@ p {
 }
 
 .engine-canvas-div {
-  width: 400px;
+  width: 360px;
   height: 320px;
   margin: 4px auto;
   position: relative;
   overflow: scroll;
   display: flex;
   flex-direction: column-reverse;
+}
+
+.engine-input {
+  min-width: 280px;
 }
 
 .engine-canvas {

@@ -1,5 +1,5 @@
 import './App.css';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Chessboard } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import type { RegionStatus } from '../interface';
@@ -85,21 +85,23 @@ function App() {
   const [arrows2, setArrows2] = useState<Arrow[]>([]);
   const [panelType, setPanelType] = useState<Panel>('main');
   const [showEngineData, setShowEngineData] = useState(false);
+  const [engineInput, setEngineInput] = useState('');
   const engineDataRef = useRef<Record<EngineType, string[]>>(null);
   if (engineDataRef.current === null) {
     engineDataRef.current = { internal: [], external: [] };
   }
   const engineData = engineDataRef.current;
+  const engineType = enginePath ? 'external' : 'internal';
   const draw = useCallback((ctx: CanvasRenderingContext2D) => {
     ctx.clearRect(0, 0, 4000, 4000);
     ctx.font = `11px Courier New`;
     ctx.fillStyle = '#fff';
-    const engineLines = engineData[enginePath ? 'external' : 'internal'];
+    const engineLines = engineData[engineType];
     for (let i = 0; i < engineLines.length; i++) {
       const y = 4000-10*(engineLines.length-i);
       ctx.fillText(engineLines[i], 10, y);
     }
-  }, [engineData, enginePath]);
+  }, [engineData, engineType]);
   useEffect(() => {
     electron.onUpdatePosition((value) => {
       setPositionFEN(value);
@@ -150,6 +152,16 @@ function App() {
       }
     });
   }, [electron, engineData]);
+  const handleEngineSend = () => {
+    electron.sendToEngine(engineType, engineInput);
+    setEngineInput('');
+  };
+  const handleEngineEnterPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleEngineSend();
+      e.preventDefault();
+    }
+  };
   const pvComponents = [];
   for (const variation of principalVariations) {
     pvComponents.push(<p className='variation'>{variation}</p>);
@@ -298,11 +310,21 @@ function App() {
           </button>
         </div>
         <div className='flex-row'>
-          {(panelType === 'engine' && showEngineData) ? (<>
+          {(panelType === 'engine' && showEngineData) ? (
             <div className='engine-canvas-div'>
+              <div className='flex-row'>
+                <input
+                  type="text"
+                  className='engine-input'
+                  value={engineInput}
+                  onChange={(e) => setEngineInput(e.target.value)}
+                  onKeyDown={handleEngineEnterPress}
+                />
+                <button onClick={handleEngineSend}>Send</button>
+              </div>
               <Canvas draw={draw} className='engine-canvas'/>
             </div>
-          </>) : (<>
+          ) : (<>
             <div className='board'>
               <Chessboard options={chessboardOptions}/>
             </div>

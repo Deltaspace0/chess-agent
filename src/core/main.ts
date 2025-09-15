@@ -216,6 +216,13 @@ function getRegionSelector(position: string): (region: Region) => Region {
   });
   ipcMain.on('piece-dropped', (_, value) => solver.processMove(value));
   ipcMain.on('promote-to', (_, value) => solver.promoteTo(value));
+  ipcMain.on('send-to-engine', (_, name, data) => {
+    if (name === 'internal') {
+      engineWorker.send(data);
+    } else if (name === 'external') {
+      engineExternal.send(data);
+    }
+  });
   ipcMain.handle('new-region', () => regionManager.selectNewRegion());
   ipcMain.handle('show-region', () => regionManager.showRegion());
   ipcMain.handle('remove-region', () => regionManager.setRegion(null));
