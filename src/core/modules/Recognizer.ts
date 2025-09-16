@@ -2,9 +2,9 @@ import { screen, sleep, Region } from '@nut-tree-fork/nut-js';
 import type { Color, Piece, PieceSymbol } from 'chess.js';
 import { defaultValues } from '../../config.ts';
 
-interface MoveError {
+interface MoveResidual {
   move: string | null;
-  error: number;
+  residual: number;
 }
 
 function getBufferSquare(bufferRows: Buffer[], region: Region): Buffer[] {
@@ -17,30 +17,25 @@ function getBufferSquare(bufferRows: Buffer[], region: Region): Buffer[] {
   return bufferSquare;
 }
 
+function compareHashes(hash1: string, hash2: string): number {
+  let residual = 0;
+  for (let i = 0; i < hash1.length; i++) {
+    residual += Math.abs(Number(hash1[i])-Number(hash2[i]));
+  }
+  return residual;
+}
+
 function getChangedSquares(oldHashes: string[][], newHashes: string[][]): [number, number][] {
   const changedSquares: [number, number][] = [];
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
-      const newHash = newHashes[i][j];
-      const oldHash = oldHashes[i][j];
-      let errorCount = 0;
-      for (let k = 0; k < newHash.length; k++) {
-        errorCount += Math.abs(Number(newHash[k])-Number(oldHash[k]));
-      }
-      if (errorCount > 10) {
+      const residual = compareHashes(newHashes[i][j], oldHashes[i][j]);
+      if (residual > 10) {
         changedSquares.push([i, j]);
       }
     }
   }
   return changedSquares;
-}
-
-function compareHashes(hash1: string, hash2: string): number {
-  let errors = 0;
-  for (let i = 0; i < hash1.length; i++) {
-    errors += Math.abs(Number(hash1[i])-Number(hash2[i]));
-  }
-  return errors;
 }
 
 class Recognizer {
@@ -94,15 +89,15 @@ class Recognizer {
         const bgr = [0, 0, 0];
         for (let k = startRow; k < startRow+height; k++) {
           for (let l = startCol; l < startCol+width; l++) {
-            let backErrors = Infinity;
+            let backResiduals = Infinity;
             for (const backPixel of backPixels) {
-              let backError = 0;
+              let backResidual = 0;
               for (let m = 0; m < 3; m++) {
-                backError += Math.abs(squareGrid[k][l*4+m]-backPixel[m]);
+                backResidual += Math.abs(squareGrid[k][l*4+m]-backPixel[m]);
               }
-              backErrors = Math.min(backErrors, backError);
+              backResiduals = Math.min(backResiduals, backResidual);
             }
-            if (backErrors < 20) {
+            if (backResiduals < 20) {
               continue;
             }
             for (let m = 0; m < 3; m++) {
@@ -134,35 +129,35 @@ class Recognizer {
     return boardHashes;
   }
 
-  private getPieceHashErrors(piece: Piece | null, hash: string): number {
+  private getPieceHashResidual(piece: Piece | null, hash: string): number {
     if (piece === null) {
-      const errors1 = compareHashes(hash, this.pieceHashes['e12']);
-      const errors2 = compareHashes(hash, this.pieceHashes['e13']);
-      return Math.min(errors1, errors2);
+      const residual1 = compareHashes(hash, this.pieceHashes['e12']);
+      const residual2 = compareHashes(hash, this.pieceHashes['e13']);
+      return Math.min(residual1, residual2);
     }
-    let minErrors = Infinity;
+    let minResidual = Infinity;
     for (const key in this.pieceHashes) {
       if (piece.type === key[0] && piece.color === key[1]) {
-        const errors = compareHashes(hash, this.pieceHashes[key]);
-        minErrors = Math.min(errors, minErrors);
+        const residual = compareHashes(hash, this.pieceHashes[key]);
+        minResidual = Math.min(residual, minResidual);
       }
     }
-    return minErrors;
+    return minResidual;
   }
 
-  private getMoveErrors(hashes: string[][], states: BoardState[]): MoveError[] {
-    const moveErrors: MoveError[] = [];
+  private getMoveResiduals(hashes: string[][], states: BoardState[]): MoveResidual[] {
+    const moveResiduals: MoveResidual[] = [];
     for (const { move, grid } of states) {
-      let error = 0;
+      let residual = 0;
       for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
           const hash = hashes[i][j];
-          error += this.getPieceHashErrors(grid[i][j], hash);
+          residual += this.getPieceHashResidual(grid[i][j], hash);
         }
       }
-      moveErrors.push({ move, error });
+      moveResiduals.push({ move, residual });
     }
-    return moveErrors;
+    return moveResiduals;
   }
 
   async load(isWhitePerspective: boolean) {
@@ -194,13 +189,13 @@ class Recognizer {
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
         const currentHash = this.getHash(grid[i][j]);
-        let minErrors = Infinity;
+        let minResidual = Infinity;
         let likelyPieceString = 'e';
         for (const pieceString in this.pieceHashes) {
           const hash = this.pieceHashes[pieceString];
-          const errors = compareHashes(currentHash, hash);
-          if (errors < minErrors) {
-            minErrors = errors;
+          const residual = compareHashes(currentHash, hash);
+          if (residual < minResidual) {
+            minResidual = residual;
             likelyPieceString = pieceString;
           }
         }
@@ -242,10 +237,10 @@ class Recognizer {
         waitingForMovement = false;
       }
       if (changedSquares.length === 0 && !waitingForMovement) {
-        const moveErrors = this.getMoveErrors(boardHashes, boardStates);
-        moveErrors.sort((a, b) => a.error-b.error);
-        const { move, error } = moveErrors[0];
-        if (move !== null && error < moveErrors[1].error*0.9) {
+        const moveResiduals = this.getMoveResiduals(boardHashes, boardStates);
+        moveResiduals.sort((a, b) => a.residual-b.residual);
+        const { move, residual } = moveResiduals[0];
+        if (move !== null && residual < moveResiduals[1].residual*0.9) {
           this.scanning = false;
           return move;
         }
