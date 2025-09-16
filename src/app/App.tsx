@@ -137,7 +137,6 @@ function App() {
     }
   };
   const mainStatusButtons = <>
-    <button onClick={() => setPanelType('engine')}>Engine</button>
     <button onClick={() => setPanelType('settings')}>Settings</button>
   </>;
   const statusButtons = {
@@ -146,6 +145,11 @@ function App() {
     engine: <button onClick={() => setPanelType('main')}>Close engine</button>,
     promotion: mainStatusButtons
   };
+  const engineButton = <button
+    onClick={() => setPanelType('engine')}
+    style={{width: '64px'}}>
+      Engine
+  </button>;
   const panels = {
     main: <>
       <fieldset className='actions'>
@@ -181,15 +185,19 @@ function App() {
           <button onClick={() => electron.skipMove()}>Skip move</button>
         </div>
       </fieldset>
-      {showLinesProps.checked && <fieldset className='pv'>
-        <legend>Principal variations</legend>
-        <p className='variation'>
-          Depth: {engineInfo.depth},
-          time: {engineInfo.time} ms,
-          nodes: {engineInfo.nodes}
-        </p>
-        {pvComponents}
-      </fieldset>}
+      {showLinesProps.checked ? (
+        <fieldset className='pv'>
+          <legend>{engineButton}</legend>
+          <p className='variation'>
+            Depth: {engineInfo.depth},
+            time: {engineInfo.time} ms,
+            nodes: {engineInfo.nodes}
+          </p>
+          {pvComponents}
+        </fieldset>
+      ) : (
+        <div className='flex-row'>{engineButton}</div>
+      )}
     </>,
     settings: <>
       <fieldset className='settings'>
