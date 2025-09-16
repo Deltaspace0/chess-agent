@@ -106,6 +106,12 @@ function getRegionSelector(position: string): (region: Region) => Region {
   });
   game.reset();
   const recognizer = new Recognizer();
+  const handleLoadHashes = () => {
+    const perspective = preferenceManager.getPreference('isWhitePerspective');
+    recognizer.load(perspective).then(
+      () => updateStatus('Loaded piece hashes'),
+      () => updateStatus('Failed to load piece hashes'));
+  };
   const solver = new Solver({ engine, game, recognizer });
   solver.onUpdateStatus(updateStatus);
   solver.onBestMove(async (move) => {
@@ -142,6 +148,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
       preferenceManager.setPreference('draggingMode', draggingMode);
       console.log(`${draggingMode ? 'Dragging' : 'Clicking'} mode`);
     },
+    loadHashes: handleLoadHashes,
     perspective: () => {
       const isWhite = !preferenceManager.getPreference('isWhitePerspective');
       preferenceManager.setPreference('isWhitePerspective', isWhite);
@@ -225,12 +232,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
   ipcMain.handle('new-region', () => regionManager.selectNewRegion());
   ipcMain.handle('show-region', () => regionManager.showRegion());
   ipcMain.handle('remove-region', () => regionManager.setRegion(null));
-  ipcMain.handle('load-hashes', () => {
-    const perspective = preferenceManager.getPreference('isWhitePerspective');
-    recognizer.load(perspective).then(
-      () => updateStatus('Loaded piece hashes'),
-      () => updateStatus('Failed to load piece hashes'));
-  });
+  ipcMain.handle('load-hashes', handleLoadHashes);
   ipcMain.handle('scan-move', () => solver.scanMove());
   ipcMain.handle('skip-move', () => solver.skipMove());
   ipcMain.handle('undo-move', () => solver.undoMove());

@@ -55,6 +55,7 @@ export const actionRegions = {
   analysisDuration: 'S8',
   selectNewRegion: 'E1',
   draggingMode: 'E2',
+  loadHashes: 'E7',
   perspective: 'E8',
   promoteQueen: 'W1',
   promoteRook: 'W2',
