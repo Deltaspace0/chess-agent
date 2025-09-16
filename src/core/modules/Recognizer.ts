@@ -1,6 +1,5 @@
 import { screen, sleep, Region } from '@nut-tree-fork/nut-js';
 import type { Color, Piece, PieceSymbol } from 'chess.js';
-import type { BoardState } from '../../interface';
 import { defaultValues } from '../../config.ts';
 
 interface RecognizerOptions {

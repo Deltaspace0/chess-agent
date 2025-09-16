@@ -1,6 +1,5 @@
 import { Chess } from 'chess.js';
 import type { Color, Piece, Square } from 'chess.js';
-import type { BoardState } from '../../interface';
 import { coordsToSquare } from '../util.ts';
 import { defaultValues } from '../../config.ts';
 

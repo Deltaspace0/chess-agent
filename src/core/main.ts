@@ -13,7 +13,6 @@ import Recognizer from './modules/Recognizer.ts';
 import RegionManager from './modules/RegionManager.ts';
 import Solver from './modules/Solver.ts';
 import { sliders, actionRegions } from '../config.ts';
-import type { Preference, PreferenceListeners } from '../interface';
 
 type ActionName = keyof typeof actionRegions;
 
@@ -131,9 +130,9 @@ function getRegionSelector(position: string): (region: Region) => Region {
     scanMove: () => void solver.scanMove(),
     analysisDuration: () => {
       const duration = preferenceManager.getPreference('analysisDuration');
-      const index = sliders.analysisDurations.indexOf(duration);
-      const newIndex = (index+1)%sliders.analysisDurations.length;
-      const newDuration = sliders.analysisDurations[newIndex];
+      const index = sliders.analysisDuration.indexOf(duration);
+      const newIndex = (index+1)%sliders.analysisDuration.length;
+      const newDuration = sliders.analysisDuration[newIndex];
       preferenceManager.setPreference('analysisDuration', newDuration);
       updateStatus(`Analysis duration: ${newDuration} ms`);
     },

@@ -1,9 +1,7 @@
-import type { Preferences } from './interface';
-
-export const sliders = {
-  analysisDurations: [100, 300, 1000, 3000, 5000, 10000],
-  multiPVs: [1, 2, 3, 4, 5, 10, 20],
-  mouseSpeeds: [500, 1000, 3000, 5000, 10000]
+export const sliders: Record<NumberPreference, number[]> = {
+  analysisDuration: [100, 300, 1000, 3000, 5000, 10000],
+  multiPV: [1, 2, 3, 4, 5, 10, 20],
+  mouseSpeed: [500, 1000, 3000, 5000, 10000]
 };
 
 export const defaultValues: Preferences = {
@@ -24,6 +22,26 @@ export const defaultValues: Preferences = {
   region: null,
   saveConfigToFile: false,
   enginePath: null
+};
+
+export const preferenceLabels: Record<Preference, string> = {
+  alwaysOnTop: 'Always on top',
+  autoResponse: 'Auto response',
+  autoScan: 'Auto scan',
+  autoQueen: 'Auto queen',
+  isWhitePerspective: 'Is White\'s perspective',
+  draggingMode: 'Dragging mode',
+  actionRegion: 'Invisible action regions',
+  showEvalBar: 'Show eval bar',
+  showArrows: 'Show arrows',
+  showLines: 'Show lines',
+  showNotation: 'Show notation',
+  analysisDuration: 'Analysis duration (ms)',
+  multiPV: 'Multiple lines',
+  mouseSpeed: 'Mouse speed',
+  region: 'Region',
+  saveConfigToFile: 'Save config on exit',
+  enginePath: 'Engine path'
 };
 
 export const actionRegions = {

@@ -1,7 +1,6 @@
 import { mouse, screen, Point, Region } from '@nut-tree-fork/nut-js';
 import mouseEvents from 'global-mouse-events';
 import StatusNotifier from './StatusNotifier.ts';
-import type { RegionStatus } from '../../interface';
 
 class RegionManager extends StatusNotifier {
   private region: Region | null = null;

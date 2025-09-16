@@ -2,78 +2,31 @@ import './App.css';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Chessboard } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
-import type { RegionStatus } from '../interface';
 import Canvas from './components/Canvas.tsx';
 import Checkbox from './components/Checkbox.tsx';
 import Gauge from './components/Gauge.tsx';
 import Slider from './components/Slider.tsx';
 import { useCheckboxProps, useElectronValue, usePreference, useSliderProps } from './hooks.ts';
-import { sliders } from '../config.ts';
 
 type Panel = 'main' | 'settings' | 'engine' | 'promotion';
 type EngineType = 'internal' | 'external';
 
 function App() {
   const electron = window.electronAPI;
-  const alwaysOnTopProps = useCheckboxProps({
-    label: 'Always on top',
-    preferenceName: 'alwaysOnTop'
-  });
-  const autoResponseProps = useCheckboxProps({
-    label: 'Auto response',
-    preferenceName: 'autoResponse'
-  });
-  const autoScanProps = useCheckboxProps({
-    label: 'Auto scan',
-    preferenceName: 'autoScan'
-  });
-  const autoQueenProps = useCheckboxProps({
-    label: 'Auto queen',
-    preferenceName: 'autoQueen'
-  });
-  const draggingModeProps = useCheckboxProps({
-    label: 'Dragging mode',
-    preferenceName: 'draggingMode'
-  });
-  const actionRegionProps = useCheckboxProps({
-    label: 'Invisible action regions',
-    preferenceName: 'actionRegion'
-  });
-  const saveConfigToFileProps = useCheckboxProps({
-    label: 'Save config on exit',
-    preferenceName: 'saveConfigToFile'
-  });
-  const showEvalBarProps = useCheckboxProps({
-    label: 'Show eval bar',
-    preferenceName: 'showEvalBar'
-  });
-  const showArrowsProps = useCheckboxProps({
-    label: 'Show arrows',
-    preferenceName: 'showArrows'
-  });
-  const showLinesProps = useCheckboxProps({
-    label: 'Show lines',
-    preferenceName: 'showLines'
-  });
-  const showNotationProps = useCheckboxProps({
-    label: 'Show notation',
-    preferenceName: 'showNotation'
-  });
-  const durationProps = useSliderProps({
-    label: 'Analysis duration (ms)',
-    list: sliders.analysisDurations,
-    preferenceName: 'analysisDuration'
-  });
-  const multiPVProps = useSliderProps({
-    label: 'Multiple lines',
-    list: sliders.multiPVs,
-    preferenceName: 'multiPV'
-  });
-  const mouseProps = useSliderProps({
-    label: 'Mouse speed',
-    list: sliders.mouseSpeeds,
-    preferenceName: 'mouseSpeed'
-  });
+  const alwaysOnTopProps = useCheckboxProps('alwaysOnTop');
+  const autoResponseProps = useCheckboxProps('autoResponse');
+  const autoScanProps = useCheckboxProps('autoScan');
+  const autoQueenProps = useCheckboxProps('autoQueen');
+  const draggingModeProps = useCheckboxProps('draggingMode');
+  const actionRegionProps = useCheckboxProps('actionRegion');
+  const saveConfigToFileProps = useCheckboxProps('saveConfigToFile');
+  const showEvalBarProps = useCheckboxProps('showEvalBar');
+  const showArrowsProps = useCheckboxProps('showArrows');
+  const showLinesProps = useCheckboxProps('showLines');
+  const showNotationProps = useCheckboxProps('showNotation');
+  const durationProps = useSliderProps('analysisDuration');
+  const multiPVProps = useSliderProps('multiPV');
+  const mouseProps = useSliderProps('mouseSpeed');
   const [isWhitePerspective, sendPerspective] = usePreference('isWhitePerspective');
   const [enginePath, sendEnginePath] = usePreference('enginePath');
   const statusText = useElectronValue('', electron.onUpdateStatus);

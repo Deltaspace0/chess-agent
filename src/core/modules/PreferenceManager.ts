@@ -1,5 +1,4 @@
 import fs from 'fs';
-import type { Preference, Preferences, PreferenceListeners } from '../../interface';
 import { defaultValues } from '../../config.ts';
 
 class PreferenceManager {
