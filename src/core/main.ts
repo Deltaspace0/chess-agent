@@ -3,6 +3,7 @@ import { mouse, sleep, Region } from '@nut-tree-fork/nut-js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ActionRegionManager from './modules/ActionRegionManager.ts';
+import Agent from './modules/Agent.ts';
 import Board from './modules/Board.ts';
 import Engine from './modules/Engine.ts';
 import EngineExternal from './modules/EngineExternal.ts';
@@ -11,7 +12,6 @@ import Game from './modules/Game.ts';
 import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
 import RegionManager from './modules/RegionManager.ts';
-import Solver from './modules/Solver.ts';
 import { sliders, actionRegions } from '../config.ts';
 
 type ActionName = keyof typeof actionRegions;
@@ -112,28 +112,28 @@ function getRegionSelector(position: string): (region: Region) => Region {
       () => updateStatus('Loaded piece hashes'),
       () => updateStatus('Failed to load piece hashes'));
   };
-  const solver = new Solver({ engine, game, recognizer });
-  solver.onUpdateStatus(updateStatus);
-  solver.onBestMove(async (move) => {
+  const agent = new Agent({ engine, game, recognizer });
+  agent.onUpdateStatus(updateStatus);
+  agent.onBestMove(async (move) => {
     const draggingMode = preferenceManager.getPreference('draggingMode');
     await board.playMove(move, draggingMode);
     await sleep(50);
     if (!draggingMode) {
-      solver.processMove(move);
+      agent.processMove(move);
     }
   });
-  solver.onPromotion(() => win.webContents.send('promotion'));
+  agent.onPromotion(() => win.webContents.send('promotion'));
   const actionCallbacks: Record<ActionName, () => void> = {
-    recognizeBoard: () => solver.recognizeBoard(),
-    playBestMove: () => solver.playBestMove(),
-    resetPosition: () => solver.resetPosition(),
+    recognizeBoard: () => agent.recognizeBoard(),
+    playBestMove: () => agent.playBestMove(),
+    resetPosition: () => agent.resetPosition(),
     autoResponse: () => {
       const autoResponse = preferenceManager.getPreference('autoResponse');
       preferenceManager.setPreference('autoResponse', !autoResponse);
     },
-    undoMove: () => solver.undoMove(),
-    skipMove: () => solver.skipMove(),
-    scanMove: () => void solver.scanMove(),
+    undoMove: () => agent.undoMove(),
+    skipMove: () => agent.skipMove(),
+    scanMove: () => void agent.scanMove(),
     analysisDuration: () => {
       const duration = preferenceManager.getPreference('analysisDuration');
       const index = sliders.analysisDuration.indexOf(duration);
@@ -154,10 +154,10 @@ function getRegionSelector(position: string): (region: Region) => Region {
       preferenceManager.setPreference('isWhitePerspective', isWhite);
       console.log(`${isWhite ? 'White' : 'Black'} perspective`);
     },
-    promoteQueen: () => solver.promoteTo('q'),
-    promoteRook: () => solver.promoteTo('r'),
-    promoteBishop: () => solver.promoteTo('b'),
-    promoteKnight: () => solver.promoteTo('n')
+    promoteQueen: () => agent.promoteTo('q'),
+    promoteRook: () => agent.promoteTo('r'),
+    promoteBishop: () => agent.promoteTo('b'),
+    promoteKnight: () => agent.promoteTo('n')
   };
   const actionRegionManager = new ActionRegionManager();
   for (const name of Object.keys(actionCallbacks) as ActionName[]) {
@@ -182,9 +182,9 @@ function getRegionSelector(position: string): (region: Region) => Region {
   });
   const preferenceListeners: Partial<PreferenceListeners> = {
     alwaysOnTop: (value) => win.setAlwaysOnTop(value, 'normal'),
-    autoResponse: (value) => solver.setAutoResponse(value),
-    autoScan: (value) => solver.setAutoScan(value),
-    autoQueen: (value) => solver.setAutoQueen(value),
+    autoResponse: (value) => agent.setAutoResponse(value),
+    autoScan: (value) => agent.setAutoScan(value),
+    autoQueen: (value) => agent.setAutoQueen(value),
     isWhitePerspective: (value) => {
       board.setPerspective(value);
       game.setPerspective(value);
@@ -221,8 +221,8 @@ function getRegionSelector(position: string): (region: Region) => Region {
   ipcMain.on('preference-value', (_, name, value) => {
     preferenceManager.setPreference(name, value);
   });
-  ipcMain.on('piece-dropped', (_, value) => solver.processMove(value));
-  ipcMain.on('promote-to', (_, value) => solver.promoteTo(value));
+  ipcMain.on('piece-dropped', (_, value) => agent.processMove(value));
+  ipcMain.on('promote-to', (_, value) => agent.promoteTo(value));
   ipcMain.on('send-to-engine', (_, name, data) => {
     if (name === 'internal') {
       engineWorker.send(data);
@@ -234,12 +234,12 @@ function getRegionSelector(position: string): (region: Region) => Region {
   ipcMain.handle('show-region', () => regionManager.showRegion());
   ipcMain.handle('remove-region', () => regionManager.setRegion(null));
   ipcMain.handle('load-hashes', handleLoadHashes);
-  ipcMain.handle('scan-move', () => solver.scanMove());
-  ipcMain.handle('skip-move', () => solver.skipMove());
-  ipcMain.handle('undo-move', () => solver.undoMove());
-  ipcMain.handle('best-move', () => solver.playBestMove());
-  ipcMain.handle('reset-position', () => solver.resetPosition());
-  ipcMain.handle('recognize-board', () => solver.recognizeBoard());
+  ipcMain.handle('scan-move', () => agent.scanMove());
+  ipcMain.handle('skip-move', () => agent.skipMove());
+  ipcMain.handle('undo-move', () => agent.undoMove());
+  ipcMain.handle('best-move', () => agent.playBestMove());
+  ipcMain.handle('reset-position', () => agent.resetPosition());
+  ipcMain.handle('recognize-board', () => agent.recognizeBoard());
   ipcMain.handle('dialog-engine', async () => {
     const result = await dialog.showOpenDialog({ properties: ['openFile'] });
     if (result.filePaths.length > 0) {
@@ -249,6 +249,6 @@ function getRegionSelector(position: string): (region: Region) => Region {
   updateStatus('Ready');
   while (true) {
     const move = await board.detectMove();
-    solver.processMove(move);
+    agent.processMove(move);
   }
 })();

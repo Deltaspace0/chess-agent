@@ -4,7 +4,7 @@ import Recognizer from './Recognizer.ts';
 import StatusNotifier from './StatusNotifier.ts';
 import { defaultValues } from '../../config.ts';
 
-interface SolverOptions {
+interface AgentOptions {
   engine: Engine;
   game: Game;
   recognizer: Recognizer;
@@ -13,7 +13,7 @@ interface SolverOptions {
   autoQueen?: boolean;
 }
 
-class Solver extends StatusNotifier {
+class Agent extends StatusNotifier {
   private engine: Engine;
   private game: Game;
   private recognizer: Recognizer;
@@ -25,7 +25,7 @@ class Solver extends StatusNotifier {
   private bestMoveCallback: (value: string) => void = () => {};
   private promotionCallback: () => void = () => {};
 
-  constructor(options: SolverOptions) {
+  constructor(options: AgentOptions) {
     super();
     this.engine = options.engine;
     this.game = options.game;
@@ -209,4 +209,4 @@ class Solver extends StatusNotifier {
   }
 }
 
-export default Solver;
+export default Agent;
