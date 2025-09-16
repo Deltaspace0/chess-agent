@@ -193,6 +193,10 @@ p {
   margin: 6px;
 }
 
+.actions {
+  padding: 2px 12px;
+}
+
 .settings {
   height: 150px;
   overflow-y: scroll;
@@ -203,8 +207,9 @@ p {
 }
 
 .pv {
-  height: 60px;
+  height: 82px;
   overflow-y: scroll;
+  padding: 2px 12px;
 }
 
 .button-auto {

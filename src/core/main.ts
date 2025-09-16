@@ -104,8 +104,8 @@ function getRegionSelector(position: string): (region: Region) => Region {
     sendToApp('highlight-moves', moves);
     sendToApp('principal-variations', variations);
   });
-  engine.onEvaluation((value) => {
-    sendToApp('evaluation', value);
+  engine.onEngineInfo((value) => {
+    sendToApp('update-engine-info', value);
   });
   const game = new Game();
   game.onUpdatePosition((value) => {

@@ -32,7 +32,7 @@ function App() {
   const [enginePath, sendEnginePath] = usePreference('enginePath');
   const statusText = useElectronValue('', electron.onUpdateStatus);
   const regionStatus = useElectronValue<RegionStatus>('none', electron.onUpdateRegion);
-  const evaluation = useElectronValue('cp 0', electron.onEvaluation);
+  const engineInfo = useElectronValue({}, electron.onUpdateEngineInfo);
   const principalVariations = useElectronValue([], electron.onPrincipalVariations);
   const [positionFEN, setPositionFEN] = useState('');
   const [arrows1, setArrows1] = useState<Arrow[]>([]);
@@ -148,7 +148,7 @@ function App() {
   };
   const panels = {
     main: <>
-      <fieldset>
+      <fieldset className='actions'>
         <legend>Actions</legend>
         <div className='flex-row'>
           <button
@@ -183,6 +183,11 @@ function App() {
       </fieldset>
       {showLinesProps.checked && <fieldset className='pv'>
         <legend>Principal variations</legend>
+        <p className='variation'>
+          Depth: {engineInfo.depth},
+          time: {engineInfo.time} ms,
+          nodes: {engineInfo.nodes}
+        </p>
         {pvComponents}
       </fieldset>}
     </>,
@@ -284,7 +289,7 @@ function App() {
               <Chessboard options={chessboardOptions}/>
             </div>
             {showEvalBarProps.checked && <Gauge
-              evaluation={evaluation}
+              evaluation={engineInfo.evaluation ?? 'cp 0'}
               isWhitePerspective={isWhitePerspective}
             />}
           </>)}

@@ -1,5 +1,5 @@
 import type { Region } from '@nut-tree-fork/nut-js';
-import type { Square, Piece, PieceSymbol, Color } from 'chess.js';
+import type { Piece } from 'chess.js';
 
 declare global {
   interface Preferences {
@@ -33,10 +33,18 @@ declare global {
   type PreferenceListeners = { [T in Preference]: (value: Preferences[T]) => void };
   type Listener<T> = (listener: (value: T) => void) => void;
   type RegionStatus = 'none' | 'exist' | 'selecting';
-  
+
   interface BoardState {
     move: string | null;
     grid: (Piece | null)[][];
+  }
+
+  interface EngineInfo {
+    depth?: number;
+    evaluation?: string;
+    nodes?: number;
+    nodesPerSecond?: number;
+    time?: number;
   }
 
   interface IElectronAPI {
@@ -44,7 +52,7 @@ declare global {
     onUpdateStatus: Listener<string>;
     onUpdateRegion: Listener<RegionStatus>;
     onUpdatePosition: Listener<string>;
-    onEvaluation: Listener<string>;
+    onUpdateEngineInfo: Listener<EngineInfo>;
     onHighlightMoves: Listener<string[][]>;
     onPrincipalVariations: Listener<string[]>;
     onPromotion: Listener<void>;

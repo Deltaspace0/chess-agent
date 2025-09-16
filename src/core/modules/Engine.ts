@@ -1,6 +1,10 @@
 import EngineProcess from './EngineProcess.ts';
 import { defaultValues } from '../../config.ts';
 
+function getNumberValue(words: string[], name: string): number {
+  return Number(words[words.indexOf(name)+1]);
+}
+
 class Engine {
   private process: EngineProcess;
   private searching: boolean = false;
@@ -10,16 +14,16 @@ class Engine {
   private fen: string | null = null;
   private bestMove: string | null = null;
   private ponderMove: string | null = null;
-  private evaluation: string | null = null;
+  private engineInfo: EngineInfo = {};
   private analysisDuration: number = defaultValues.analysisDuration;
   private multiPV: number = defaultValues.multiPV;
   private threads: number = defaultValues.engineThreads;
   private principalMoves: string[] = [];
-  private sendingPrincipalMoves: boolean = false;
+  private sendingEngineInfo: boolean = false;
   private processListener: (data: string) => void = this.processData.bind(this);
   private principalMovesCallback: (value: string[]) => void = () => {};
   private bestMoveCallback: (value: string) => void = () => {};
-  private evaluationCallback: (value: string) => void = () => {};
+  private engineInfoCallback: (value: EngineInfo) => void = () => {};
 
   constructor(process: EngineProcess) {
     this.process = process;
@@ -29,15 +33,19 @@ class Engine {
   private processData(data: string) {
     const words: string[] = data.split(' ');
     if (words.includes('pv')) {
-      const depth = words[words.indexOf('depth')+1];
-      if (this.principalMoves.length === 0 && depth !== '1') {
+      const depth = getNumberValue(words, 'depth');
+      if (this.principalMoves.length === 0 && depth !== 1) {
         return;
       }
+      this.engineInfo.depth = depth;
+      this.engineInfo.nodes = getNumberValue(words, 'nodes');
+      this.engineInfo.nodesPerSecond = getNumberValue(words, 'nps');
+      this.engineInfo.time = getNumberValue(words, 'time');
       const i = words.indexOf('score');
       const evaluation = this.signEvaluation(words[i+1]+' '+words[i+2]);
-      const pv = Number(words[words.indexOf('multipv')+1])-1;
+      const pv = getNumberValue(words, 'multipv')-1;
       if (pv === 0) {
-        this.setEvaluation(evaluation);
+        this.engineInfo.evaluation = evaluation;
       }
       const moves = words.slice(words.indexOf('pv')+1).join(' ');
       this.setPrincipalMove(pv, evaluation+' '+moves);
@@ -63,27 +71,27 @@ class Engine {
     return evaluation;
   }
 
-  private setPrincipalMove(pv: number, move: string) {
-    this.principalMoves[pv] = move;
-    if (!this.sendingPrincipalMoves) {
-      this.sendingPrincipalMoves = true;
+  private sendEngineInfo() {
+    if (!this.sendingEngineInfo) {
+      this.sendingEngineInfo = true;
       setTimeout(() => {
-        this.principalMovesCallback([...this.principalMoves]);
-        this.sendingPrincipalMoves = false;
+        this.engineInfoCallback(this.engineInfo);
+        this.principalMovesCallback(this.principalMoves);
+        this.sendingEngineInfo = false;
       }, 50);
     }
   }
 
-  private setEvaluation(value: string) {
-    this.evaluation = value;
-    this.evaluationCallback(value);
+  private setPrincipalMove(pv: number, move: string) {
+    this.principalMoves[pv] = move;
+    this.sendEngineInfo();
   }
 
   private resetAnalysis() {
     this.principalMoves = [];
     this.bestMove = null;
     this.ponderMove = null;
-    this.evaluation = null;
+    this.engineInfo = {};
     this.process.send('stop');
   }
 
@@ -131,10 +139,6 @@ class Engine {
     return this.ponderMove;
   }
 
-  getEvaluation(): string | null {
-    return this.evaluation;
-  }
-
   getMoves(): string {
     return this.moves.join(' ');
   }
@@ -162,8 +166,8 @@ class Engine {
     this.bestMoveCallback = callback;
   }
 
-  onEvaluation(callback: (value: string) => void) {
-    this.evaluationCallback = callback;
+  onEngineInfo(callback: (value: EngineInfo) => void) {
+    this.engineInfoCallback = callback;
   }
 
   reset(fen?: string) {

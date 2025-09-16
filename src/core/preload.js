@@ -33,7 +33,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onUpdateStatus: addListener('update-status'),
   onUpdateRegion: addListener('update-region'),
   onUpdatePosition: addListener('update-position'),
-  onEvaluation: addListener('evaluation'),
+  onUpdateEngineInfo: addListener('update-engine-info'),
   onHighlightMoves: addListener('highlight-moves'),
   onPrincipalVariations: addListener('principal-variations'),
   onPromotion: addListener('promotion'),
