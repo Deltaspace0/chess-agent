@@ -113,10 +113,12 @@ class Engine {
   }
 
   private sendMultiPV() {
+    this.process.send(`stop`);
     this.process.send(`setoption name MultiPV value ${this.multiPV}`);
   }
 
   private sendThreads() {
+    this.process.send(`stop`);
     this.process.send(`setoption name Threads value ${this.threads}`);
   }
 
