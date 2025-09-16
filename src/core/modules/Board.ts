@@ -3,20 +3,10 @@ import mouseEvents from 'global-mouse-events';
 import { coordsToSquare, squareToCoords } from '../util.ts';
 import { defaultValues } from '../../config.ts';
 
-interface BoardOptions {
-  region?: Region | null;
-  perspective?: boolean;
-}
-
 class Board {
-  private region: Region | null;
-  private perspective: boolean;
+  private region: Region | null = defaultValues.region;
+  private perspective: boolean = defaultValues.isWhitePerspective;
   private downCallback: (() => Promise<void>) | null = null;
-
-  constructor(options?: BoardOptions) {
-    this.region = options?.region ?? defaultValues.region;
-    this.perspective = options?.perspective ?? defaultValues.isWhitePerspective;
-  }
 
   private getSquare({ x, y }: Point): string | null {
     if (this.region === null) {

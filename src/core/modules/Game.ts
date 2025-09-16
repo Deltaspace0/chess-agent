@@ -3,18 +3,13 @@ import type { Color, Piece, Square } from 'chess.js';
 import { coordsToSquare } from '../util.ts';
 import { defaultValues } from '../../config.ts';
 
-interface GameOptions {
-  perspective?: boolean;
-}
-
 class Game {
   private chess: Chess;
-  private perspective: boolean;
+  private perspective: boolean = defaultValues.isWhitePerspective;
   private positionCallback = () => {};
 
-  constructor(options?: GameOptions) {
+  constructor() {
     this.chess = new Chess();
-    this.perspective = options?.perspective ?? defaultValues.isWhitePerspective;
   }
 
   private getPerspectiveColor(): Color {

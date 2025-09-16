@@ -2,10 +2,6 @@ import { screen, sleep, Region } from '@nut-tree-fork/nut-js';
 import type { Color, Piece, PieceSymbol } from 'chess.js';
 import { defaultValues } from '../../config.ts';
 
-interface RecognizerOptions {
-  region?: Region | null;
-}
-
 interface MoveError {
   move: string | null;
   error: number;
@@ -48,13 +44,9 @@ function compareHashes(hash1: string, hash2: string): number {
 }
 
 class Recognizer {
-  private region: Region | null;
+  private region: Region | null = defaultValues.region;
   private scanning: boolean = false;
   private pieceHashes: Record<string, string> = {};
-
-  constructor(options?: RecognizerOptions) {
-    this.region = options?.region ?? defaultValues.region;
-  }
 
   private async grabBoard(): Promise<Buffer[][][]> {
     if (this.region === null) {

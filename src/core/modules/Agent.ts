@@ -8,18 +8,15 @@ interface AgentOptions {
   engine: Engine;
   game: Game;
   recognizer: Recognizer;
-  autoResponse?: boolean;
-  autoScan?: boolean;
-  autoQueen?: boolean;
 }
 
 class Agent extends StatusNotifier {
   private engine: Engine;
   private game: Game;
   private recognizer: Recognizer;
-  private autoResponse: boolean;
-  private autoScan: boolean;
-  private autoQueen: boolean;
+  private autoResponse: boolean = defaultValues.autoResponse;
+  private autoScan: boolean = defaultValues.autoScan;
+  private autoQueen: boolean = defaultValues.autoQueen;
   private promotionMove: string = '';
   private stopBestMove: (() => void) | null = null;
   private bestMoveCallback: (value: string) => void = () => {};
@@ -30,9 +27,6 @@ class Agent extends StatusNotifier {
     this.engine = options.engine;
     this.game = options.game;
     this.recognizer = options.recognizer;
-    this.autoResponse = options.autoResponse ?? defaultValues.autoResponse;
-    this.autoScan = options.autoScan ?? defaultValues.autoScan;
-    this.autoQueen = options.autoQueen ?? defaultValues.autoQueen;
   }
 
   processMove(move: string) {
