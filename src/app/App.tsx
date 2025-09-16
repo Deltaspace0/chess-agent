@@ -136,8 +136,8 @@ function App() {
     }
   };
   const mainStatusButtons = <>
-    <button onClick={() => setPanelType('settings')}>Settings</button>
     <button onClick={() => setPanelType('engine')}>Engine</button>
+    <button onClick={() => setPanelType('settings')}>Settings</button>
   </>;
   const statusButtons = {
     main: mainStatusButtons,
