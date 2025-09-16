@@ -16,6 +16,7 @@ declare global {
     showNotation: boolean;
     analysisDuration: number;
     multiPV: number;
+    engineThreads: number;
     mouseSpeed: number;
     region: Region | null;
     saveConfigToFile: boolean;

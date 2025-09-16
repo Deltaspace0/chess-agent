@@ -13,6 +13,7 @@ class Engine {
   private evaluation: string | null = null;
   private analysisDuration: number = defaultValues.analysisDuration;
   private multiPV: number = defaultValues.multiPV;
+  private threads: number = defaultValues.engineThreads;
   private principalMoves: string[] = [];
   private sendingPrincipalMoves: boolean = false;
   private processListener: (data: string) => void = this.processData.bind(this);
@@ -107,6 +108,10 @@ class Engine {
     this.process.send(`setoption name MultiPV value ${this.multiPV}`);
   }
 
+  private sendThreads() {
+    this.process.send(`setoption name Threads value ${this.threads}`);
+  }
+
   setProcess(process: EngineProcess) {
     this.process.removeListener('stdout', this.processListener);
     this.process = process;
@@ -114,6 +119,7 @@ class Engine {
     this.process.send('uci');
     this.searching = false;
     this.sendMultiPV();
+    this.sendThreads();
     this.analyzePosition();
   }
 
@@ -141,6 +147,11 @@ class Engine {
     this.multiPV = value;
     this.sendMultiPV();
     this.analyzePosition();
+  }
+
+  setThreads(value: number) {
+    this.threads = value;
+    this.sendThreads();
   }
 
   onPrincipalMoves(callback: (value: string[]) => void) {

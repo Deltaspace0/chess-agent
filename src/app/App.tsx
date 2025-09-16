@@ -26,6 +26,7 @@ function App() {
   const showNotationProps = useCheckboxProps('showNotation');
   const durationProps = useSliderProps('analysisDuration');
   const multiPVProps = useSliderProps('multiPV');
+  const threadsProps = useSliderProps('engineThreads');
   const mouseProps = useSliderProps('mouseSpeed');
   const [isWhitePerspective, sendPerspective] = usePreference('isWhitePerspective');
   const [enginePath, sendEnginePath] = usePreference('enginePath');
@@ -190,6 +191,7 @@ function App() {
         <legend>Settings</legend>
         <Slider {...durationProps}/>
         <Slider {...multiPVProps}/>
+        <Slider {...threadsProps}/>
         <Slider {...mouseProps}/>
         <div className='flex-row'>
           <div className='flex-column'>

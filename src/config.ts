@@ -1,6 +1,7 @@
 export const sliders: Record<NumberPreference, number[]> = {
   analysisDuration: [100, 300, 1000, 3000, 5000, 10000],
   multiPV: [1, 2, 3, 4, 5, 10, 20],
+  engineThreads: [...Array(33).keys()].slice(1),
   mouseSpeed: [500, 1000, 3000, 5000, 10000]
 };
 
@@ -18,6 +19,7 @@ export const defaultValues: Preferences = {
   showNotation: true,
   analysisDuration: 1000,
   multiPV: 1,
+  engineThreads: 1,
   mouseSpeed: 3000,
   region: null,
   saveConfigToFile: false,
@@ -38,6 +40,7 @@ export const preferenceLabels: Record<Preference, string> = {
   showNotation: 'Show notation',
   analysisDuration: 'Analysis duration (ms)',
   multiPV: 'Multiple lines',
+  engineThreads: 'Threads',
   mouseSpeed: 'Mouse speed',
   region: 'Region',
   saveConfigToFile: 'Save config on exit',

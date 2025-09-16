@@ -192,6 +192,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
     actionRegion: (value) => actionRegionManager.setActive(value),
     analysisDuration: (value) => engine.setAnalysisDuration(value),
     multiPV: (value) => engine.setMultiPV(value),
+    engineThreads: (value) => engine.setThreads(value),
     mouseSpeed: (value) => { mouse.config.mouseSpeed = value; },
     region: (value) => {
       actionRegionManager.setRegion(value);
