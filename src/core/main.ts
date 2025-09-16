@@ -58,51 +58,58 @@ function getRegionSelector(position: string): (region: Region) => Region {
   preferenceManager.loadFromFile('config.json');
   await app.whenReady();
   const win = await createWindow();
+  let appRunning = true;
+  const sendToApp = (channel: string, ...args: unknown[]) => {
+    if (appRunning) {
+      win.webContents.send(channel, ...args);
+    }
+  }
   app.on('window-all-closed', () => {
     if (preferenceManager.getPreference('saveConfigToFile')) {
       preferenceManager.saveToFile('config.json');
     }
+    appRunning = false;
     app.quit();
   });
   const updateStatus = (status: string) => {
     console.log(status);
-    win.webContents.send('update-status', status);
+    sendToApp('update-status', status);
   };
   const board = new Board();
   board.onMouseDownSquare(() => recognizer.stopScanning());
   const engineExternal = new EngineExternal();
   engineExternal.addListener('stdin', (data) => {
-    win.webContents.send('engine-data', 'external', '<<< '+data);
+    sendToApp('engine-data', 'external', '<<< '+data);
   });
   engineExternal.addListener('stdout', (data) => {
-    win.webContents.send('engine-data', 'external', '>>> '+data);
+    sendToApp('engine-data', 'external', '>>> '+data);
   });
   engineExternal.addListener('stderr', (data) => {
-    win.webContents.send('engine-data', 'external', '!>> '+data);
+    sendToApp('engine-data', 'external', '!>> '+data);
   });
   const engineWorker = new EngineWorker();
   engineWorker.addListener('stdin', (data) => {
-    win.webContents.send('engine-data', 'internal', '<<< '+data);
+    sendToApp('engine-data', 'internal', '<<< '+data);
   });
   engineWorker.addListener('stdout', (data) => {
-    win.webContents.send('engine-data', 'internal', '>>> '+data);
+    sendToApp('engine-data', 'internal', '>>> '+data);
   });
   engineWorker.addListener('stderr', (data) => {
-    win.webContents.send('engine-data', 'internal', '!>> '+data);
+    sendToApp('engine-data', 'internal', '!>> '+data);
   });
   const engine = new Engine(engineWorker);
   engine.onPrincipalMoves((value) => {
     const moves = value.map((x) => x.split(' ').slice(0, 3));
     const variations = value.map((x) => game.formatEvalMoves(x));
-    win.webContents.send('highlight-moves', moves);
-    win.webContents.send('principal-variations', variations);
+    sendToApp('highlight-moves', moves);
+    sendToApp('principal-variations', variations);
   });
   engine.onEvaluation((value) => {
-    win.webContents.send('evaluation', value);
+    sendToApp('evaluation', value);
   });
   const game = new Game();
   game.onUpdatePosition((value) => {
-    win.webContents.send('update-position', value);
+    sendToApp('update-position', value);
   });
   game.reset();
   const recognizer = new Recognizer();
@@ -122,7 +129,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
       agent.processMove(move);
     }
   });
-  agent.onPromotion(() => win.webContents.send('promotion'));
+  agent.onPromotion(() => sendToApp('promotion'));
   const actionCallbacks: Record<ActionName, () => void> = {
     recognizeBoard: () => agent.recognizeBoard(),
     playBestMove: () => agent.playBestMove(),
@@ -174,11 +181,11 @@ function getRegionSelector(position: string): (region: Region) => Region {
   regionManager.onUpdateRegionStatus((value) => {
     const region = preferenceManager.getPreference('region');
     actionRegionManager.setRegion(value === 'selecting' ? null : region);
-    win.webContents.send('update-region', value);
+    sendToApp('update-region', value);
   });
   regionManager.setRegion(preferenceManager.getPreference('region'));
   preferenceManager.onUpdate((name, value) => {
-    win.webContents.send('update-preference', name, value);
+    sendToApp('update-preference', name, value);
   });
   const preferenceListeners: Partial<PreferenceListeners> = {
     alwaysOnTop: (value) => win.setAlwaysOnTop(value, 'normal'),
