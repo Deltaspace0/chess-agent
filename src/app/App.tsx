@@ -301,6 +301,18 @@ function App() {
             <button onClick={() => electron.setPosition(inputFEN)}>Set FEN</button>
           </div>
           <div className='flex-row'>
+            <div className='flex-column' style={{margin: '16px 0'}}>
+              <button
+                onClick={() => electron.resetPosition()}
+                style={{width: '64px'}}>
+                  Reset
+              </button>
+              <button
+                onClick={() => electron.clearPosition()}
+                style={{width: '64px'}}>
+                  Clear
+              </button>
+            </div>
             <div className='flex-column'>
               <p style={{margin: '4px 0'}}>Turn:</p>
               <Radio
@@ -325,7 +337,7 @@ function App() {
                 }}/>
             </div>
             <div className='flex-column'>
-              <p style={{margin: '4px 0'}}>White castling:</p>
+              <p style={{margin: '4px 0'}}>White:</p>
               <Checkbox
                 label='O-O'
                 checked={positionInfo.whiteCastlingRights.k}
@@ -346,7 +358,7 @@ function App() {
               />
             </div>
             <div className='flex-column'>
-              <p style={{margin: '4px 0'}}>Black castling:</p>
+              <p style={{margin: '4px 0'}}>Black:</p>
               <Checkbox
                 label='O-O'
                 checked={positionInfo.blackCastlingRights.k}

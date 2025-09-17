@@ -51,6 +51,11 @@ class Game {
     this.positionCallback();
   }
 
+  clear() {
+    this.chess.clear();
+    this.positionCallback();
+  }
+
   undo() {
     this.chess.undo();
     this.positionCallback();

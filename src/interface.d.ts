@@ -86,6 +86,7 @@ declare global {
     undoMove();
     bestMove();
     resetPosition();
+    clearPosition();
     recognizeBoard();
     dialogEngine();
   }

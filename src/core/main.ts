@@ -253,6 +253,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
   ipcMain.handle('undo-move', () => agent.undoMove());
   ipcMain.handle('best-move', () => agent.playBestMove());
   ipcMain.handle('reset-position', () => agent.resetPosition());
+  ipcMain.handle('clear-position', () => agent.clearPosition());
   ipcMain.handle('recognize-board', () => agent.recognizeBoard());
   ipcMain.handle('dialog-engine', async () => {
     const result = await dialog.showOpenDialog({ properties: ['openFile'] });

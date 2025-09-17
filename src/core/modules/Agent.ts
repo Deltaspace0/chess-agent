@@ -188,6 +188,13 @@ class Agent extends StatusNotifier {
     this.statusCallback('Reset');
   }
 
+  clearPosition() {
+    this.recognizer.stopScanning();
+    this.game.clear();
+    this.engine.reset(this.game.fen());
+    this.statusCallback('Clear');
+  }
+
   loadPosition(fen: string) {
     this.recognizer.stopScanning();
     try {
