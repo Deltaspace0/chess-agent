@@ -9,13 +9,17 @@ class EngineWorker extends EngineProcess {
     const url = new URL('../stockfish.js', import.meta.url);
     this.worker = new Worker(url, { type: 'module' });
     this.worker.addEventListener('message', (e) => {
-      for (const listener of this.listeners.stdout) {
-        listener(e.data);
+      const stream = e.data.type === 'error' ? 'stderr' : 'stdout';
+      for (const listener of this.listeners[stream]) {
+        listener(e.data.message);
       }
     });
   }
 
   send(message: string) {
+    if (message.includes('Threads')) {
+      return;
+    }
     this.worker.postMessage(message);
     for (const listener of this.listeners.stdin) {
       listener(message);

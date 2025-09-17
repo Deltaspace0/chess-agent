@@ -6,7 +6,7 @@ function getNumberValue(words: string[], name: string): number {
 }
 
 class Engine {
-  private process: EngineProcess;
+  private process: EngineProcess | null = null;
   private searching: boolean = false;
   private needSearch: boolean = false;
   private moves: string[] = [];
@@ -25,9 +25,10 @@ class Engine {
   private bestMoveCallback: (value: string) => void = () => {};
   private engineInfoCallback: (value: EngineInfo) => void = () => {};
 
-  constructor(process: EngineProcess) {
-    this.process = process;
-    this.process.addListener('stdout', this.processListener);
+  private sendToProcess(data: string) {
+    if (this.process) {
+      this.process.send(data);
+    }
   }
 
   private processData(data: string) {
@@ -92,14 +93,14 @@ class Engine {
     this.bestMove = null;
     this.ponderMove = null;
     this.engineInfo = {};
-    this.process.send('stop');
+    this.sendToProcess('stop');
   }
 
   private search() {
     if (!this.searching) {
       const pos = this.fen === null ? 'startpos' : `fen ${this.fen}`;
-      this.process.send(`position ${pos} moves ${this.moves.join(' ')}`);
-      this.process.send(`go movetime ${this.analysisDuration}`);
+      this.sendToProcess(`position ${pos} moves ${this.moves.join(' ')}`);
+      this.sendToProcess(`go movetime ${this.analysisDuration}`);
       this.searching = true;
       this.needSearch = false;
     } else {
@@ -113,20 +114,20 @@ class Engine {
   }
 
   private sendMultiPV() {
-    this.process.send(`stop`);
-    this.process.send(`setoption name MultiPV value ${this.multiPV}`);
+    this.sendToProcess(`stop`);
+    this.sendToProcess(`setoption name MultiPV value ${this.multiPV}`);
   }
 
   private sendThreads() {
-    this.process.send(`stop`);
-    this.process.send(`setoption name Threads value ${this.threads}`);
+    this.sendToProcess(`stop`);
+    this.sendToProcess(`setoption name Threads value ${this.threads}`);
   }
 
   setProcess(process: EngineProcess) {
-    this.process.removeListener('stdout', this.processListener);
+    this.process?.removeListener('stdout', this.processListener);
     this.process = process;
     this.process.addListener('stdout', this.processListener);
-    this.process.send('uci');
+    this.sendToProcess('uci');
     this.searching = false;
     this.sendMultiPV();
     this.sendThreads();

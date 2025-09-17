@@ -97,7 +97,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
   engineWorker.addListener('stderr', (data) => {
     sendToApp('engine-data', 'internal', '!>> '+data);
   });
-  const engine = new Engine(engineWorker);
+  const engine = new Engine();
   engine.onPrincipalMoves((value) => {
     const moves = value.map((x) => x.split(' ').slice(0, 3));
     const variations = value.map((x) => game.formatEvalMoves(x));
