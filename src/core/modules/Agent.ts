@@ -4,7 +4,7 @@ import Recognizer from './Recognizer.ts';
 import StatusNotifier from './StatusNotifier.ts';
 import { defaultValues } from '../../config.ts';
 
-interface AgentOptions {
+interface AgentModules {
   engine: Engine;
   game: Game;
   recognizer: Recognizer;
@@ -22,11 +22,11 @@ class Agent extends StatusNotifier {
   private bestMoveCallback: (value: string) => void = () => {};
   private promotionCallback: () => void = () => {};
 
-  constructor(options: AgentOptions) {
+  constructor(modules: AgentModules) {
     super();
-    this.engine = options.engine;
-    this.game = options.game;
-    this.recognizer = options.recognizer;
+    this.engine = modules.engine;
+    this.game = modules.game;
+    this.recognizer = modules.recognizer;
   }
 
   processMove(move: string) {
