@@ -47,11 +47,18 @@ declare global {
     time?: number;
   }
 
+  interface PositionInfo {
+    whiteCastlingRights: { k: boolean, q: boolean },
+    blackCastlingRights: { k: boolean, q: boolean },
+    isWhiteTurn: boolean
+  }
+
   interface IElectronAPI {
     onUpdatePreference<T extends Preference>(name: T, listener: PreferenceListeners[T]);
     onUpdateStatus: Listener<string>;
     onUpdateRegion: Listener<RegionStatus>;
     onUpdatePosition: Listener<string>;
+    onUpdatePositionInfo: Listener<PositionInfo>;
     onUpdateEngineInfo: Listener<EngineInfo>;
     onHighlightMoves: Listener<string[][]>;
     onPrincipalVariations: Listener<string[]>;
@@ -62,6 +69,7 @@ declare global {
     promoteTo(value: string);
     sendToEngine(name: string, data: string);
     setPosition(value: string);
+    setPositionInfo(value: PositionInfo);
     newRegion();
     showRegion();
     removeRegion();

@@ -5,6 +5,7 @@ import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import Canvas from './components/Canvas.tsx';
 import Checkbox from './components/Checkbox.tsx';
 import Gauge from './components/Gauge.tsx';
+import Radio from './components/Radio.tsx';
 import Slider from './components/Slider.tsx';
 import { useCheckboxProps, useElectronValue, usePreference, useSliderProps } from './hooks.ts';
 
@@ -34,6 +35,11 @@ function App() {
   const regionStatus = useElectronValue<RegionStatus>('none', electron.onUpdateRegion);
   const engineInfo = useElectronValue({}, electron.onUpdateEngineInfo);
   const principalVariations = useElectronValue([], electron.onPrincipalVariations);
+  const positionInfo = useElectronValue<PositionInfo>({
+    whiteCastlingRights: { 'k': true, 'q': true },
+    blackCastlingRights: { 'k': true, 'q': true },
+    isWhiteTurn: true
+  }, electron.onUpdatePositionInfo);
   const [positionFEN, setPositionFEN] = useState('');
   const [inputFEN, setInputFEN] = useState('');
   const [arrows1, setArrows1] = useState<Arrow[]>([]);
@@ -259,20 +265,89 @@ function App() {
     edit: <>
       <fieldset className='full-field'>
         <legend>Edit board</legend>
-        <div className='flex-row'>
-          <input
-            type="text"
-            style={{minWidth: '240px'}}
-            value={inputFEN}
-            onChange={(e) => setInputFEN(e.target.value)}
-            onKeyDown={(e: React.KeyboardEvent) => {
-              if (e.key === 'Enter') {
-                electron.setPosition(inputFEN);
-                e.preventDefault();
-              }
-            }}
-          />
-          <button onClick={() => electron.setPosition(inputFEN)}>Set FEN</button>
+        <div className='flex-column'>
+          <div className='flex-row'>
+            <input
+              type="text"
+              style={{minWidth: '240px'}}
+              value={inputFEN}
+              onChange={(e) => setInputFEN(e.target.value)}
+              onKeyDown={(e: React.KeyboardEvent) => {
+                if (e.key === 'Enter') {
+                  electron.setPosition(inputFEN);
+                  e.preventDefault();
+                }
+              }}
+            />
+            <button onClick={() => electron.setPosition(inputFEN)}>Set FEN</button>
+          </div>
+          <div className='flex-row'>
+            <div className='flex-column'>
+              <p style={{margin: '4px 0'}}>Turn:</p>
+              <Radio
+                label='White'
+                name='turn'
+                value='w'
+                checked={positionInfo.isWhiteTurn}
+                onChange={() => {
+                  const newPositionInfo = structuredClone(positionInfo);
+                  newPositionInfo.isWhiteTurn = true;
+                  electron.setPositionInfo(newPositionInfo);
+                }}/>
+              <Radio
+                label='Black'
+                name='turn'
+                value='b'
+                checked={!positionInfo.isWhiteTurn}
+                onChange={() => {
+                  const newPositionInfo = structuredClone(positionInfo);
+                  newPositionInfo.isWhiteTurn = false;
+                  electron.setPositionInfo(newPositionInfo);
+                }}/>
+            </div>
+            <div className='flex-column'>
+              <p style={{margin: '4px 0'}}>White castling:</p>
+              <Checkbox
+                label='O-O'
+                checked={positionInfo.whiteCastlingRights.k}
+                onChange={(value) => {
+                  const newPositionInfo = structuredClone(positionInfo);
+                  newPositionInfo.whiteCastlingRights.k = value;
+                  electron.setPositionInfo(newPositionInfo);
+                }}
+              />
+              <Checkbox
+                label='O-O-O'
+                checked={positionInfo.whiteCastlingRights.q}
+                onChange={(value) => {
+                  const newPositionInfo = structuredClone(positionInfo);
+                  newPositionInfo.whiteCastlingRights.q = value;
+                  electron.setPositionInfo(newPositionInfo);
+                }}
+              />
+            </div>
+            <div className='flex-column'>
+              <p style={{margin: '4px 0'}}>Black castling:</p>
+              <Checkbox
+                label='O-O'
+                checked={positionInfo.blackCastlingRights.k}
+                onChange={(value) => {
+                  const newPositionInfo = structuredClone(positionInfo);
+                  newPositionInfo.blackCastlingRights.k = value;
+                  electron.setPositionInfo(newPositionInfo);
+                }}
+              />
+              <Checkbox
+                label='O-O-O'
+                checked={positionInfo.blackCastlingRights.q}
+                onChange={(value) => {
+                  const newPositionInfo = structuredClone(positionInfo);
+                  newPositionInfo.blackCastlingRights.q = value;
+                  electron.setPositionInfo(newPositionInfo);
+                }}
+              />
+            </div>
+          </div>
         </div>
       </fieldset>
     </>

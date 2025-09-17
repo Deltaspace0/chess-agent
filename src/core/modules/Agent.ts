@@ -200,6 +200,13 @@ class Agent extends StatusNotifier {
     this.statusCallback('New position');
   }
 
+  loadPositionInfo(info: PositionInfo) {
+    this.recognizer.stopScanning();
+    if (this.game.setPositionInfo(info)) {
+      this.engine.reset(this.game.fen());
+    }
+  }
+
   promoteTo(piece: string) {
     if (this.promotionMove) {
       this.processMove(this.promotionMove+piece);

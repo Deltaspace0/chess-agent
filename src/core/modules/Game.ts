@@ -22,6 +22,7 @@ class Game {
     } catch (e) {
       return false;
     }
+    this.positionCallback();
     return true;
   }
 
@@ -68,6 +69,24 @@ class Game {
   load(fen: string) {
     this.chess.load(fen);
     this.positionCallback();
+  }
+
+  getPositionInfo(): PositionInfo {
+    return {
+      whiteCastlingRights: this.chess.getCastlingRights('w'),
+      blackCastlingRights: this.chess.getCastlingRights('b'),
+      isWhiteTurn: this.chess.turn() === 'w'
+    };
+  }
+
+  setPositionInfo(info: PositionInfo): boolean {
+    if (!this.chess.setCastlingRights('w', info.whiteCastlingRights)) {
+      return false;
+    }
+    if (!this.chess.setCastlingRights('b', info.blackCastlingRights)) {
+      return false;
+    }
+    return this.setTurn(info.isWhiteTurn ? 'w' : 'b');
   }
 
   isMyTurn(): boolean {

@@ -109,6 +109,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
   });
   const game = new Game();
   game.onUpdatePosition((value) => {
+    sendToApp('update-position-info', game.getPositionInfo());
     sendToApp('update-position', value);
   });
   game.reset();
@@ -238,6 +239,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
     }
   });
   ipcMain.on('set-position', (_, value) => agent.loadPosition(value));
+  ipcMain.on('set-position-info', (_, value) => agent.loadPositionInfo(value));
   ipcMain.handle('new-region', () => regionManager.selectNewRegion());
   ipcMain.handle('show-region', () => regionManager.showRegion());
   ipcMain.handle('remove-region', () => regionManager.setRegion(null));
