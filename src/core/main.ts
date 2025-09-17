@@ -237,6 +237,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
       engineExternal.send(data);
     }
   });
+  ipcMain.on('set-position', (_, value) => agent.loadPosition(value));
   ipcMain.handle('new-region', () => regionManager.selectNewRegion());
   ipcMain.handle('show-region', () => regionManager.showRegion());
   ipcMain.handle('remove-region', () => regionManager.setRegion(null));

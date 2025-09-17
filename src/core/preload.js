@@ -42,6 +42,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   pieceDropped: sendValue('piece-dropped'),
   promoteTo: sendValue('promote-to'),
   sendToEngine: sendValue('send-to-engine'),
+  setPosition: sendValue('set-position'),
   newRegion: invoke('new-region'),
   showRegion: invoke('show-region'),
   removeRegion: invoke('remove-region'),

@@ -61,6 +61,7 @@ declare global {
     pieceDropped(value: string);
     promoteTo(value: string);
     sendToEngine(name: string, data: string);
+    setPosition(value: string);
     newRegion();
     showRegion();
     removeRegion();

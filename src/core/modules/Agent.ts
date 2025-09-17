@@ -188,6 +188,18 @@ class Agent extends StatusNotifier {
     this.statusCallback('Reset');
   }
 
+  loadPosition(fen: string) {
+    this.recognizer.stopScanning();
+    try {
+      this.game.load(fen);
+    } catch (e) {
+      this.statusCallback('Invalid FEN');
+      return;
+    }
+    this.engine.reset(fen);
+    this.statusCallback('New position');
+  }
+
   promoteTo(piece: string) {
     if (this.promotionMove) {
       this.processMove(this.promotionMove+piece);

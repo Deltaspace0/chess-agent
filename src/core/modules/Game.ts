@@ -65,6 +65,11 @@ class Game {
     }
   }
 
+  load(fen: string) {
+    this.chess.load(fen);
+    this.positionCallback();
+  }
+
   isMyTurn(): boolean {
     return this.chess.turn() === this.getPerspectiveColor();
   }

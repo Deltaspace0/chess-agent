@@ -8,7 +8,7 @@ import Gauge from './components/Gauge.tsx';
 import Slider from './components/Slider.tsx';
 import { useCheckboxProps, useElectronValue, usePreference, useSliderProps } from './hooks.ts';
 
-type Panel = 'main' | 'settings' | 'engine' | 'promotion';
+type Panel = 'main' | 'settings' | 'engine' | 'promotion' | 'edit';
 type EngineType = 'internal' | 'external';
 
 function App() {
@@ -35,6 +35,7 @@ function App() {
   const engineInfo = useElectronValue({}, electron.onUpdateEngineInfo);
   const principalVariations = useElectronValue([], electron.onPrincipalVariations);
   const [positionFEN, setPositionFEN] = useState('');
+  const [inputFEN, setInputFEN] = useState('');
   const [arrows1, setArrows1] = useState<Arrow[]>([]);
   const [arrows2, setArrows2] = useState<Arrow[]>([]);
   const [panelType, setPanelType] = useState<Panel>('main');
@@ -59,6 +60,7 @@ function App() {
   useEffect(() => {
     electron.onUpdatePosition((value) => {
       setPositionFEN(value);
+      setInputFEN(value);
       setPanelType((x) => x === 'promotion' ? 'main' : x);
     });
     electron.onHighlightMoves((evalMoves) => {
@@ -110,12 +112,6 @@ function App() {
     electron.sendToEngine(engineType, engineInput);
     setEngineInput('');
   };
-  const handleEngineEnterPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleEngineSend();
-      e.preventDefault();
-    }
-  };
   const pvComponents = [];
   for (const variation of principalVariations) {
     pvComponents.push(<p className='variation'>{variation}</p>);
@@ -137,13 +133,15 @@ function App() {
     }
   };
   const mainStatusButtons = <>
+    <button onClick={() => setPanelType('edit')}>Edit board</button>
     <button onClick={() => setPanelType('settings')}>Settings</button>
   </>;
   const statusButtons = {
     main: mainStatusButtons,
     settings: <button onClick={() => setPanelType('main')}>Close settings</button>,
     engine: <button onClick={() => setPanelType('main')}>Close engine</button>,
-    promotion: mainStatusButtons
+    promotion: mainStatusButtons,
+    edit: <button onClick={() => setPanelType('main')}>Return</button>
   };
   const engineButton = <button
     onClick={() => setPanelType('engine')}
@@ -226,7 +224,7 @@ function App() {
       </fieldset>
     </>,
     engine: <>
-      <fieldset className='engine'>
+      <fieldset className='full-field'>
         <legend>Engine</legend>
         <div className='flex-row'>
           <button onClick={() => electron.dialogEngine()}>Load external engine</button>
@@ -257,6 +255,26 @@ function App() {
           <button onClick={() => setPanelType('main')}>Cancel</button>
         </div>
       </fieldset>
+    </>,
+    edit: <>
+      <fieldset className='full-field'>
+        <legend>Edit board</legend>
+        <div className='flex-row'>
+          <input
+            type="text"
+            style={{minWidth: '240px'}}
+            value={inputFEN}
+            onChange={(e) => setInputFEN(e.target.value)}
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === 'Enter') {
+                electron.setPosition(inputFEN);
+                e.preventDefault();
+              }
+            }}
+          />
+          <button onClick={() => electron.setPosition(inputFEN)}>Set FEN</button>
+        </div>
+      </fieldset>
     </>
   };
   return (
@@ -283,10 +301,15 @@ function App() {
               <div className='flex-row'>
                 <input
                   type="text"
-                  className='engine-input'
+                  style={{minWidth: '280px'}}
                   value={engineInput}
                   onChange={(e) => setEngineInput(e.target.value)}
-                  onKeyDown={handleEngineEnterPress}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleEngineSend();
+                      e.preventDefault();
+                    }
+                  }}
                 />
                 <button onClick={handleEngineSend}>Send</button>
               </div>

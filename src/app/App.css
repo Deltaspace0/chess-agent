@@ -183,10 +183,6 @@ p {
   flex-direction: column-reverse;
 }
 
-.engine-input {
-  min-width: 280px;
-}
-
 .engine-canvas {
   min-width: 4000px;
   min-height: 4000px;
@@ -202,7 +198,7 @@ p {
   overflow-y: scroll;
 }
 
-.engine {
+.full-field {
   height: 150px;
 }
 
