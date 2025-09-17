@@ -89,6 +89,7 @@ declare global {
     clearPosition();
     recognizeBoard();
     dialogEngine();
+    reloadEngine();
   }
 
   interface Window {

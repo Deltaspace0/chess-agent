@@ -238,11 +238,16 @@ function App() {
       <fieldset className='full-field'>
         <legend>Engine</legend>
         <div className='flex-row'>
-          <button onClick={() => electron.dialogEngine()}>Load external engine</button>
+          <button onClick={() => electron.dialogEngine()}>Load engine</button>
+          <button
+            onClick={() => electron.reloadEngine()}
+            disabled={enginePath === null}>
+              Reload
+          </button>
           <button
             onClick={() => sendEnginePath(null)}
             disabled={enginePath === null}>
-              Remove external engine
+              Disable
           </button>
         </div>
         {enginePath !== null && <p className='status'>{enginePath}</p>}

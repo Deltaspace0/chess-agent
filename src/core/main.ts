@@ -94,6 +94,14 @@ function getRegionSelector(position: string): (region: Region) => Region {
     sendToApp('principal-variations', []);
     sendToApp('update-engine-info', {});
   });
+  const spawnExternalEngine = (path: string) => {
+    if (engineExternal.spawn(path)) {
+      engine.setProcess(engineExternal);
+      updateStatus('Ready');
+    } else {
+      updateStatus('Failed to load external engine');
+    }
+  };
   const engineWorker = new EngineWorker();
   engineWorker.addListener('stdin', (data) => {
     sendToApp('engine-data', 'internal', '<<< '+data);
@@ -220,13 +228,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
         engineExternal.kill();
         updateStatus('Ready');
       } else {
-        const result = engineExternal.spawn(value);
-        if (result) {
-          engine.setProcess(engineExternal);
-          updateStatus('Ready');
-        } else {
-          updateStatus('Failed to load external engine');
-        }
+        spawnExternalEngine(value);
       }
     }
   };
@@ -266,6 +268,12 @@ function getRegionSelector(position: string): (region: Region) => Region {
     const result = await dialog.showOpenDialog({ properties: ['openFile'] });
     if (result.filePaths.length > 0) {
       preferenceManager.setPreference('enginePath', result.filePaths[0]);
+    }
+  });
+  ipcMain.handle('reload-engine', () => {
+    const path = preferenceManager.getPreference('enginePath');
+    if (path) {
+      spawnExternalEngine(path);
     }
   });
   updateStatus('Ready');

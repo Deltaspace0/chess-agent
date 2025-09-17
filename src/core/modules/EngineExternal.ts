@@ -31,6 +31,7 @@ class EngineExternal extends EngineProcess {
 
   kill() {
     if (this.process) {
+      this.process.removeAllListeners('exit');
       this.process.kill();
       this.process = null;
     }
