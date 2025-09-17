@@ -207,6 +207,13 @@ class Agent extends StatusNotifier {
     }
   }
 
+  putPiece(droppedPiece: DroppedPiece) {
+    this.recognizer.stopScanning();
+    if (this.game.putPiece(droppedPiece)) {
+      this.engine.reset(this.game.fen());
+    }
+  }
+
   promoteTo(piece: string) {
     if (this.promotionMove) {
       this.processMove(this.promotionMove+piece);

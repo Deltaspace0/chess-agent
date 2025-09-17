@@ -48,9 +48,15 @@ declare global {
   }
 
   interface PositionInfo {
-    whiteCastlingRights: { k: boolean, q: boolean },
-    blackCastlingRights: { k: boolean, q: boolean },
-    isWhiteTurn: boolean
+    whiteCastlingRights: { k: boolean, q: boolean };
+    blackCastlingRights: { k: boolean, q: boolean };
+    isWhiteTurn: boolean;
+  }
+
+  interface DroppedPiece {
+    sourceSquare: string | null;
+    targetSquare: string | null;
+    piece: string;
   }
 
   interface IElectronAPI {
@@ -65,7 +71,8 @@ declare global {
     onPromotion: Listener<void>;
     onEngineData(listener: (name: string, data: string) => void);
     preferenceValue<T extends Preference>(name: T, value: Preferences[T]);
-    pieceDropped(value: string);
+    pieceDropped(value: DroppedPiece);
+    pieceDroppedEdit(value: DroppedPiece);
     promoteTo(value: string);
     sendToEngine(name: string, data: string);
     setPosition(value: string);

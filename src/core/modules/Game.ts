@@ -1,5 +1,5 @@
 import { Chess } from 'chess.js';
-import type { Color, Piece, Square } from 'chess.js';
+import type { Color, Piece, PieceSymbol, Square } from 'chess.js';
 import { coordsToSquare } from '../util.ts';
 import { defaultValues } from '../../config.ts';
 
@@ -149,6 +149,23 @@ class Game {
       }
     }
     this.positionCallback();
+  }
+
+  putPiece({ sourceSquare, targetSquare, piece }: DroppedPiece): boolean {
+    if (sourceSquare) {
+      this.chess.remove(sourceSquare as Square);
+    }
+    let result = true;
+    if (targetSquare) {
+      result = this.chess.put({
+        color: piece[0] as Color,
+        type: piece[1].toLowerCase() as PieceSymbol
+      }, targetSquare as Square);
+    }
+    if (result) {
+      this.positionCallback();
+    }
+    return result;
   }
 
   skipMove(): Color | null {

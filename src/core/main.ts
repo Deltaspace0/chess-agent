@@ -229,7 +229,11 @@ function getRegionSelector(position: string): (region: Region) => Region {
   ipcMain.on('preference-value', (_, name, value) => {
     preferenceManager.setPreference(name, value);
   });
-  ipcMain.on('piece-dropped', (_, value) => agent.processMove(value));
+  ipcMain.on('piece-dropped', (_, value) => {
+    const { sourceSquare, targetSquare } = value;
+    agent.processMove(sourceSquare+targetSquare);
+  });
+  ipcMain.on('piece-dropped-edit', (_, value) => agent.putPiece(value));
   ipcMain.on('promote-to', (_, value) => agent.promoteTo(value));
   ipcMain.on('send-to-engine', (_, name, data) => {
     if (name === 'internal') {

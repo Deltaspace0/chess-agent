@@ -41,6 +41,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onEngineData: addListener('engine-data'),
   preferenceValue: sendValue('preference-value'),
   pieceDropped: sendValue('piece-dropped'),
+  pieceDroppedEdit: sendValue('piece-dropped-edit'),
   promoteTo: sendValue('promote-to'),
   sendToEngine: sendValue('send-to-engine'),
   setPosition: sendValue('set-position'),

@@ -130,11 +130,16 @@ function App() {
     allowDrawingArrows: false,
     boardOrientation: isWhitePerspective ? 'white' : 'black',
     position: positionFEN,
-    onPieceDrop: ({ sourceSquare, targetSquare }) => {
+    onPieceDrop: ({ sourceSquare, targetSquare, piece }) => {
+      const droppedPiece = { sourceSquare, targetSquare, piece: piece.pieceType };
+      if (panelType === 'edit') {
+        electron.pieceDroppedEdit(droppedPiece);
+        return true;
+      }
       if (targetSquare === null || targetSquare === sourceSquare) {
         return false;
       }
-      electron.pieceDropped(sourceSquare+targetSquare);
+      electron.pieceDropped(droppedPiece);
       return true;
     }
   };
