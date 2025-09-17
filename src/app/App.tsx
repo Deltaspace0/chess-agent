@@ -1,6 +1,6 @@
 import './App.css';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Chessboard } from 'react-chessboard';
+import { Chessboard, ChessboardProvider, SparePiece } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import Canvas from './components/Canvas.tsx';
 import Checkbox from './components/Checkbox.tsx';
@@ -209,7 +209,7 @@ function App() {
       )}
     </>,
     settings: <>
-      <fieldset className='settings'>
+      <fieldset className='scroll-field'>
         <legend>Settings</legend>
         <Slider {...durationProps}/>
         <Slider {...multiPVProps}/>
@@ -271,6 +271,20 @@ function App() {
       <fieldset className='full-field'>
         <legend>Edit board</legend>
         <div className='flex-column'>
+          <div className='flex-row'>
+            <SparePiece pieceType='wP'/>
+            <SparePiece pieceType='wR'/>
+            <SparePiece pieceType='wN'/>
+            <SparePiece pieceType='wB'/>
+            <SparePiece pieceType='wQ'/>
+            <SparePiece pieceType='wK'/>
+            <SparePiece pieceType='bP'/>
+            <SparePiece pieceType='bR'/>
+            <SparePiece pieceType='bN'/>
+            <SparePiece pieceType='bB'/>
+            <SparePiece pieceType='bQ'/>
+            <SparePiece pieceType='bK'/>
+          </div>
           <div className='flex-row'>
             <input
               type="text"
@@ -358,60 +372,62 @@ function App() {
     </>
   };
   return (
-    <div className='App'>
-      <div className='flex-column'>
-        <div className='flex-row'>
-          <button onClick={() => electron.newRegion()}>
-            {regionStatus === 'selecting' ? 'Cancel selection' : 'Select new region'}
-          </button>
-          <button
-            onClick={() => electron.showRegion()}
-            disabled={regionStatus !== 'exist'}>
-              Show region
-          </button>
-          <button
-            onClick={() => electron.removeRegion()}
-            disabled={regionStatus !== 'exist'}>
-              Remove region
-          </button>
-        </div>
-        <div className='flex-row'>
-          {(panelType === 'engine' && showEngineData) ? (
-            <div className='engine-canvas-div'>
-              <div className='flex-row'>
-                <input
-                  type="text"
-                  style={{minWidth: '280px'}}
-                  value={engineInput}
-                  onChange={(e) => setEngineInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleEngineSend();
-                      e.preventDefault();
-                    }
-                  }}
-                />
-                <button onClick={handleEngineSend}>Send</button>
+    <ChessboardProvider options={chessboardOptions}>
+      <div className='App'>
+        <div className='flex-column'>
+          <div className='flex-row'>
+            <button onClick={() => electron.newRegion()}>
+              {regionStatus === 'selecting' ? 'Cancel selection' : 'Select new region'}
+            </button>
+            <button
+              onClick={() => electron.showRegion()}
+              disabled={regionStatus !== 'exist'}>
+                Show region
+            </button>
+            <button
+              onClick={() => electron.removeRegion()}
+              disabled={regionStatus !== 'exist'}>
+                Remove region
+            </button>
+          </div>
+          <div className='flex-row'>
+            {(panelType === 'engine' && showEngineData) ? (
+              <div className='engine-canvas-div'>
+                <div className='flex-row'>
+                  <input
+                    type="text"
+                    style={{minWidth: '280px'}}
+                    value={engineInput}
+                    onChange={(e) => setEngineInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleEngineSend();
+                        e.preventDefault();
+                      }
+                    }}
+                  />
+                  <button onClick={handleEngineSend}>Send</button>
+                </div>
+                <Canvas draw={draw} className='engine-canvas'/>
               </div>
-              <Canvas draw={draw} className='engine-canvas'/>
-            </div>
-          ) : (<>
-            <div className='board'>
-              <Chessboard options={chessboardOptions}/>
-            </div>
-            {showEvalBarProps.checked && <Gauge
-              evaluation={engineInfo.evaluation ?? 'cp 0'}
-              isWhitePerspective={isWhitePerspective}
-            />}
-          </>)}
+            ) : (<>
+              <div className='board'>
+                <Chessboard/>
+              </div>
+              {showEvalBarProps.checked && <Gauge
+                evaluation={engineInfo.evaluation ?? 'cp 0'}
+                isWhitePerspective={isWhitePerspective}
+              />}
+            </>)}
+          </div>
+          <div className='flex-row'>
+            <p className='status'>{statusText}</p>
+            {statusButtons[panelType]}
+          </div>
+          {panels[panelType]}
         </div>
-        <div className='flex-row'>
-          <p className='status'>{statusText}</p>
-          {statusButtons[panelType]}
-        </div>
-        {panels[panelType]}
       </div>
-    </div>
+    </ChessboardProvider>
   );
 }
 

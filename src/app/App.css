@@ -193,7 +193,7 @@ p {
   padding: 2px 12px;
 }
 
-.settings {
+.scroll-field {
   height: 150px;
   overflow-y: scroll;
 }
