@@ -33,9 +33,17 @@ class Engine {
 
   private processData(data: string) {
     const words: string[] = data.split(' ');
-    if (words.includes('pv')) {
+    if (words.includes('depth')) {
       const depth = getNumberValue(words, 'depth');
-      if (this.principalMoves.length === 0 && depth !== 1) {
+      if (depth === 0) {
+        this.searching = false;
+        if (this.needSearch) {
+          this.search();
+        }
+        this.sendEngineInfo();
+        return;
+      }
+      if (this.principalMoves.length === 0 && depth > 1) {
         return;
       }
       this.engineInfo.depth = depth;
