@@ -11,6 +11,11 @@ class EngineExternal extends EngineProcess {
     } catch (e) {
       return false;
     }
+    this.process.on('exit', (code) => {
+      for (const listener of this.listeners.exit) {
+        listener(JSON.stringify(code));
+      }
+    });
     for (const t of ['stdout', 'stderr'] as const) {
       this.process[t].on('data', (data) => {
         const dataLines = data.toString().split('\n').slice(0, -1);

@@ -87,6 +87,13 @@ function getRegionSelector(position: string): (region: Region) => Region {
   engineExternal.addListener('stderr', (data) => {
     sendToApp('engine-data', 'external', '!>> '+data);
   });
+  engineExternal.addListener('exit', (code) => {
+    updateStatus('Please reload the engine');
+    sendToApp('engine-data', 'external', `Exit code: ${code}`);
+    sendToApp('highlight-moves', []);
+    sendToApp('principal-variations', []);
+    sendToApp('update-engine-info', {});
+  });
   const engineWorker = new EngineWorker();
   engineWorker.addListener('stdin', (data) => {
     sendToApp('engine-data', 'internal', '<<< '+data);

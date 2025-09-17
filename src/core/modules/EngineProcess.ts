@@ -1,11 +1,12 @@
-type ListenerType = 'stdin' | 'stdout' | 'stderr';
+type ListenerType = 'stdin' | 'stdout' | 'stderr' | 'exit';
 type Listener = (data: string) => void;
 
 abstract class EngineProcess {
   protected listeners: Record<ListenerType, Set<Listener>> = {
     stdin: new Set(),
     stdout: new Set(),
-    stderr: new Set()
+    stderr: new Set(),
+    exit: new Set()
   };
 
   abstract send(message: string): void;
