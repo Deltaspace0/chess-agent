@@ -4,11 +4,36 @@ import { coordsToSquare, squareToCoords } from '../util.ts';
 import { defaultValues } from '../../config.ts';
 
 class Board {
+  private draggingMode: boolean = defaultValues.draggingMode;
   private region: Region | null = defaultValues.region;
   private perspective: boolean = defaultValues.isWhitePerspective;
-  private downCallback: (() => Promise<void>) | null = null;
+  private startSquare: string | null = null;
+  private moveListener: (move: string) => boolean = () => false;
+  private downListener: (() => Promise<void>) | null = null;
 
-  private getSquare({ x, y }: Point): string | null {
+  constructor() {
+    mouseEvents.on('mousedown', async () => {
+      const square = await this.getSquare();
+      if (this.startSquare && square && this.startSquare !== square) {
+        const result = this.moveListener(this.startSquare+square);
+        if (result) {
+          this.startSquare = null;
+          return;
+        }
+      }
+      this.startSquare = square;
+    });
+    mouseEvents.on('mouseup', async () => {
+      const square = await this.getSquare();
+      if (this.startSquare && square && this.startSquare !== square) {
+        this.moveListener(this.startSquare+square);
+        this.startSquare = null;
+      }
+    });
+  }
+
+  private async getSquare(): Promise<string | null> {
+    const { x, y } = await mouse.getPosition();
     if (this.region === null) {
       return null;
     }
@@ -30,54 +55,34 @@ class Board {
     return new Point(x, y);
   }
 
-  async playMove(move: string, draggingMode: boolean) {
+  async playMove(move: string) {
     await mouse.move(straightTo(this.getPoint(move.substring(0, 2))));
     await sleep(50);
-    await (draggingMode ? mouse.pressButton(0) : mouse.click(0));
+    await (this.draggingMode ? mouse.pressButton(0) : mouse.click(0));
     await sleep(50);
     await mouse.move(straightTo(this.getPoint(move.substring(2, 4))));
-    await (draggingMode ? mouse.releaseButton(0) : mouse.click(0));
+    await (this.draggingMode ? mouse.releaseButton(0) : mouse.click(0));
   }
 
-  async detectMove(): Promise<string> {
-    return new Promise((resolve) => {
-      let startSquare: string | null = null;
-      const downCallback = async () => {
-        const point = await mouse.getPosition();
-        startSquare = this.getSquare(point);
-      };
-      const upCallback = async () => {
-        if (startSquare === null) {
-          return;
-        }
-        const point = await mouse.getPosition();
-        const endSquare = this.getSquare(point);
-        if (endSquare !== null) {
-          if (startSquare !== endSquare) {
-            mouseEvents.off('mousedown', downCallback);
-            mouseEvents.off('mouseup', upCallback);
-            resolve(startSquare+endSquare);
-          }
-        }
-        startSquare = null;
-      };
-      mouseEvents.on('mousedown', downCallback);
-      mouseEvents.on('mouseup', upCallback);
-    });
+  onMove(listener: (move: string) => boolean) {
+    this.moveListener = listener;
   }
 
-  onMouseDownSquare(callback: (square: string) => void) {
-    if (this.downCallback) {
-      mouseEvents.off('mousedown', this.downCallback);
+  onMouseDownSquare(listener: (square: string) => void) {
+    if (this.downListener) {
+      mouseEvents.off('mousedown', this.downListener);
     }
-    this.downCallback = async () => {
-      const point = await mouse.getPosition();
-      const square = this.getSquare(point);
+    this.downListener = async () => {
+      const square = await this.getSquare();
       if (square !== null) {
-        callback(square);
+        listener(square);
       }
     };
-    mouseEvents.on('mousedown', this.downCallback);
+    mouseEvents.on('mousedown', this.downListener);
+  }
+
+  setDraggingMode(draggingMode: boolean) {
+    this.draggingMode = draggingMode;
   }
 
   setRegion(region: Region | null) {

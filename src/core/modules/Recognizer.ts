@@ -226,6 +226,7 @@ class Recognizer {
     if (this.scanning) {
       throw new Error('already scanning');
     }
+    await sleep(50);
     this.scanning = true;
     let prevBoardHashes = await this.getBoardHashes();
     let waitingForMovement = false;

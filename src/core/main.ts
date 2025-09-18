@@ -1,5 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
-import { mouse, sleep, Region } from '@nut-tree-fork/nut-js';
+import { mouse, Region } from '@nut-tree-fork/nut-js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ActionRegionManager from './modules/ActionRegionManager.ts';
@@ -76,6 +76,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
     sendToApp('update-status', status);
   };
   const board = new Board();
+  board.onMove((move) => agent.processMove(move));
   board.onMouseDownSquare(() => recognizer.stopScanning());
   const engineExternal = new EngineExternal();
   engineExternal.addListener('stdin', (data) => {
@@ -137,14 +138,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
   };
   const agent = new Agent({ engine, game, recognizer });
   agent.onUpdateStatus(updateStatus);
-  agent.onBestMove(async (move) => {
-    const draggingMode = preferenceManager.getPreference('draggingMode');
-    await board.playMove(move, draggingMode);
-    await sleep(50);
-    if (!draggingMode) {
-      agent.processMove(move);
-    }
-  });
+  agent.onBestMove((move) => board.playMove(move));
   agent.onPromotion(() => sendToApp('promotion'));
   const actionCallbacks: Record<ActionName, () => void> = {
     recognizeBoard: () => agent.recognizeBoard(),
@@ -212,6 +206,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
       board.setPerspective(value);
       game.setPerspective(value);
     },
+    draggingMode: (value) => board.setDraggingMode(value),
     actionRegion: (value) => actionRegionManager.setActive(value),
     analysisDuration: (value) => engine.setAnalysisDuration(value),
     multiPV: (value) => engine.setMultiPV(value),
@@ -277,8 +272,4 @@ function getRegionSelector(position: string): (region: Region) => Region {
     }
   });
   updateStatus('Ready');
-  while (true) {
-    const move = await board.detectMove();
-    agent.processMove(move);
-  }
 })();

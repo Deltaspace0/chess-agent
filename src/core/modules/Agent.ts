@@ -37,13 +37,13 @@ class Agent extends StatusNotifier {
     }
   }
 
-  processMove(move: string) {
+  processMove(move: string): boolean {
     const piece = this.game.get(move.substring(0, 2));
     const isPromotion = '18'.includes(move[3]) && piece?.type === 'p';
     if (isPromotion && move.length < 5) {
       if (!this.game.isLegalMove(move+'q')) {
         this.statusCallback(`Illegal move: ${move}`);
-        return;
+        return false;
       }
       if (this.promotionMove.length === 5) {
         move = this.promotionMove;
@@ -52,7 +52,7 @@ class Agent extends StatusNotifier {
       } else {
         this.promotionMove = move;
         this.promotionCallback();
-        return;
+        return true;
       }
     }
     this.promotionMove = '';
@@ -60,7 +60,7 @@ class Agent extends StatusNotifier {
       if (piece) {
         this.statusCallback(`Illegal move: ${move}`);
       }
-      return;
+      return false;
     }
     const gameOver = this.game.isGameOver();
     const moves = this.engine.sendMove(move, gameOver);
@@ -69,13 +69,14 @@ class Agent extends StatusNotifier {
     if (gameOver) {
       this.statusCallback('Game is over');
       this.recognizer.stopScanning();
-      return;
+      return true;
     }
     if (this.autoResponse && this.game.isMyTurn()) {
       this.playBestMove();
     } else if (this.autoScan) {
       this.scanMove();
     }
+    return true;
   }
 
   async playBestMove() {
