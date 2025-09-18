@@ -76,6 +76,16 @@ class Game {
     this.positionCallback();
   }
 
+  isLegalMove(move: string): boolean {
+    try {
+      this.chess.move(move);
+      this.chess.undo();
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+
   kingsExist(): boolean {
     if (this.chess.findPiece({ type: 'k', color: 'w' }).length === 0) {
       return false;

@@ -41,6 +41,10 @@ class Agent extends StatusNotifier {
     const piece = this.game.get(move.substring(0, 2));
     const isPromotion = '18'.includes(move[3]) && piece?.type === 'p';
     if (isPromotion && move.length < 5) {
+      if (!this.game.isLegalMove(move+'q')) {
+        this.statusCallback(`Illegal move: ${move}`);
+        return;
+      }
       if (this.promotionMove.length === 5) {
         move = this.promotionMove;
       } else if (this.autoQueen) {
@@ -52,8 +56,7 @@ class Agent extends StatusNotifier {
       }
     }
     this.promotionMove = '';
-    const result = this.game.move(move);
-    if (!result) {
+    if (!this.game.move(move)) {
       if (piece) {
         this.statusCallback(`Illegal move: ${move}`);
       }
