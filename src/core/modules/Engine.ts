@@ -193,6 +193,12 @@ class Engine {
     this.analyzePosition();
   }
 
+  clear() {
+    this.moves = [];
+    this.resetAnalysis();
+    this.sendEngineInfo();
+  }
+
   sendMove(move: string, skipAnalysis?: boolean): string {
     this.moves.push(move);
     if (skipAnalysis) {

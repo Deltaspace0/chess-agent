@@ -76,6 +76,13 @@ class Game {
     this.positionCallback();
   }
 
+  kingsExist(): boolean {
+    if (this.chess.findPiece({ type: 'k', color: 'w' }).length === 0) {
+      return false;
+    }
+    return this.chess.findPiece({ type: 'k', color: 'b' }).length > 0;
+  }
+
   getPositionInfo(): PositionInfo {
     return {
       whiteCastlingRights: this.chess.getCastlingRights('w'),
@@ -157,24 +164,43 @@ class Game {
   }
 
   putPiece({ sourceSquare, targetSquare, piece }: DroppedPiece): boolean {
+    const chess = new Chess();
+    chess.load(this.chess.fen(), { skipValidation: true });
     if (sourceSquare) {
-      this.chess.remove(sourceSquare as Square);
+      chess.remove(sourceSquare as Square);
     }
-    let result = true;
     if (targetSquare) {
-      result = this.chess.put({
+      const result = chess.put({
         color: piece[0] as Color,
         type: piece[1].toLowerCase() as PieceSymbol
       }, targetSquare as Square);
+      if (!result) {
+        return false;
+      }
     }
-    if (result) {
-      this.positionCallback();
+    const whiteKingPosition = chess.findPiece({ type: 'k', color: 'w' })[0];
+    if (whiteKingPosition && chess.isAttacked(whiteKingPosition, 'b')) {
+      try {
+        chess.setTurn('w');
+      } catch (e) {
+        return false;
+      }
     }
-    return result;
+    const blackKingPosition = chess.findPiece({ type: 'k', color: 'b' })[0];
+    if (blackKingPosition && chess.isAttacked(blackKingPosition, 'w')) {
+      try {
+        chess.setTurn('b');
+      } catch (e) {
+        return false;
+      }
+    }
+    this.chess.load(chess.fen(), { skipValidation: true });
+    this.positionCallback();
+    return true;
   }
 
   skipMove(): Color | null {
-    const newColor = 'wb'[Number(this.chess.turn() === 'w')] as Color;
+    const newColor = this.chess.turn() === 'w' ? 'b' : 'w' as Color;
     const result = this.setTurn(newColor);
     return result ? newColor : null;
   }

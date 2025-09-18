@@ -29,6 +29,14 @@ class Agent extends StatusNotifier {
     this.recognizer = modules.recognizer;
   }
 
+  private syncEngine() {
+    if (this.game.kingsExist()) {
+      this.engine.reset(this.game.fen());
+    } else {
+      this.engine.clear();
+    }
+  }
+
   processMove(move: string) {
     const piece = this.game.get(move.substring(0, 2));
     const isPromotion = '18'.includes(move[3]) && piece?.type === 'p';
@@ -143,7 +151,7 @@ class Agent extends StatusNotifier {
     } else {
       this.statusCallback('Failed to set turn');
     }
-    this.engine.reset(this.game.fen());
+    this.syncEngine();
     this.game.printBoard();
   }
 
@@ -154,7 +162,7 @@ class Agent extends StatusNotifier {
       this.statusCallback(`Failed to skip turn`);
       return;
     }
-    this.engine.reset(this.game.fen());
+    this.syncEngine();
     this.statusCallback(`${result === 'w' ? 'White' : 'Black'} to move`);
   }
 
@@ -191,7 +199,7 @@ class Agent extends StatusNotifier {
   clearPosition() {
     this.recognizer.stopScanning();
     this.game.clear();
-    this.engine.reset(this.game.fen());
+    this.syncEngine();
     this.statusCallback('Clear');
   }
 
@@ -210,14 +218,14 @@ class Agent extends StatusNotifier {
   loadPositionInfo(info: PositionInfo) {
     this.recognizer.stopScanning();
     if (this.game.setPositionInfo(info)) {
-      this.engine.reset(this.game.fen());
+      this.syncEngine();
     }
   }
 
   putPiece(droppedPiece: DroppedPiece) {
     this.recognizer.stopScanning();
     if (this.game.putPiece(droppedPiece)) {
-      this.engine.reset(this.game.fen());
+      this.syncEngine();
     }
   }
 
