@@ -1,5 +1,5 @@
 import EngineProcess from './EngineProcess.ts';
-import { defaultValues } from '../../config.ts';
+import { defaultValues } from '../../../config.ts';
 
 function getNumberValue(words: string[], name: string): number {
   return Number(words[words.indexOf(name)+1]);

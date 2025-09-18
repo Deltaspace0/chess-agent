@@ -1,4 +1,4 @@
-import Engine from './Engine.ts';
+import Engine from './engine/Engine.ts';
 import Game from './Game.ts';
 import Recognizer from './Recognizer.ts';
 import StatusNotifier from './StatusNotifier.ts';

@@ -250,7 +250,7 @@ function App() {
               Disable
           </button>
         </div>
-        {enginePath !== null && <p className='status'>{enginePath}</p>}
+        <p className='status'>{enginePath ?? '(Internal engine is active)'}</p>
         <div className='flex-row'>
           <button onClick={() => setShowEngineData(!showEngineData)}>
             {showEngineData ? 'Close engine UCI' : 'Show engine UCI'}

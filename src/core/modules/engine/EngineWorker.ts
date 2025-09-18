@@ -6,7 +6,7 @@ class EngineWorker extends EngineProcess {
 
   constructor() {
     super();
-    const url = new URL('../stockfish.js', import.meta.url);
+    const url = new URL('./stockfish.js', import.meta.url);
     this.worker = new Worker(url, { type: 'module' });
     this.worker.addEventListener('message', (e) => {
       const stream = e.data.type === 'error' ? 'stderr' : 'stdout';
