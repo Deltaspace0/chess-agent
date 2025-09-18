@@ -1,6 +1,6 @@
 import { screen, sleep, Region } from '@nut-tree-fork/nut-js';
 import type { Color, Piece, PieceSymbol } from 'chess.js';
-import { defaultValues } from '../../config.ts';
+import { preferenceConfig } from '../../config.ts';
 
 interface MoveResidual {
   move: string | null;
@@ -39,7 +39,7 @@ function getChangedSquares(oldHashes: string[][], newHashes: string[][]): [numbe
 }
 
 class Recognizer {
-  private region: Region | null = defaultValues.region;
+  private region: Region | null = preferenceConfig.region.defaultValue;
   private scanning: boolean = false;
   private pieceHashes: Record<string, string> = {};
 

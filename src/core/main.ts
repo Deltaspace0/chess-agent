@@ -12,7 +12,7 @@ import Game from './modules/Game.ts';
 import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
 import RegionManager from './modules/RegionManager.ts';
-import { sliders, actionRegions } from '../config.ts';
+import { actionRegions } from '../config.ts';
 
 type ActionName = keyof typeof actionRegions;
 
@@ -131,7 +131,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
   game.reset();
   const recognizer = new Recognizer();
   const handleLoadHashes = () => {
-    const perspective = preferenceManager.getPreference('isWhitePerspective');
+    const perspective = preferenceManager.getPreference('perspective');
     recognizer.load(perspective).then(
       () => updateStatus('Loaded piece hashes'),
       () => updateStatus('Failed to load piece hashes'));
@@ -153,9 +153,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
     scanMove: () => void agent.scanMove(),
     analysisDuration: () => {
       const duration = preferenceManager.getPreference('analysisDuration');
-      const index = sliders.analysisDuration.indexOf(duration);
-      const newIndex = (index+1)%sliders.analysisDuration.length;
-      const newDuration = sliders.analysisDuration[newIndex];
+      const newDuration = duration > 300 ? 300 : 5000;
       preferenceManager.setPreference('analysisDuration', newDuration);
       updateStatus(`Analysis duration: ${newDuration} ms`);
     },
@@ -167,8 +165,8 @@ function getRegionSelector(position: string): (region: Region) => Region {
     },
     loadHashes: handleLoadHashes,
     perspective: () => {
-      const isWhite = !preferenceManager.getPreference('isWhitePerspective');
-      preferenceManager.setPreference('isWhitePerspective', isWhite);
+      const isWhite = !preferenceManager.getPreference('perspective');
+      preferenceManager.setPreference('perspective', isWhite);
       console.log(`${isWhite ? 'White' : 'Black'} perspective`);
     },
     promoteQueen: () => agent.promoteTo('q'),
@@ -202,7 +200,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
     autoResponse: (value) => agent.setAutoResponse(value),
     autoScan: (value) => agent.setAutoScan(value),
     autoQueen: (value) => agent.setAutoQueen(value),
-    isWhitePerspective: (value) => {
+    perspective: (value) => {
       board.setPerspective(value);
       game.setPerspective(value);
     },

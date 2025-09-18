@@ -1,5 +1,5 @@
 import EngineProcess from './EngineProcess.ts';
-import { defaultValues } from '../../../config.ts';
+import { preferenceConfig } from '../../../config.ts';
 
 function getNumberValue(words: string[], name: string): number {
   return Number(words[words.indexOf(name)+1]);
@@ -15,9 +15,9 @@ class Engine {
   private bestMove: string | null = null;
   private ponderMove: string | null = null;
   private engineInfo: EngineInfo = {};
-  private analysisDuration: number = defaultValues.analysisDuration;
-  private multiPV: number = defaultValues.multiPV;
-  private threads: number = defaultValues.engineThreads;
+  private analysisDuration: number = preferenceConfig.analysisDuration.defaultValue;
+  private multiPV: number = preferenceConfig.multiPV.defaultValue;
+  private threads: number = preferenceConfig.engineThreads.defaultValue;
   private principalMoves: string[] = [];
   private sendingEngineInfo: boolean = false;
   private processListener: (data: string) => void = this.processData.bind(this);

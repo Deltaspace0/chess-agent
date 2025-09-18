@@ -7,7 +7,7 @@ declare global {
     autoResponse: boolean;
     autoScan: boolean;
     autoQueen: boolean;
-    isWhitePerspective: boolean;
+    perspective: boolean;
     draggingMode: boolean;
     actionRegion: boolean;
     showEvalBar: boolean;
@@ -21,6 +21,14 @@ declare global {
     region: Region | null;
     saveConfigToFile: boolean;
     enginePath: string | null;
+  }
+
+  interface PreferenceConfig<T extends Preference> {
+    label: string;
+    defaultValue: Preferences[T];
+    type: Preferences[T] extends boolean
+      ? 'boolean' : Preferences[T] extends number ? 'number' : 'other';
+    sliderValues?: Preferences[T] extends number ? number[] : never;
   }
 
   type Preference = keyof Preferences;

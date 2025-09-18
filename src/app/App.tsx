@@ -7,30 +7,14 @@ import Checkbox from './components/Checkbox.tsx';
 import Gauge from './components/Gauge.tsx';
 import Radio from './components/Radio.tsx';
 import Slider from './components/Slider.tsx';
-import { useCheckboxProps, useElectronValue, usePreference, useSliderProps } from './hooks.ts';
+import { useElectronValue, usePreferences } from './hooks.ts';
 
 type Panel = 'main' | 'settings' | 'engine' | 'promotion' | 'edit';
 type EngineType = 'internal' | 'external';
 
 function App() {
   const electron = window.electronAPI;
-  const alwaysOnTopProps = useCheckboxProps('alwaysOnTop');
-  const autoResponseProps = useCheckboxProps('autoResponse');
-  const autoScanProps = useCheckboxProps('autoScan');
-  const autoQueenProps = useCheckboxProps('autoQueen');
-  const draggingModeProps = useCheckboxProps('draggingMode');
-  const actionRegionProps = useCheckboxProps('actionRegion');
-  const saveConfigToFileProps = useCheckboxProps('saveConfigToFile');
-  const showEvalBarProps = useCheckboxProps('showEvalBar');
-  const showArrowsProps = useCheckboxProps('showArrows');
-  const showLinesProps = useCheckboxProps('showLines');
-  const showNotationProps = useCheckboxProps('showNotation');
-  const durationProps = useSliderProps('analysisDuration');
-  const multiPVProps = useSliderProps('multiPV');
-  const threadsProps = useSliderProps('engineThreads');
-  const mouseProps = useSliderProps('mouseSpeed');
-  const [isWhitePerspective, sendPerspective] = usePreference('isWhitePerspective');
-  const [enginePath, sendEnginePath] = usePreference('enginePath');
+  const prefs = usePreferences();
   const statusText = useElectronValue('', electron.onUpdateStatus);
   const regionStatus = useElectronValue<RegionStatus>('none', electron.onUpdateRegion);
   const engineInfo = useElectronValue({}, electron.onUpdateEngineInfo);
@@ -52,7 +36,7 @@ function App() {
     engineDataRef.current = { internal: [], external: [] };
   }
   const engineData = engineDataRef.current;
-  const engineType = enginePath ? 'external' : 'internal';
+  const engineType = prefs.enginePath.value ? 'external' : 'internal';
   const draw = useCallback((ctx: CanvasRenderingContext2D) => {
     ctx.clearRect(0, 0, 4000, 4000);
     ctx.font = `11px Courier New`;
@@ -123,12 +107,11 @@ function App() {
     pvComponents.push(<p className='variation'>{variation}</p>);
   }
   const chessboardOptions: ChessboardOptions = {
-    showNotation: showNotationProps.checked,
-    arrows: showArrowsProps.checked
-      ? (isWhitePerspective ? arrows1 : arrows2)
-      : [],
+    showNotation: prefs.showNotation.value,
+    arrows: prefs.showArrows.value
+      ? (prefs.perspective.value ? arrows1 : arrows2) : [],
     allowDrawingArrows: false,
-    boardOrientation: isWhitePerspective ? 'white' : 'black',
+    boardOrientation: prefs.perspective.value ? 'white' : 'black',
     position: positionFEN,
     onPieceDrop: ({ sourceSquare, targetSquare, piece }) => {
       const droppedPiece = { sourceSquare, targetSquare, piece: piece.pieceType };
@@ -175,8 +158,8 @@ function App() {
               Scan move
           </button>
           <button onClick={() => electron.resetPosition()}>Reset</button>
-          <button onClick={() => sendPerspective(!isWhitePerspective)}>
-            {isWhitePerspective ? 'White' : 'Black'} (flip)
+          <button onClick={() => prefs.perspective.send(!prefs.perspective.value)}>
+            {prefs.perspective.value ? 'White' : 'Black'} (flip)
           </button>
         </div>
         <div className='flex-row'>
@@ -194,7 +177,7 @@ function App() {
           <button onClick={() => electron.skipMove()}>Skip move</button>
         </div>
       </fieldset>
-      {showLinesProps.checked ? (
+      {prefs.showLines.value ? (
         <fieldset className='pv'>
           <legend>{engineButton}</legend>
           <p className='variation'>
@@ -211,25 +194,25 @@ function App() {
     settings: <>
       <fieldset className='scroll-field'>
         <legend>Settings</legend>
-        <Slider {...durationProps}/>
-        <Slider {...multiPVProps}/>
-        <Slider {...threadsProps}/>
-        <Slider {...mouseProps}/>
+        <Slider {...prefs.analysisDuration.sliderProps}/>
+        <Slider {...prefs.multiPV.sliderProps}/>
+        <Slider {...prefs.engineThreads.sliderProps}/>
+        <Slider {...prefs.mouseSpeed.sliderProps}/>
         <div className='flex-row'>
           <div className='flex-column'>
-            <Checkbox {...autoResponseProps}/>
-            <Checkbox {...autoScanProps}/>
-            <Checkbox {...autoQueenProps}/>
-            <Checkbox {...actionRegionProps}/>
-            <Checkbox {...draggingModeProps}/>
-            <Checkbox {...saveConfigToFileProps}/>
+            <Checkbox {...prefs.autoResponse.checkboxProps}/>
+            <Checkbox {...prefs.autoScan.checkboxProps}/>
+            <Checkbox {...prefs.autoQueen.checkboxProps}/>
+            <Checkbox {...prefs.actionRegion.checkboxProps}/>
+            <Checkbox {...prefs.draggingMode.checkboxProps}/>
+            <Checkbox {...prefs.saveConfigToFile.checkboxProps}/>
           </div>
           <div className='flex-column'>
-            <Checkbox {...alwaysOnTopProps}/>
-            <Checkbox {...showEvalBarProps}/>
-            <Checkbox {...showArrowsProps}/>
-            <Checkbox {...showLinesProps}/>
-            <Checkbox {...showNotationProps}/>
+            <Checkbox {...prefs.alwaysOnTop.checkboxProps}/>
+            <Checkbox {...prefs.showEvalBar.checkboxProps}/>
+            <Checkbox {...prefs.showArrows.checkboxProps}/>
+            <Checkbox {...prefs.showLines.checkboxProps}/>
+            <Checkbox {...prefs.showNotation.checkboxProps}/>
           </div>
         </div>
       </fieldset>
@@ -241,16 +224,18 @@ function App() {
           <button onClick={() => electron.dialogEngine()}>Load engine</button>
           <button
             onClick={() => electron.reloadEngine()}
-            disabled={enginePath === null}>
+            disabled={prefs.enginePath.value === null}>
               Reload
           </button>
           <button
-            onClick={() => sendEnginePath(null)}
-            disabled={enginePath === null}>
+            onClick={() => prefs.enginePath.send(null)}
+            disabled={prefs.enginePath.value === null}>
               Disable
           </button>
         </div>
-        <p className='status'>{enginePath ?? '(Internal engine is active)'}</p>
+        <p className='status'>
+          {prefs.enginePath.value ?? '(Internal engine is active)'}
+        </p>
         <div className='flex-row'>
           <button onClick={() => setShowEngineData(!showEngineData)}>
             {showEngineData ? 'Close engine UCI' : 'Show engine UCI'}
@@ -431,9 +416,9 @@ function App() {
               <div className='board'>
                 <Chessboard/>
               </div>
-              {showEvalBarProps.checked && <Gauge
+              {prefs.showEvalBar.value && <Gauge
                 evaluation={engineInfo.evaluation ?? 'cp 0'}
-                isWhitePerspective={isWhitePerspective}
+                perspective={prefs.perspective.value}
               />}
             </>)}
           </div>

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { defaultValues } from '../../config.ts';
+import { preferenceConfig, preferenceNames } from '../../config.ts';
 
 class PreferenceManager {
   private preferences: Preferences;
@@ -7,7 +7,11 @@ class PreferenceManager {
   private listeners: Partial<PreferenceListeners> = {};
 
   constructor() {
-    this.preferences = {...defaultValues};
+    const preferences: Partial<Record<Preference, unknown>> = {};
+    for (const name of preferenceNames) {
+      preferences[name] = preferenceConfig[name].defaultValue;
+    }
+    this.preferences = preferences as Preferences;
   }
 
   setPreference<T extends Preference>(name: T, value: Preferences[T]) {
@@ -17,17 +21,12 @@ class PreferenceManager {
   }
 
   getPreference<T extends Preference>(name: T): Preferences[T] {
-    try {
-      return this.preferences[name];
-    } catch (e) {
-      console.log(e);
-      return defaultValues[name];
-    }
+    return this.preferences[name];
   }
 
   onUpdate(listener: typeof this.generalListener) {
     this.generalListener = listener;
-    for (const name of Object.keys(this.preferences) as Preference[]) {
+    for (const name of preferenceNames) {
       listener(name, this.preferences[name]);
     }
   }
@@ -47,8 +46,8 @@ class PreferenceManager {
 
   loadFromFile(path: string) {
     try {
-      this.preferences = JSON.parse(fs.readFileSync(path, {encoding: 'ascii'}));
-      this.preferences = {...defaultValues, ...this.preferences};
+      const preferences = JSON.parse(fs.readFileSync(path, {encoding: 'ascii'}));
+      this.preferences = {...this.preferences, ...preferences};
     } catch (e) {
       console.log(e);
     }

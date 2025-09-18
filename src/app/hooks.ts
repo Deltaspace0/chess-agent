@@ -1,5 +1,81 @@
 import { useEffect, useState } from 'react';
-import { defaultValues, preferenceLabels, sliders } from '../config.ts';
+import { preferenceConfig, preferenceNames } from '../config.ts';
+
+interface PreferenceHook<T> {
+  value: T;
+  send: (x: T) => void;
+}
+
+interface BooleanPreferenceHook extends PreferenceHook<boolean> {
+  checkboxProps: {
+    label: string;
+    type: string;
+    checked: boolean;
+    onChange: (x: boolean) => void;
+  };
+}
+
+interface NumberPreferenceHook extends PreferenceHook<number> {
+  sliderProps: {
+    label: string;
+    value: number;
+    setValue: (x: number) => void;
+    min: number;
+    max: number;
+    step: number;
+    map: (x: number) => number;
+  };
+}
+
+type PreferenceHooks = {
+  [T in Preference]: Preferences[T] extends boolean
+    ? BooleanPreferenceHook : Preferences[T] extends number
+      ? NumberPreferenceHook : PreferenceHook<Preferences[T]>;
+};
+
+export function usePreferences(): PreferenceHooks {
+  const preferences: Partial<Record<Preference, unknown>> = {};
+  for (const name of preferenceNames) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const [value, send] = usePreference(name);
+    if (preferenceConfig[name].type === 'boolean') {
+      const checkboxProps = {
+        label: preferenceConfig[name].label,
+        type: 'checkbox',
+        checked: value,
+        onChange: send
+      };
+      preferences[name] = { value, send, checkboxProps };
+    } else if (preferenceConfig[name].type === 'number') {
+      const list = preferenceConfig[name].sliderValues ?? [];
+      const sliderProps = {
+        label: preferenceConfig[name].label,
+        value: list.indexOf(value as number),
+        setValue: send,
+        min: 0,
+        max: list.length-1,
+        step: 1,
+        map: (x: number) => list[x]
+      };
+      preferences[name] = { value, send, sliderProps };
+    } else {
+      preferences[name] = { value, send };
+    }
+  }
+  return preferences as PreferenceHooks;
+}
+
+export function usePreference<T extends Preference>(name: T) {
+  const [value, setValue] = useState(preferenceConfig[name].defaultValue);
+  useEffect(() => {
+    const listener = setValue as PreferenceListeners[T];
+    window.electronAPI.onUpdatePreference(name, listener);
+  }, [name]);
+  const sendValue = (x: Preferences[T]) => {
+    window.electronAPI.preferenceValue(name, x);
+  }
+  return [value, sendValue] as const;
+}
 
 export function useElectronValue<T>(initialValue: T, onUpdate: Listener<T>): T {
   const [value, setValue] = useState(initialValue);
@@ -7,40 +83,4 @@ export function useElectronValue<T>(initialValue: T, onUpdate: Listener<T>): T {
     onUpdate(setValue);
   }, [onUpdate]);
   return value;
-}
-
-export function usePreference<T extends Preference>(preferenceName: T) {
-  const [value, setValue] = useState(defaultValues[preferenceName]);
-  useEffect(() => {
-    const listener = setValue as PreferenceListeners[T];
-    window.electronAPI.onUpdatePreference(preferenceName, listener);
-  }, [preferenceName]);
-  const sendValue = (x: Preferences[T]) => {
-    window.electronAPI.preferenceValue(preferenceName, x);
-  }
-  return [value, sendValue] as const;
-}
-
-export function useCheckboxProps(preferenceName: BooleanPreference) {
-  const [value, sendValue] = usePreference(preferenceName);
-  return {
-    label: preferenceLabels[preferenceName],
-    type: 'checkbox',
-    checked: value,
-    onChange: sendValue
-  };
-}
-
-export function useSliderProps(preferenceName: NumberPreference) {
-  const [value, sendValue] = usePreference(preferenceName);
-  const list = sliders[preferenceName];
-  return {
-    label: preferenceLabels[preferenceName],
-    value: list.indexOf(value),
-    setValue: sendValue,
-    min: 0,
-    max: list.length-1,
-    step: 1,
-    map: (x: number) => list[x]
-  };
 }

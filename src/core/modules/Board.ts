@@ -1,12 +1,12 @@
 import { mouse, sleep, straightTo, Point, Region } from '@nut-tree-fork/nut-js';
 import mouseEvents from 'global-mouse-events';
 import { coordsToSquare, squareToCoords } from '../util.ts';
-import { defaultValues } from '../../config.ts';
+import { preferenceConfig } from '../../config.ts';
 
 class Board {
-  private draggingMode: boolean = defaultValues.draggingMode;
-  private region: Region | null = defaultValues.region;
-  private perspective: boolean = defaultValues.isWhitePerspective;
+  private draggingMode: boolean = preferenceConfig.draggingMode.defaultValue;
+  private region: Region | null = preferenceConfig.region.defaultValue;
+  private perspective: boolean = preferenceConfig.perspective.defaultValue;
   private startSquare: string | null = null;
   private moveListener: (move: string) => boolean = () => false;
   private downListener: (() => Promise<void>) | null = null;

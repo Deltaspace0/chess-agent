@@ -1,11 +1,11 @@
 import { Chess } from 'chess.js';
 import type { Color, Piece, PieceSymbol, Square } from 'chess.js';
 import { coordsToSquare } from '../util.ts';
-import { defaultValues } from '../../config.ts';
+import { preferenceConfig } from '../../config.ts';
 
 class Game {
   private chess: Chess;
-  private perspective: boolean = defaultValues.isWhitePerspective;
+  private perspective: boolean = preferenceConfig.perspective.defaultValue;
   private positionCallback = () => {};
 
   constructor() {

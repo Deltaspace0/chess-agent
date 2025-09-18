@@ -2,7 +2,7 @@ import Engine from './engine/Engine.ts';
 import Game from './Game.ts';
 import Recognizer from './Recognizer.ts';
 import StatusNotifier from './StatusNotifier.ts';
-import { defaultValues } from '../../config.ts';
+import { preferenceConfig } from '../../config.ts';
 
 interface AgentModules {
   engine: Engine;
@@ -14,9 +14,9 @@ class Agent extends StatusNotifier {
   private engine: Engine;
   private game: Game;
   private recognizer: Recognizer;
-  private autoResponse: boolean = defaultValues.autoResponse;
-  private autoScan: boolean = defaultValues.autoScan;
-  private autoQueen: boolean = defaultValues.autoQueen;
+  private autoResponse: boolean = preferenceConfig.autoResponse.defaultValue;
+  private autoScan: boolean = preferenceConfig.autoScan.defaultValue;
+  private autoQueen: boolean = preferenceConfig.autoQueen.defaultValue;
   private promotionMove: string = '';
   private stopBestMove: (() => void) | null = null;
   private bestMoveCallback: (value: string) => void = () => {};
