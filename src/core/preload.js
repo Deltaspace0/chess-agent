@@ -21,22 +21,24 @@ function invoke(channel) {
 }
 
 const preferenceListeners = {};
+const variableListeners = {};
 ipcRenderer.on('update-preference', (_, name, value) => {
   if (name in preferenceListeners) {
     preferenceListeners[name](value);
+  }
+});
+ipcRenderer.on('update-variable', (_, name, value) => {
+  if (name in variableListeners) {
+    variableListeners[name](value);
   }
 });
 contextBridge.exposeInMainWorld('electronAPI', {
   onUpdatePreference: (name, listener) => {
     preferenceListeners[name] = listener;
   },
-  onUpdateStatus: addListener('update-status'),
-  onUpdateRegion: addListener('update-region'),
-  onUpdatePosition: addListener('update-position'),
-  onUpdatePositionInfo: addListener('update-position-info'),
-  onUpdateEngineInfo: addListener('update-engine-info'),
-  onHighlightMoves: addListener('highlight-moves'),
-  onPrincipalVariations: addListener('principal-variations'),
+  onUpdateVariable: (name, listener) => {
+    variableListeners[name] = listener;
+  },
   onPromotion: addListener('promotion'),
   onEngineData: addListener('engine-data'),
   preferenceValue: sendValue('preference-value'),

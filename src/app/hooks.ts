@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { preferenceConfig, preferenceNames } from '../config.ts';
+import { defaultVariables, preferenceConfig, preferenceNames } from '../config.ts';
 
 interface PreferenceHook<T> {
   value: T;
@@ -77,10 +77,11 @@ export function usePreference<T extends Preference>(name: T) {
   return [value, sendValue] as const;
 }
 
-export function useElectronValue<T>(initialValue: T, onUpdate: Listener<T>): T {
-  const [value, setValue] = useState(initialValue);
+export function useVariable<T extends Variable>(name: T) {
+  const [value, setValue] = useState(defaultVariables[name]);
   useEffect(() => {
-    onUpdate(setValue);
-  }, [onUpdate]);
+    const listener = setValue as VariableListeners[T];
+    window.electronAPI.onUpdateVariable(name, listener);
+  }, [name]);
   return value;
 }

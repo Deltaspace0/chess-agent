@@ -2,6 +2,18 @@ import type { Region } from '@nut-tree-fork/nut-js';
 import type { Piece } from 'chess.js';
 
 declare global {
+  type Preference = keyof Preferences;
+
+  type BooleanPreference = {
+    [T in Preference]: Preferences[T] extends boolean ? T : never;
+  }[Preference];
+
+  type NumberPreference = {
+    [T in Preference]: Preferences[T] extends number ? T : never;
+  }[Preference];
+
+  type PreferenceListeners = { [T in Preference]: (value: Preferences[T]) => void };
+
   interface Preferences {
     alwaysOnTop: boolean;
     autoResponse: boolean;
@@ -31,17 +43,6 @@ declare global {
     sliderValues?: Preferences[T] extends number ? number[] : never;
   }
 
-  type Preference = keyof Preferences;
-  type BooleanPreference = {
-    [T in Preference]: Preferences[T] extends boolean ? T : never;
-  }[Preference];
-  type NumberPreference = {
-    [T in Preference]: Preferences[T] extends number ? T : never;
-  }[Preference];
-  type PreferenceListeners = { [T in Preference]: (value: Preferences[T]) => void };
-  type Listener<T> = (listener: (value: T) => void) => void;
-  type RegionStatus = 'none' | 'exist' | 'selecting';
-
   interface BoardState {
     move: string | null;
     grid: (Piece | null)[][];
@@ -67,16 +68,24 @@ declare global {
     piece: string;
   }
 
+  interface Variables {
+    status: string;
+    regionStatus: RegionStatus;
+    positionFEN: string;
+    positionInfo: PositionInfo;
+    engineInfo: EngineInfo;
+    highlightMoves: string[][];
+    principalVariations: string[];
+  }
+
+  type Variable = keyof Variables;
+  type VariableListeners = { [T in Variable]: (value: Variables[T]) => void };
+  type RegionStatus = 'none' | 'exist' | 'selecting';
+
   interface IElectronAPI {
     onUpdatePreference<T extends Preference>(name: T, listener: PreferenceListeners[T]);
-    onUpdateStatus: Listener<string>;
-    onUpdateRegion: Listener<RegionStatus>;
-    onUpdatePosition: Listener<string>;
-    onUpdatePositionInfo: Listener<PositionInfo>;
-    onUpdateEngineInfo: Listener<EngineInfo>;
-    onHighlightMoves: Listener<string[][]>;
-    onPrincipalVariations: Listener<string[]>;
-    onPromotion: Listener<void>;
+    onUpdateVariable<T extends Variable>(name: T, listener: VariableListeners[T]);
+    onPromotion(listener: () => void);
     onEngineData(listener: (name: string, data: string) => void);
     preferenceValue<T extends Preference>(name: T, value: Preferences[T]);
     pieceDropped(value: DroppedPiece);

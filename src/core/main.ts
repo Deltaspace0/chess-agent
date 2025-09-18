@@ -12,7 +12,7 @@ import Game from './modules/Game.ts';
 import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
 import RegionManager from './modules/RegionManager.ts';
-import { actionRegions } from '../config.ts';
+import { actionRegions, defaultVariables } from '../config.ts';
 
 type ActionName = keyof typeof actionRegions;
 
@@ -73,7 +73,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
   });
   const updateStatus = (status: string) => {
     console.log(status);
-    sendToApp('update-status', status);
+    sendToApp('update-variable', 'status', status);
   };
   const board = new Board();
   board.onMove((move) => agent.processMove(move));
@@ -91,9 +91,9 @@ function getRegionSelector(position: string): (region: Region) => Region {
   engineExternal.addListener('exit', (code) => {
     updateStatus('Please reload the engine');
     sendToApp('engine-data', 'external', `Exit code: ${code}`);
-    sendToApp('highlight-moves', []);
-    sendToApp('principal-variations', []);
-    sendToApp('update-engine-info', {});
+    for (const name of ['highlightMoves', 'principalVariations', 'engineInfo']) {
+      sendToApp('update-variable', name, defaultVariables[name as Variable]);
+    }
   });
   const spawnExternalEngine = (path: string) => {
     if (engineExternal.spawn(path)) {
@@ -117,16 +117,16 @@ function getRegionSelector(position: string): (region: Region) => Region {
   engine.onPrincipalMoves((value) => {
     const moves = value.map((x) => x.split(' ').slice(0, 3));
     const variations = value.map((x) => game.formatEvalMoves(x));
-    sendToApp('highlight-moves', moves);
-    sendToApp('principal-variations', variations);
+    sendToApp('update-variable', 'highlightMoves', moves);
+    sendToApp('update-variable', 'principalVariations', variations);
   });
   engine.onEngineInfo((value) => {
-    sendToApp('update-engine-info', value);
+    sendToApp('update-variable', 'engineInfo', value);
   });
   const game = new Game();
   game.onUpdatePosition((value) => {
-    sendToApp('update-position-info', game.getPositionInfo());
-    sendToApp('update-position', value);
+    sendToApp('update-variable', 'positionInfo', game.getPositionInfo());
+    sendToApp('update-variable', 'positionFEN', value);
   });
   game.reset();
   const recognizer = new Recognizer();
@@ -189,7 +189,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
   regionManager.onUpdateRegionStatus((value) => {
     const region = preferenceManager.getPreference('region');
     actionRegionManager.setRegion(value === 'selecting' ? null : region);
-    sendToApp('update-region', value);
+    sendToApp('update-variable', 'regionStatus', value);
   });
   regionManager.setRegion(preferenceManager.getPreference('region'));
   preferenceManager.onUpdate((name, value) => {

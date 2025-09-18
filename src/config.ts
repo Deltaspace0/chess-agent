@@ -97,6 +97,20 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
 
 export const preferenceNames = Object.keys(preferenceConfig) as Preference[];
 
+export const defaultVariables: Variables = {
+  status: '',
+  regionStatus: 'none',
+  positionFEN: '',
+  positionInfo: {
+    whiteCastlingRights: { 'k': true, 'q': true },
+    blackCastlingRights: { 'k': true, 'q': true },
+    isWhiteTurn: true
+  },
+  engineInfo: {},
+  highlightMoves: [],
+  principalVariations: []
+}
+
 export const actionRegions = {
   recognizeBoard: 'S1',
   playBestMove: 'S2',

@@ -7,7 +7,7 @@ import Checkbox from './components/Checkbox.tsx';
 import Gauge from './components/Gauge.tsx';
 import Radio from './components/Radio.tsx';
 import Slider from './components/Slider.tsx';
-import { useElectronValue, usePreferences } from './hooks.ts';
+import { usePreferences, useVariable } from './hooks.ts';
 
 type Panel = 'main' | 'settings' | 'engine' | 'promotion' | 'edit';
 type EngineType = 'internal' | 'external';
@@ -15,15 +15,11 @@ type EngineType = 'internal' | 'external';
 function App() {
   const electron = window.electronAPI;
   const prefs = usePreferences();
-  const statusText = useElectronValue('', electron.onUpdateStatus);
-  const regionStatus = useElectronValue<RegionStatus>('none', electron.onUpdateRegion);
-  const engineInfo = useElectronValue({}, electron.onUpdateEngineInfo);
-  const principalVariations = useElectronValue([], electron.onPrincipalVariations);
-  const positionInfo = useElectronValue<PositionInfo>({
-    whiteCastlingRights: { 'k': true, 'q': true },
-    blackCastlingRights: { 'k': true, 'q': true },
-    isWhiteTurn: true
-  }, electron.onUpdatePositionInfo);
+  const statusText = useVariable('status');
+  const regionStatus = useVariable('regionStatus');
+  const engineInfo = useVariable('engineInfo');
+  const principalVariations = useVariable('principalVariations');
+  const positionInfo = useVariable('positionInfo');
   const [positionFEN, setPositionFEN] = useState('');
   const [inputFEN, setInputFEN] = useState('');
   const [arrows1, setArrows1] = useState<Arrow[]>([]);
@@ -48,12 +44,12 @@ function App() {
     }
   }, [engineData, engineType]);
   useEffect(() => {
-    electron.onUpdatePosition((value) => {
+    electron.onUpdateVariable('positionFEN', (value) => {
       setPositionFEN(value);
       setInputFEN(value);
       setPanelType((x) => x === 'promotion' ? 'main' : x);
     });
-    electron.onHighlightMoves((evalMoves) => {
+    electron.onUpdateVariable('highlightMoves', (evalMoves) => {
       const newArrows1: Arrow[] = [];
       const newArrows2: Arrow[] = [];
       for (let i = evalMoves.length-1; i >= 0; i--) {
