@@ -369,8 +369,8 @@ function App() {
                 <Chessboard/>
               </div>
               {prefs.showEvalBar.value && <Gauge
-                evaluation={engineInfo.evaluation ?? 'cp 0'}
                 perspective={prefs.perspective.value}
+                evaluation={engineInfo.evaluation}
               />}
             </>)}
           </div>

@@ -1,10 +1,10 @@
 interface GaugeProps {
-  evaluation: string;
   perspective: boolean;
+  evaluation?: string;
 }
 
-function Gauge({ evaluation, perspective }: GaugeProps) {
-  const [type, n] = evaluation.split(' ');
+function Gauge({ perspective, evaluation }: GaugeProps) {
+  const [type, n] = evaluation?.split(' ') ?? ['cp', '0'];
   const value = Number(n);
   let height = value > 0 ? 100 : 0;
   if (type === 'cp') {
