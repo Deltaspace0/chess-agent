@@ -2,6 +2,7 @@ import './App.css';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Chessboard, ChessboardProvider, SparePiece } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
+import ActionButton from './components/ActionButton.tsx';
 import Canvas from './components/Canvas.tsx';
 import Checkbox from './components/Checkbox.tsx';
 import Gauge from './components/Gauge.tsx';
@@ -17,6 +18,8 @@ function App() {
   const prefs = usePreferences();
   const statusText = useVariable('status');
   const regionStatus = useVariable('regionStatus');
+  const isNoRegion = regionStatus !== 'exist';
+  const isSelectingRegion = regionStatus === 'selecting';
   const engineInfo = useVariable('engineInfo');
   const principalVariations = useVariable('principalVariations');
   const positionInfo = useVariable('positionInfo');
@@ -33,6 +36,7 @@ function App() {
   }
   const engineData = engineDataRef.current;
   const engineType = prefs.enginePath.value ? 'external' : 'internal';
+  const isInternalEngine = prefs.enginePath.value === null;
   const draw = useCallback((ctx: CanvasRenderingContext2D) => {
     ctx.clearRect(0, 0, 4000, 4000);
     ctx.font = `11px Courier New`;
@@ -98,10 +102,6 @@ function App() {
     electron.sendToEngine(engineType, engineInput);
     setEngineInput('');
   };
-  const pvComponents = [];
-  for (const variation of principalVariations) {
-    pvComponents.push(<p className='variation'>{variation}</p>);
-  }
   const chessboardOptions: ChessboardOptions = {
     showNotation: prefs.showNotation.value,
     arrows: prefs.showArrows.value
@@ -122,68 +122,36 @@ function App() {
       return true;
     }
   };
-  const mainStatusButtons = <>
-    <button onClick={() => setPanelType('edit')}>Edit board</button>
-    <button onClick={() => setPanelType('settings')}>Settings</button>
-  </>;
-  const statusButtons = {
-    main: mainStatusButtons,
-    settings: <button onClick={() => setPanelType('main')}>Close settings</button>,
-    engine: <button onClick={() => setPanelType('main')}>Close engine</button>,
-    promotion: mainStatusButtons,
-    edit: <button onClick={() => setPanelType('main')}>Return</button>
-  };
   const engineButton = <button
     onClick={() => setPanelType('engine')}
-    style={{width: '64px'}}>
-      Engine
-  </button>;
+    style={{width: '64px'}}>Engine</button>;
   const panels = {
     main: <>
       <fieldset className='actions'>
         <legend>Actions</legend>
         <div className='flex-row'>
-          <button
-            onClick={() => electron.bestMove()}
-            disabled={regionStatus !== 'exist'}>
-              Best move
-          </button>
-          <button
-            onClick={() => electron.scanMove()}
-            disabled={regionStatus !== 'exist'}>
-              Scan move
-          </button>
-          <button onClick={() => electron.resetPosition()}>Reset</button>
+          <ActionButton name='bestMove' disabled={isNoRegion}/>
+          <ActionButton name='scanMove' disabled={isNoRegion}/>
+          <ActionButton name='resetPosition'/>
           <button onClick={() => prefs.perspective.send(!prefs.perspective.value)}>
             {prefs.perspective.value ? 'White' : 'Black'} (flip)
           </button>
         </div>
         <div className='flex-row'>
-          <button
-            onClick={() => electron.recognizeBoard()}
-            disabled={regionStatus !== 'exist'}>
-              Recognize
-          </button>
-          <button
-            onClick={() => electron.loadHashes()}
-            disabled={regionStatus !== 'exist'}>
-              Load hashes
-          </button>
-          <button onClick={() => electron.undoMove()}>Undo move</button>
-          <button onClick={() => electron.skipMove()}>Skip move</button>
+          <ActionButton name='recognizeBoard' disabled={isNoRegion}/>
+          <ActionButton name='loadHashes' disabled={isNoRegion}/>
+          <ActionButton name='undoMove'/>
+          <ActionButton name='skipMove'/>
         </div>
       </fieldset>
-      {prefs.showLines.value ? (
-        <fieldset className='pv'>
-          <legend>{engineButton}</legend>
-          <p className='variation'>
-            Depth: {engineInfo.depth},
-            time: {engineInfo.time} ms,
-            nodes: {engineInfo.nodes}
-          </p>
-          {pvComponents}
-        </fieldset>
-      ) : (
+      {prefs.showLines.value ? (<fieldset className='pv'>
+        <legend>{engineButton}</legend>
+        <p className='variation'>
+          Depth: {engineInfo.depth}, time: {engineInfo.time} ms,
+          nodes: {engineInfo.nodes}
+        </p>
+        {principalVariations.map((x) => <p className='variation'>{x}</p>)}
+      </fieldset>) : (
         <div className='flex-row'>{engineButton}</div>
       )}
     </>,
@@ -217,15 +185,11 @@ function App() {
       <fieldset className='full-field'>
         <legend>Engine</legend>
         <div className='flex-row'>
-          <button onClick={() => electron.dialogEngine()}>Load engine</button>
-          <button
-            onClick={() => electron.reloadEngine()}
-            disabled={prefs.enginePath.value === null}>
-              Reload
-          </button>
+          <ActionButton name='dialogEngine'/>
+          <ActionButton name='reloadEngine' disabled={isInternalEngine}/>
           <button
             onClick={() => prefs.enginePath.send(null)}
-            disabled={prefs.enginePath.value === null}>
+            disabled={isInternalEngine}>
               Disable
           </button>
         </div>
@@ -243,10 +207,10 @@ function App() {
       <fieldset>
         <legend>Promote pawn to</legend>
         <div className='flex-row'>
-          <button onClick={() => electron.promoteTo('q')}>Queen</button>
-          <button onClick={() => electron.promoteTo('r')}>Rook</button>
-          <button onClick={() => electron.promoteTo('b')}>Bishop</button>
-          <button onClick={() => electron.promoteTo('n')}>Knight</button>
+          <ActionButton name='promoteQueen'/>
+          <ActionButton name='promoteRook'/>
+          <ActionButton name='promoteBishop'/>
+          <ActionButton name='promoteKnight'/>
         </div>
         <div className='flex-row'>
           <button onClick={() => setPanelType('main')}>Cancel</button>
@@ -284,20 +248,14 @@ function App() {
                 }
               }}
             />
-            <button onClick={() => electron.setPosition(inputFEN)}>Set FEN</button>
+            <button onClick={() => electron.setPosition(inputFEN)}>
+              Set FEN
+            </button>
           </div>
           <div className='flex-row'>
             <div className='flex-column' style={{margin: '16px 0'}}>
-              <button
-                onClick={() => electron.resetPosition()}
-                style={{width: '64px'}}>
-                  Reset
-              </button>
-              <button
-                onClick={() => electron.clearPosition()}
-                style={{width: '64px'}}>
-                  Clear
-              </button>
+              <ActionButton name='resetPosition' style={{width: '64px'}}/>
+              <ActionButton name='clearPosition' style={{width: '64px'}}/>
             </div>
             <div className='flex-column'>
               <p style={{margin: '4px 0'}}>Turn:</p>
@@ -374,19 +332,12 @@ function App() {
       <div className='App'>
         <div className='flex-column'>
           <div className='flex-row'>
-            <button onClick={() => electron.newRegion()}>
-              {regionStatus === 'selecting' ? 'Cancel selection' : 'Select new region'}
-            </button>
-            <button
-              onClick={() => electron.showRegion()}
-              disabled={regionStatus !== 'exist'}>
-                Show region
-            </button>
-            <button
-              onClick={() => electron.removeRegion()}
-              disabled={regionStatus !== 'exist'}>
-                Remove region
-            </button>
+            <ActionButton
+              name='newRegion'
+              label={isSelectingRegion ? 'Cancel selection' : undefined}
+            />
+            <ActionButton name='showRegion' disabled={isNoRegion}/>
+            <ActionButton name='removeRegion' disabled={isNoRegion}/>
           </div>
           <div className='flex-row'>
             {(panelType === 'engine' && showEngineData) ? (
@@ -420,7 +371,12 @@ function App() {
           </div>
           <div className='flex-row'>
             <p className='status'>{statusText}</p>
-            {statusButtons[panelType]}
+            {['main', 'promotion'].includes(panelType) ? (<>
+              <button onClick={() => setPanelType('edit')}>Edit board</button>
+              <button onClick={() => setPanelType('settings')}>Settings</button>
+            </>) : (
+              <button onClick={() => setPanelType('main')}>Return</button>
+            )}
           </div>
           {panels[panelType]}
         </div>

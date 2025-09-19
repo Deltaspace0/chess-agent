@@ -111,21 +111,43 @@ export const defaultVariables: Variables = {
   principalVariations: []
 }
 
-export const actionRegions = {
-  recognizeBoard: 'S1',
-  playBestMove: 'S2',
-  resetPosition: 'S3',
-  autoResponse: 'S4',
-  undoMove: 'S5',
-  skipMove: 'S6',
-  scanMove: 'S7',
-  analysisDuration: 'S8',
-  selectNewRegion: 'E1',
-  draggingMode: 'E2',
+export const actionLabels: Record<Action, string> = {
+  newRegion: 'Select new region',
+  showRegion: 'Show region',
+  removeRegion: 'Remove region',
+  loadHashes: 'Load hashes',
+  scanMove: 'Scan move',
+  skipMove: 'Skip move',
+  undoMove: 'Undo move',
+  bestMove: 'Best move',
+  resetPosition: 'Reset',
+  clearPosition: 'Clear',
+  recognizeBoard: 'Recognize',
+  dialogEngine: 'Load engine',
+  reloadEngine: 'Reload',
+  promoteQueen: 'Queen',
+  promoteRook: 'Rook',
+  promoteBishop: 'Bishop',
+  promoteKnight: 'Knight'
+};
+
+export const actionNames = Object.keys(actionLabels) as Action[];
+
+export const actionRegions: Partial<Record<Action | Preference, string>> = {
+  newRegion: 'E1',
   loadHashes: 'E7',
-  perspective: 'E8',
+  scanMove: 'S7',
+  skipMove: 'S6',
+  undoMove: 'S5',
+  bestMove: 'S2',
+  resetPosition: 'S3',
+  recognizeBoard: 'S1',
   promoteQueen: 'W1',
   promoteRook: 'W2',
   promoteBishop: 'W3',
-  promoteKnight: 'W4'
+  promoteKnight: 'W4',
+  autoResponse: 'S4',
+  perspective: 'E8',
+  draggingMode: 'E2',
+  analysisDuration: 'S8'
 };

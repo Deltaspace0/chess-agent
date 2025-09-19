@@ -62,11 +62,9 @@ declare global {
     isWhiteTurn: boolean;
   }
 
-  interface DroppedPiece {
-    sourceSquare: string | null;
-    targetSquare: string | null;
-    piece: string;
-  }
+  type Variable = keyof Variables;
+  type VariableListeners = { [T in Variable]: (value: Variables[T]) => void };
+  type RegionStatus = 'none' | 'exist' | 'selecting';
 
   interface Variables {
     status: string;
@@ -78,9 +76,29 @@ declare global {
     principalVariations: string[];
   }
 
-  type Variable = keyof Variables;
-  type VariableListeners = { [T in Variable]: (value: Variables[T]) => void };
-  type RegionStatus = 'none' | 'exist' | 'selecting';
+  interface DroppedPiece {
+    sourceSquare: string | null;
+    targetSquare: string | null;
+    piece: string;
+  }
+
+  type Action = 'newRegion'
+    | 'showRegion'
+    | 'removeRegion'
+    | 'loadHashes'
+    | 'scanMove'
+    | 'skipMove'
+    | 'undoMove'
+    | 'bestMove'
+    | 'resetPosition'
+    | 'clearPosition'
+    | 'recognizeBoard'
+    | 'dialogEngine'
+    | 'reloadEngine'
+    | 'promoteQueen'
+    | 'promoteRook'
+    | 'promoteBishop'
+    | 'promoteKnight';
 
   interface IElectronAPI {
     onUpdatePreference<T extends Preference>(name: T, listener: PreferenceListeners[T]);
@@ -90,23 +108,10 @@ declare global {
     preferenceValue<T extends Preference>(name: T, value: Preferences[T]);
     pieceDropped(value: DroppedPiece);
     pieceDroppedEdit(value: DroppedPiece);
-    promoteTo(value: string);
     sendToEngine(name: string, data: string);
     setPosition(value: string);
     setPositionInfo(value: PositionInfo);
-    newRegion();
-    showRegion();
-    removeRegion();
-    loadHashes();
-    scanMove();
-    skipMove();
-    undoMove();
-    bestMove();
-    resetPosition();
-    clearPosition();
-    recognizeBoard();
-    dialogEngine();
-    reloadEngine();
+    doAction(name: Action);
   }
 
   interface Window {

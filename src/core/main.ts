@@ -12,9 +12,7 @@ import Game from './modules/Game.ts';
 import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
 import RegionManager from './modules/RegionManager.ts';
-import { actionRegions, defaultVariables } from '../config.ts';
-
-type ActionName = keyof typeof actionRegions;
+import { actionNames, actionRegions, defaultVariables } from '../config.ts';
 
 async function createWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({
@@ -130,55 +128,81 @@ function getRegionSelector(position: string): (region: Region) => Region {
   });
   game.reset();
   const recognizer = new Recognizer();
-  const handleLoadHashes = () => {
-    const perspective = preferenceManager.getPreference('perspective');
-    recognizer.load(perspective).then(
-      () => updateStatus('Loaded piece hashes'),
-      () => updateStatus('Failed to load piece hashes'));
-  };
   const agent = new Agent({ engine, game, recognizer });
   agent.onUpdateStatus(updateStatus);
   agent.onBestMove((move) => board.playMove(move));
   agent.onPromotion(() => sendToApp('promotion'));
-  const actionCallbacks: Record<ActionName, () => void> = {
-    recognizeBoard: () => agent.recognizeBoard(),
-    playBestMove: () => agent.playBestMove(),
-    resetPosition: () => agent.resetPosition(),
-    autoResponse: () => {
-      const autoResponse = preferenceManager.getPreference('autoResponse');
-      preferenceManager.setPreference('autoResponse', !autoResponse);
+  const actionCallbacks: Record<Action, () => void> = {
+    newRegion: () => void regionManager.selectNewRegion(),
+    showRegion: () => regionManager.showRegion(),
+    removeRegion: () => regionManager.setRegion(null),
+    loadHashes: () => {
+      const perspective = preferenceManager.getPreference('perspective');
+      recognizer.load(perspective).then(
+        () => updateStatus('Loaded piece hashes'),
+        () => updateStatus('Failed to load piece hashes'));
     },
-    undoMove: () => agent.undoMove(),
-    skipMove: () => agent.skipMove(),
     scanMove: () => void agent.scanMove(),
-    analysisDuration: () => {
-      const duration = preferenceManager.getPreference('analysisDuration');
-      const newDuration = duration > 300 ? 300 : 5000;
-      preferenceManager.setPreference('analysisDuration', newDuration);
-      updateStatus(`Analysis duration: ${newDuration} ms`);
+    skipMove: () => agent.skipMove(),
+    undoMove: () => agent.undoMove(),
+    bestMove: () => agent.playBestMove(),
+    resetPosition: () => agent.resetPosition(),
+    clearPosition: () => agent.clearPosition(),
+    recognizeBoard: () => agent.recognizeBoard(),
+    dialogEngine: async () => {
+      const result = await dialog.showOpenDialog({ properties: ['openFile'] });
+      if (result.filePaths.length > 0) {
+        preferenceManager.setPreference('enginePath', result.filePaths[0]);
+      }
     },
-    selectNewRegion: () => void regionManager.selectNewRegion(),
-    draggingMode: () => {
-      const draggingMode = !preferenceManager.getPreference('draggingMode');
-      preferenceManager.setPreference('draggingMode', draggingMode);
-      console.log(`${draggingMode ? 'Dragging' : 'Clicking'} mode`);
-    },
-    loadHashes: handleLoadHashes,
-    perspective: () => {
-      const isWhite = !preferenceManager.getPreference('perspective');
-      preferenceManager.setPreference('perspective', isWhite);
-      console.log(`${isWhite ? 'White' : 'Black'} perspective`);
+    reloadEngine: () => {
+      const path = preferenceManager.getPreference('enginePath');
+      if (path) {
+        spawnExternalEngine(path);
+      }
     },
     promoteQueen: () => agent.promoteTo('q'),
     promoteRook: () => agent.promoteTo('r'),
     promoteBishop: () => agent.promoteTo('b'),
     promoteKnight: () => agent.promoteTo('n')
   };
+  const preferenceTogglers: Partial<Record<Preference, () => void>> = {
+    autoResponse: () => {
+      const autoResponse = !preferenceManager.getPreference('autoResponse');
+      preferenceManager.setPreference('autoResponse', autoResponse);
+      updateStatus(`Auto response is ${autoResponse ? 'on' : 'off'}`);
+    },
+    perspective: () => {
+      const isWhite = !preferenceManager.getPreference('perspective');
+      preferenceManager.setPreference('perspective', isWhite);
+      updateStatus(`${isWhite ? 'White' : 'Black'} perspective`);
+    },
+    draggingMode: () => {
+      const draggingMode = !preferenceManager.getPreference('draggingMode');
+      preferenceManager.setPreference('draggingMode', draggingMode);
+      updateStatus(`${draggingMode ? 'Dragging' : 'Clicking'} mode`);
+    },
+    analysisDuration: () => {
+      const duration = preferenceManager.getPreference('analysisDuration');
+      const newDuration = duration > 300 ? 300 : 5000;
+      preferenceManager.setPreference('analysisDuration', newDuration);
+      updateStatus(`Analysis duration: ${newDuration} ms`);
+    }
+  };
   const actionRegionManager = new ActionRegionManager();
-  for (const name of Object.keys(actionCallbacks) as ActionName[]) {
+  for (const name of actionNames) {
+    const regionLocation = actionRegions[name];
+    if (regionLocation) {
+      actionRegionManager.addActionRegion({
+        callback: actionCallbacks[name],
+        regionSelector: getRegionSelector(regionLocation)
+      });
+    }
+  }
+  for (const name of Object.keys(preferenceTogglers) as Preference[]) {
     actionRegionManager.addActionRegion({
-      callback: actionCallbacks[name],
-      regionSelector: getRegionSelector(actionRegions[name])
+      callback: preferenceTogglers[name]!,
+      regionSelector: getRegionSelector(actionRegions[name]!)
     });
   }
   const regionManager = new RegionManager();
@@ -246,28 +270,6 @@ function getRegionSelector(position: string): (region: Region) => Region {
   });
   ipcMain.on('set-position', (_, value) => agent.loadPosition(value));
   ipcMain.on('set-position-info', (_, value) => agent.loadPositionInfo(value));
-  ipcMain.handle('new-region', () => regionManager.selectNewRegion());
-  ipcMain.handle('show-region', () => regionManager.showRegion());
-  ipcMain.handle('remove-region', () => regionManager.setRegion(null));
-  ipcMain.handle('load-hashes', handleLoadHashes);
-  ipcMain.handle('scan-move', () => agent.scanMove());
-  ipcMain.handle('skip-move', () => agent.skipMove());
-  ipcMain.handle('undo-move', () => agent.undoMove());
-  ipcMain.handle('best-move', () => agent.playBestMove());
-  ipcMain.handle('reset-position', () => agent.resetPosition());
-  ipcMain.handle('clear-position', () => agent.clearPosition());
-  ipcMain.handle('recognize-board', () => agent.recognizeBoard());
-  ipcMain.handle('dialog-engine', async () => {
-    const result = await dialog.showOpenDialog({ properties: ['openFile'] });
-    if (result.filePaths.length > 0) {
-      preferenceManager.setPreference('enginePath', result.filePaths[0]);
-    }
-  });
-  ipcMain.handle('reload-engine', () => {
-    const path = preferenceManager.getPreference('enginePath');
-    if (path) {
-      spawnExternalEngine(path);
-    }
-  });
+  ipcMain.on('action', (_, value) => actionCallbacks[value as Action]());
   updateStatus('Ready');
 })();
