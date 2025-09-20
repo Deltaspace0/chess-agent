@@ -174,7 +174,9 @@ function getRegionSelector(position: string): (region: Region) => Region {
     clearPosition: () => agent.clearPosition(),
     recognizeBoard: () => agent.recognizeBoard(),
     dialogEngine: async () => {
-      const result = await dialog.showOpenDialog({ properties: ['openFile'] });
+      const result = await dialog.showOpenDialog(engineWin, {
+        properties: ['openFile']
+      });
       if (result.filePaths.length > 0) {
         preferenceManager.setPreference('enginePath', result.filePaths[0]);
       }
