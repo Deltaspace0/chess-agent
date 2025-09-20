@@ -34,6 +34,8 @@ async function createWindow(): Promise<BrowserWindow> {
 
 async function createEngineWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({
+    minWidth: 320,
+    minHeight: 320,
     show: false,
     icon: 'images/chess-icon.png',
     webPreferences: {
