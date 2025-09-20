@@ -1,5 +1,5 @@
 import '../App.css';
-import { type JSX, useEffect, useState } from 'react';
+import { type JSX, useEffect, useRef, useState } from 'react';
 import ActionButton from '../components/ActionButton.tsx';
 import { usePreferences } from '../hooks.ts';
 
@@ -12,6 +12,7 @@ function App() {
   const [internalLines, setInternalLines] = useState<JSX.Element[]>([]);
   const [externalLines, setExternalLines] = useState<JSX.Element[]>([]);
   const [externalActive, setExternalActive] = useState(false);
+  const autoScrollDiv = useRef<HTMLDivElement>(null);
   useEffect(() => {
     electron.onEngineData((name, data) => {
       if (name === 'external-event') {
@@ -31,6 +32,9 @@ function App() {
     });
   }, [electron]);
   const handleEngineSend = () => {
+    setTimeout(() => {
+      autoScrollDiv.current?.scrollIntoView(false);
+    }, 50);
     electron.sendToEngine(engineType, engineInput);
     setEngineInput('');
   };
@@ -51,6 +55,7 @@ function App() {
         readOnly={true}
       />
       <div className='engine-uci-div'>
+        <div ref={autoScrollDiv}/>
         {isInternalEngine ? internalLines : externalLines}
       </div>
       {(isInternalEngine || externalActive) ? (<div className='flex-row'>
