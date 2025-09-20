@@ -43,7 +43,8 @@ class Engine {
         this.sendEngineInfo();
         return;
       }
-      if (this.principalMoves.length === 0 && depth > 1) {
+      const pv = getNumberValue(words, 'multipv')-1;
+      if (pv > this.multiPV-1) {
         return;
       }
       this.engineInfo.depth = depth;
@@ -52,7 +53,6 @@ class Engine {
       this.engineInfo.time = getNumberValue(words, 'time');
       const i = words.indexOf('score');
       const evaluation = this.signEvaluation(words[i+1]+' '+words[i+2]);
-      const pv = getNumberValue(words, 'multipv')-1;
       if (pv === 0) {
         this.engineInfo.evaluation = evaluation;
       }
