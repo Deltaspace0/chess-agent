@@ -1,5 +1,5 @@
 import '../App.css';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import ActionButton from '../components/ActionButton.tsx';
 import { usePreferences } from '../hooks.ts';
 
@@ -9,8 +9,8 @@ function App() {
   const engineType = prefs.enginePath.value ? 'external' : 'internal';
   const isInternalEngine = prefs.enginePath.value === null;
   const [engineInput, setEngineInput] = useState('');
-  const [internalEngineData, setInternalEngineData] = useState('');
-  const [externalEngineData, setExternalEngineData] = useState('');
+  const [internalLines, setInternalLines] = useState<JSX.Element[]>([]);
+  const [externalLines, setExternalLines] = useState<JSX.Element[]>([]);
   const [externalActive, setExternalActive] = useState(false);
   useEffect(() => {
     electron.onEngineData((name, data) => {
@@ -18,8 +18,16 @@ function App() {
         setExternalActive(data !== 'exit');
         return;
       }
-      const f = (x: string) => x.split('\n').concat(data).slice(-1000).join('\n');
-      (name === 'internal' ? setInternalEngineData : setExternalEngineData)(f);
+      let color = '#ffffff';
+      if (data.substring(0, 3) === '<<<') {
+        color = '#f6ee11ff';
+      } else if (data.substring(0, 3) === '!>>') {
+        color = '#fc9288ff';
+      }
+      const line = <span style={{color}}>{data}</span>;
+      (name === 'internal' ? setInternalLines : setExternalLines)((x) => {
+        return [line, ...x].slice(0, 1000);
+      });
     });
   }, [electron]);
   const handleEngineSend = () => {
@@ -43,7 +51,7 @@ function App() {
         readOnly={true}
       />
       <div className='engine-uci-div'>
-        {isInternalEngine ? internalEngineData : externalEngineData}
+        {isInternalEngine ? internalLines : externalLines}
       </div>
       {(isInternalEngine || externalActive) ? (<div className='flex-row'>
         <input
