@@ -110,6 +110,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
   });
   engineExternal.addListener('exit', (code) => {
     updateStatus('Please reload the engine');
+    sendToApp('engine-data', 'external-event', 'exit');
     sendToApp('engine-data', 'external', `Exit code: ${code}`);
     for (const name of ['highlightMoves', 'principalVariations', 'engineInfo']) {
       sendToApp('update-variable', name, defaultVariables[name as Variable]);
@@ -118,6 +119,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
   const spawnExternalEngine = (path: string) => {
     if (engineExternal.spawn(path)) {
       engine.setProcess(engineExternal);
+      sendToApp('engine-data', 'external-event', 'start');
       updateStatus('Ready');
     } else {
       updateStatus('Failed to load external engine');

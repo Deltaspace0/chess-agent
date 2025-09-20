@@ -11,8 +11,13 @@ function App() {
   const [engineInput, setEngineInput] = useState('');
   const [internalEngineData, setInternalEngineData] = useState('');
   const [externalEngineData, setExternalEngineData] = useState('');
+  const [externalActive, setExternalActive] = useState(false);
   useEffect(() => {
     electron.onEngineData((name, data) => {
+      if (name === 'external-event') {
+        setExternalActive(data !== 'exit');
+        return;
+      }
       const f = (x: string) => x.split('\n').concat(data).slice(-1000).join('\n');
       (name === 'internal' ? setInternalEngineData : setExternalEngineData)(f);
     });
@@ -32,15 +37,17 @@ function App() {
             Disable
         </button>
       </div>
-      <p className='text'>
-        Engine path: {prefs.enginePath.value ?? '(Internal engine)'}
-      </p>
+      <input
+        type='text'
+        value={prefs.enginePath.value ?? '(Internal engine)'}
+        readOnly={true}
+      />
       <div className='engine-uci-div'>
         {isInternalEngine ? internalEngineData : externalEngineData}
       </div>
-      <div className='flex-row'>
+      {(isInternalEngine || externalActive) ? (<div className='flex-row'>
         <input
-          type="text"
+          type='text'
           style={{minWidth: 'calc(100vw - 100px)'}}
           value={engineInput}
           onChange={(e) => setEngineInput(e.target.value)}
@@ -52,7 +59,7 @@ function App() {
           }}
         />
         <button onClick={handleEngineSend}>Send</button>
-      </div>
+      </div>) : (<p className='status'>External engine is closed</p>)}
     </div>
   </div>);
 }

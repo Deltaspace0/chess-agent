@@ -182,7 +182,7 @@ p {
   font-family: 'Courier New', Courier, monospace;
   font-size: 11px;
   margin: 6px;
-  height: calc(100vh - 100px);
+  height: calc(100vh - 112px);
   overflow: scroll;
   display: flex;
   flex-direction: column-reverse;

@@ -184,7 +184,7 @@ function App() {
           </div>
           <div className='flex-row'>
             <input
-              type="text"
+              type='text'
               style={{minWidth: '240px'}}
               value={inputFEN}
               onChange={(e) => setInputFEN(e.target.value)}
