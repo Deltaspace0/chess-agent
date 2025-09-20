@@ -7,8 +7,6 @@ function getNumberValue(words: string[], name: string): number {
 
 class Engine {
   private process: EngineProcess | null = null;
-  private searching: boolean = false;
-  private needSearch: boolean = false;
   private moves: string[] = [];
   private whiteFirst: boolean = true;
   private fen: string | null = null;
@@ -32,14 +30,10 @@ class Engine {
   }
 
   private processData(data: string) {
-    const words: string[] = data.split(' ');
+    const words = data.split(' ');
     if (words.includes('depth')) {
       const depth = getNumberValue(words, 'depth');
       if (depth === 0) {
-        this.searching = false;
-        if (this.needSearch) {
-          this.search();
-        }
         this.sendEngineInfo();
         return;
       }
@@ -60,15 +54,10 @@ class Engine {
       this.setPrincipalMove(pv, evaluation+' '+moves);
     }
     if (words.includes('bestmove')) {
-      this.searching = false;
-      if (this.needSearch) {
-        this.search();
-      } else {
-        const move = words[words.indexOf('bestmove')+1];
-        this.bestMove = move;
-        this.ponderMove = words[words.indexOf('ponder')+1];
-        this.bestMoveCallback(move);
-      }
+      const move = words[words.indexOf('bestmove')+1];
+      this.bestMove = move;
+      this.ponderMove = words[words.indexOf('ponder')+1];
+      this.bestMoveCallback(move);
     }
   }
 
@@ -104,21 +93,11 @@ class Engine {
     this.sendToProcess('stop');
   }
 
-  private search() {
-    if (!this.searching) {
-      const pos = this.fen === null ? 'startpos' : `fen ${this.fen}`;
-      this.sendToProcess(`position ${pos} moves ${this.moves.join(' ')}`);
-      this.sendToProcess(`go movetime ${this.analysisDuration}`);
-      this.searching = true;
-      this.needSearch = false;
-    } else {
-      this.needSearch = true;
-    }
-  }
-
   private analyzePosition() {
     this.resetAnalysis();
-    this.search();
+    const pos = this.fen === null ? 'startpos' : `fen ${this.fen}`;
+    this.sendToProcess(`position ${pos} moves ${this.moves.join(' ')}`);
+    this.sendToProcess(`go movetime ${this.analysisDuration}`);
   }
 
   private sendMultiPV() {
@@ -136,7 +115,6 @@ class Engine {
     this.process = process;
     this.process.addListener('stdout', this.processListener);
     this.sendToProcess('uci');
-    this.searching = false;
     this.sendMultiPV();
     this.sendThreads();
     this.analyzePosition();
