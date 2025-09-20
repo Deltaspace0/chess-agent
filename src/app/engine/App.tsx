@@ -1,10 +1,7 @@
 import '../App.css';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import ActionButton from '../components/ActionButton.tsx';
-import Canvas from '../components/Canvas.tsx';
 import { usePreferences } from '../hooks.ts';
-
-type EngineType = 'internal' | 'external';
 
 function App() {
   const electron = window.electronAPI;
@@ -12,32 +9,14 @@ function App() {
   const engineType = prefs.enginePath.value ? 'external' : 'internal';
   const isInternalEngine = prefs.enginePath.value === null;
   const [engineInput, setEngineInput] = useState('');
-  const engineDataRef = useRef<Record<EngineType, string[]>>(null);
-  if (engineDataRef.current === null) {
-    engineDataRef.current = { internal: [], external: [] };
-  }
-  const engineData = engineDataRef.current;
-  const draw = useCallback((ctx: CanvasRenderingContext2D) => {
-    ctx.clearRect(0, 0, 4000, 4000);
-    ctx.font = `11px Courier New`;
-    ctx.fillStyle = '#fff';
-    const engineLines = engineData[engineType];
-    for (let i = 0; i < engineLines.length; i++) {
-      const y = 4000-10*(engineLines.length-i);
-      ctx.fillText(engineLines[i], 10, y);
-    }
-  }, [engineData, engineType]);
+  const [internalEngineData, setInternalEngineData] = useState('');
+  const [externalEngineData, setExternalEngineData] = useState('');
   useEffect(() => {
     electron.onEngineData((name, data) => {
-      if (name in engineData) {
-        const engineLines = engineData[name as EngineType];
-        engineLines.push(data);
-        if (engineLines.length > 1000) {
-          engineLines.splice(0, 1);
-        }
-      }
+      const f = (x: string) => x.split('\n').concat(data).slice(-1000).join('\n');
+      (name === 'internal' ? setInternalEngineData : setExternalEngineData)(f);
     });
-  }, [electron, engineData]);
+  }, [electron]);
   const handleEngineSend = () => {
     electron.sendToEngine(engineType, engineInput);
     setEngineInput('');
@@ -56,8 +35,8 @@ function App() {
       <p className='text'>
         Engine path: {prefs.enginePath.value ?? '(Internal engine)'}
       </p>
-      <div className='engine-div'>
-        <Canvas draw={draw} className='engine-canvas'/>
+      <div className='engine-uci-div'>
+        {isInternalEngine ? internalEngineData : externalEngineData}
       </div>
       <div className='flex-row'>
         <input

@@ -177,17 +177,16 @@ p {
   font-size: 12px;
 }
 
-.engine-div {
+.engine-uci-div {
+  background-color: #000000;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
   margin: 6px;
-  max-height: calc(100vh - 100px);
+  height: calc(100vh - 100px);
   overflow: scroll;
   display: flex;
   flex-direction: column-reverse;
-}
-
-.engine-canvas {
-  min-width: 4000px;
-  min-height: 4000px;
+  white-space: pre;
 }
 
 .actions {
