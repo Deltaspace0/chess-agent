@@ -95,6 +95,7 @@ declare global {
     | 'recognizeBoard'
     | 'dialogEngine'
     | 'reloadEngine'
+    | 'showEngine'
     | 'promoteQueen'
     | 'promoteRook'
     | 'promoteBishop'

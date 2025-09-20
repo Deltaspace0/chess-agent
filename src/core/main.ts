@@ -14,6 +14,9 @@ import Recognizer from './modules/Recognizer.ts';
 import RegionManager from './modules/RegionManager.ts';
 import { actionNames, actionRegions, defaultVariables } from '../config.ts';
 
+const dirname = path.dirname(fileURLToPath(import.meta.url));
+const preloadPath = path.join(dirname, 'preload.js');
+
 async function createWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({
     width: 400,
@@ -21,11 +24,28 @@ async function createWindow(): Promise<BrowserWindow> {
     icon: 'images/chess-icon.png',
     resizable: false,
     webPreferences: {
-      preload: path.join(path.dirname(fileURLToPath(import.meta.url)), 'preload.js')
+      preload: preloadPath
     }
   });
   win.removeMenu();
-  await win.loadURL('http://localhost:5173');
+  await win.loadURL('http://localhost:5173/src/app/main/');
+  return win;
+}
+
+async function createEngineWindow(): Promise<BrowserWindow> {
+  const win = new BrowserWindow({
+    show: false,
+    icon: 'images/chess-icon.png',
+    webPreferences: {
+      preload: preloadPath
+    }
+  });
+  win.addListener('close', (e) => {
+    win.hide();
+    e.preventDefault();
+  });
+  win.removeMenu();
+  await win.loadURL('http://localhost:5173/src/app/engine/');
   return win;
 }
 
@@ -57,18 +77,20 @@ function getRegionSelector(position: string): (region: Region) => Region {
   await app.whenReady();
   const win = await createWindow();
   let appRunning = true;
-  const sendToApp = (channel: string, ...args: unknown[]) => {
-    if (appRunning) {
-      win.webContents.send(channel, ...args);
-    }
-  }
-  app.on('window-all-closed', () => {
+  win.once('close', () => {
     if (preferenceManager.getPreference('saveConfigToFile')) {
       preferenceManager.saveToFile('config.json');
     }
     appRunning = false;
     app.quit();
   });
+  const engineWin = await createEngineWindow();
+  const sendToApp = (channel: string, ...args: unknown[]) => {
+    if (appRunning) {
+      win.webContents.send(channel, ...args);
+      engineWin.webContents.send(channel, ...args);
+    }
+  }
   const updateStatus = (status: string) => {
     console.log(status);
     sendToApp('update-variable', 'status', status);
@@ -161,6 +183,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
         spawnExternalEngine(path);
       }
     },
+    showEngine: () => engineWin.show(),
     promoteQueen: () => agent.promoteTo('q'),
     promoteRook: () => agent.promoteTo('r'),
     promoteBishop: () => agent.promoteTo('b'),
@@ -220,7 +243,10 @@ function getRegionSelector(position: string): (region: Region) => Region {
     sendToApp('update-preference', name, value);
   });
   const preferenceListeners: Partial<PreferenceListeners> = {
-    alwaysOnTop: (value) => win.setAlwaysOnTop(value, 'normal'),
+    alwaysOnTop: (value) => {
+      win.setAlwaysOnTop(value, 'normal');
+      engineWin.setAlwaysOnTop(value, 'normal');
+    },
     autoResponse: (value) => agent.setAutoResponse(value),
     autoScan: (value) => agent.setAutoScan(value),
     autoQueen: (value) => agent.setAutoQueen(value),

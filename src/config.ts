@@ -125,6 +125,7 @@ export const actionLabels: Record<Action, string> = {
   recognizeBoard: 'Recognize',
   dialogEngine: 'Load engine',
   reloadEngine: 'Reload',
+  showEngine: 'Engine',
   promoteQueen: 'Queen',
   promoteRook: 'Rook',
   promoteBishop: 'Bishop',

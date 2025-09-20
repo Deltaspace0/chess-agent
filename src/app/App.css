@@ -124,6 +124,10 @@ input[type="range"]:disabled::-webkit-slider-runnable-track {
   box-shadow: none;
 }
 
+input[type="text"] {
+  margin: 4px;
+}
+
 button {
   font-size: 12px;
   width: 180px;
@@ -173,11 +177,9 @@ p {
   font-size: 12px;
 }
 
-.engine-canvas-div {
-  width: 360px;
-  height: 320px;
-  margin: 4px auto;
-  position: relative;
+.engine-div {
+  margin: 6px;
+  max-height: calc(100vh - 100px);
   overflow: scroll;
   display: flex;
   flex-direction: column-reverse;
@@ -186,7 +188,6 @@ p {
 .engine-canvas {
   min-width: 4000px;
   min-height: 4000px;
-  margin: 6px;
 }
 
 .actions {
@@ -223,6 +224,10 @@ p {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.text {
+  margin: 1px;
 }
 
 .App {

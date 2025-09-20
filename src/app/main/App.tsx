@@ -1,17 +1,15 @@
-import './App.css';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import '../App.css';
+import React, { useEffect, useState } from 'react';
 import { Chessboard, ChessboardProvider, SparePiece } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
-import ActionButton from './components/ActionButton.tsx';
-import Canvas from './components/Canvas.tsx';
-import Checkbox from './components/Checkbox.tsx';
-import Gauge from './components/Gauge.tsx';
-import Radio from './components/Radio.tsx';
-import Slider from './components/Slider.tsx';
-import { usePreferences, useVariable } from './hooks.ts';
+import ActionButton from '../components/ActionButton.tsx';
+import Checkbox from '../components/Checkbox.tsx';
+import Gauge from '../components/Gauge.tsx';
+import Radio from '../components/Radio.tsx';
+import Slider from '../components/Slider.tsx';
+import { usePreferences, useVariable } from '../hooks.ts';
 
-type Panel = 'main' | 'settings' | 'engine' | 'promotion' | 'edit';
-type EngineType = 'internal' | 'external';
+type Panel = 'main' | 'settings' | 'promotion' | 'edit';
 
 function App() {
   const electron = window.electronAPI;
@@ -28,25 +26,6 @@ function App() {
   const [arrows1, setArrows1] = useState<Arrow[]>([]);
   const [arrows2, setArrows2] = useState<Arrow[]>([]);
   const [panelType, setPanelType] = useState<Panel>('main');
-  const [showEngineData, setShowEngineData] = useState(false);
-  const [engineInput, setEngineInput] = useState('');
-  const engineDataRef = useRef<Record<EngineType, string[]>>(null);
-  if (engineDataRef.current === null) {
-    engineDataRef.current = { internal: [], external: [] };
-  }
-  const engineData = engineDataRef.current;
-  const engineType = prefs.enginePath.value ? 'external' : 'internal';
-  const isInternalEngine = prefs.enginePath.value === null;
-  const draw = useCallback((ctx: CanvasRenderingContext2D) => {
-    ctx.clearRect(0, 0, 4000, 4000);
-    ctx.font = `11px Courier New`;
-    ctx.fillStyle = '#fff';
-    const engineLines = engineData[engineType];
-    for (let i = 0; i < engineLines.length; i++) {
-      const y = 4000-10*(engineLines.length-i);
-      ctx.fillText(engineLines[i], 10, y);
-    }
-  }, [engineData, engineType]);
   useEffect(() => {
     electron.onUpdateVariable('positionFEN', (value) => {
       setPositionFEN(value);
@@ -88,20 +67,7 @@ function App() {
       setArrows2(newArrows2);
     });
     electron.onPromotion(() => setPanelType('promotion'));
-    electron.onEngineData((name, data) => {
-      if (name in engineData) {
-        const engineLines = engineData[name as EngineType];
-        engineLines.push(data);
-        if (engineLines.length > 1000) {
-          engineLines.splice(0, 1);
-        }
-      }
-    });
-  }, [electron, engineData]);
-  const handleEngineSend = () => {
-    electron.sendToEngine(engineType, engineInput);
-    setEngineInput('');
-  };
+  }, [electron]);
   const chessboardOptions: ChessboardOptions = {
     showNotation: prefs.showNotation.value,
     arrows: prefs.showArrows.value
@@ -127,9 +93,7 @@ function App() {
       return true;
     }
   };
-  const engineButton = <button
-    onClick={() => setPanelType('engine')}
-    style={{width: '64px'}}>Engine</button>;
+  const engineButton = <ActionButton name='showEngine' style={{width: '64px'}}/>;
   const panels = {
     main: <>
       <fieldset className='actions'>
@@ -183,28 +147,6 @@ function App() {
             <Checkbox {...prefs.showLines.checkboxProps}/>
             <Checkbox {...prefs.showNotation.checkboxProps}/>
           </div>
-        </div>
-      </fieldset>
-    </>,
-    engine: <>
-      <fieldset className='full-field'>
-        <legend>Engine</legend>
-        <div className='flex-row'>
-          <ActionButton name='dialogEngine'/>
-          <ActionButton name='reloadEngine' disabled={isInternalEngine}/>
-          <button
-            onClick={() => prefs.enginePath.send(null)}
-            disabled={isInternalEngine}>
-              Disable
-          </button>
-        </div>
-        <p className='status'>
-          {prefs.enginePath.value ?? '(Internal engine is active)'}
-        </p>
-        <div className='flex-row'>
-          <button onClick={() => setShowEngineData(!showEngineData)}>
-            {showEngineData ? 'Close engine UCI' : 'Show engine UCI'}
-          </button>
         </div>
       </fieldset>
     </>,
@@ -332,62 +274,39 @@ function App() {
       </fieldset>
     </>
   };
-  return (
-    <ChessboardProvider options={chessboardOptions}>
-      <div className='App'>
-        <div className='flex-column'>
-          <div className='flex-row'>
-            <ActionButton
-              name='newRegion'
-              label={isSelectingRegion ? 'Cancel selection' : undefined}
-            />
-            <ActionButton name='showRegion' disabled={isNoRegion}/>
-            <ActionButton name='removeRegion' disabled={isNoRegion}/>
-          </div>
-          <div className='flex-row'>
-            {(panelType === 'engine' && showEngineData) ? (
-              <div className='engine-canvas-div'>
-                <div className='flex-row'>
-                  <input
-                    type="text"
-                    style={{minWidth: '280px'}}
-                    value={engineInput}
-                    onChange={(e) => setEngineInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleEngineSend();
-                        e.preventDefault();
-                      }
-                    }}
-                  />
-                  <button onClick={handleEngineSend}>Send</button>
-                </div>
-                <Canvas draw={draw} className='engine-canvas'/>
-              </div>
-            ) : (<>
-              <div className='board'>
-                <Chessboard/>
-              </div>
-              {prefs.showEvalBar.value && <Gauge
-                perspective={prefs.perspective.value}
-                evaluation={engineInfo.evaluation}
-              />}
-            </>)}
-          </div>
-          <div className='flex-row'>
-            <p className='status'>{statusText}</p>
-            {['main', 'promotion'].includes(panelType) ? (<>
-              <button onClick={() => setPanelType('edit')}>Edit board</button>
-              <button onClick={() => setPanelType('settings')}>Settings</button>
-            </>) : (
-              <button onClick={() => setPanelType('main')}>Return</button>
-            )}
-          </div>
-          {panels[panelType]}
+  return (<ChessboardProvider options={chessboardOptions}>
+    <div className='App'>
+      <div className='flex-column'>
+        <div className='flex-row'>
+          <ActionButton
+            name='newRegion'
+            label={isSelectingRegion ? 'Cancel selection' : undefined}
+          />
+          <ActionButton name='showRegion' disabled={isNoRegion}/>
+          <ActionButton name='removeRegion' disabled={isNoRegion}/>
         </div>
+        <div className='flex-row'>
+          <div className='board'>
+            <Chessboard/>
+          </div>
+          {prefs.showEvalBar.value && <Gauge
+            perspective={prefs.perspective.value}
+            evaluation={engineInfo.evaluation}
+          />}
+        </div>
+        <div className='flex-row'>
+          <p className='status'>{statusText}</p>
+          {['main', 'promotion'].includes(panelType) ? (<>
+            <button onClick={() => setPanelType('edit')}>Edit board</button>
+            <button onClick={() => setPanelType('settings')}>Settings</button>
+          </>) : (
+            <button onClick={() => setPanelType('main')}>Return</button>
+          )}
+        </div>
+        {panels[panelType]}
       </div>
-    </ChessboardProvider>
-  );
+    </div>
+  </ChessboardProvider>);
 }
 
 export default App;
