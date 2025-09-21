@@ -7,7 +7,7 @@ import Agent from './modules/Agent.ts';
 import Board from './modules/Board.ts';
 import Engine from './modules/engine/Engine.ts';
 import EngineExternal from './modules/engine/EngineExternal.ts';
-import EngineWorker from './modules/engine/EngineWorker.ts';
+import EngineInternal from './modules/engine/EngineInternal.ts';
 import Game from './modules/Game.ts';
 import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
@@ -127,14 +127,14 @@ function getRegionSelector(position: string): (region: Region) => Region {
       updateStatus('Failed to load external engine');
     }
   };
-  const engineWorker = new EngineWorker();
-  engineWorker.addListener('stdin', (data) => {
+  const engineInternal = new EngineInternal();
+  engineInternal.addListener('stdin', (data) => {
     sendToApp('engine-data', 'internal', '<<< '+data);
   });
-  engineWorker.addListener('stdout', (data) => {
+  engineInternal.addListener('stdout', (data) => {
     sendToApp('engine-data', 'internal', '>>> '+data);
   });
-  engineWorker.addListener('stderr', (data) => {
+  engineInternal.addListener('stderr', (data) => {
     sendToApp('engine-data', 'internal', '!>> '+data);
   });
   const engine = new Engine();
@@ -273,7 +273,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
     },
     enginePath: (value) => {
       if (!value) {
-        engine.setProcess(engineWorker);
+        engine.setProcess(engineInternal);
         engineExternal.kill();
         updateStatus('Ready');
       } else {
@@ -295,7 +295,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
   ipcMain.on('promote-to', (_, value) => agent.promoteTo(value));
   ipcMain.on('send-to-engine', (_, name, data) => {
     if (name === 'internal') {
-      engineWorker.send(data);
+      engineInternal.send(data);
     } else if (name === 'external') {
       engineExternal.send(data);
     }

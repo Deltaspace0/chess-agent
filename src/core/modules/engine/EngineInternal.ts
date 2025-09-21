@@ -1,7 +1,7 @@
 import Worker from 'web-worker';
 import EngineProcess from './EngineProcess.ts';
 
-class EngineWorker extends EngineProcess {
+class EngineInternal extends EngineProcess {
   private worker!: Worker;
   private options: Record<string, string> = {};
 
@@ -44,4 +44,4 @@ class EngineWorker extends EngineProcess {
   }
 }
 
-export default EngineWorker;
+export default EngineInternal;
