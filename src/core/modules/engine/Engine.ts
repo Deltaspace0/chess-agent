@@ -54,7 +54,7 @@ class Engine {
       this.setPrincipalMove(pv, evaluation+' '+moves);
     }
     if (words.includes('bestmove')) {
-      const move = words[words.indexOf('bestmove')+1];
+      const move = words[words.indexOf('bestmove')+1].trim();
       this.bestMove = move;
       this.ponderMove = words[words.indexOf('ponder')+1];
       this.bestMoveCallback(move);
