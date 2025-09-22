@@ -72,11 +72,9 @@ declare global {
 
   type Variable = keyof Variables;
   type VariableListeners = { [T in Variable]: (value: Variables[T]) => void };
-  type RegionStatus = 'none' | 'exist' | 'selecting';
 
   interface Variables {
     status: string;
-    regionStatus: RegionStatus;
     positionFEN: string;
     positionInfo: PositionInfo;
     engineInfo: EngineInfo;
@@ -90,9 +88,8 @@ declare global {
     piece: string;
   }
 
-  type Action = 'newRegion'
-    | 'showRegion'
-    | 'removeRegion'
+  type Action = 'showRegion'
+    | 'hideRegion'
     | 'loadHashes'
     | 'scanMove'
     | 'skipMove'

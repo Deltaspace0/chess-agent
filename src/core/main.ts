@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, screen } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ActionRegionManager from './modules/ActionRegionManager.ts';
@@ -10,7 +10,6 @@ import EngineInternal from './modules/engine/EngineInternal.ts';
 import Game from './modules/Game.ts';
 import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
-import RegionManager from './modules/RegionManager.ts';
 import { PhysicalMouse } from './modules/Mouse.ts';
 import { actionNames, actionRegions, defaultVariables } from '../config.ts';
 
@@ -19,10 +18,11 @@ const preloadPath = path.join(dirname, 'preload.js');
 
 async function createWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({
-    width: 400,
-    height: 600,
+    width: 380,
+    height: 580,
     icon: 'images/chess-icon.png',
     resizable: false,
+    useContentSize: true,
     webPreferences: {
       preload: preloadPath
     }
@@ -38,16 +38,33 @@ async function createEngineWindow(): Promise<BrowserWindow> {
     minHeight: 320,
     show: false,
     icon: 'images/chess-icon.png',
+    useContentSize: true,
     webPreferences: {
       preload: preloadPath
     }
   });
-  win.addListener('close', (e) => {
-    win.hide();
-    e.preventDefault();
-  });
   win.removeMenu();
   await win.loadURL('http://localhost:5173/src/app/engine/');
+  return win;
+}
+
+async function createRegionWindow(): Promise<BrowserWindow> {
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const win = new BrowserWindow({
+    alwaysOnTop: true,
+    frame: false,
+    width: primaryDisplay.size.width-4,
+    height: primaryDisplay.size.height,
+    resizable: false,
+    show: false,
+    skipTaskbar: true,
+    transparent: true,
+    webPreferences: {
+      preload: preloadPath
+    }
+  });
+  win.removeMenu();
+  await win.loadURL('http://localhost:5173/src/app/region/');
   return win;
 }
 
@@ -92,7 +109,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
   await app.whenReady();
   const win = await createWindow();
   let appRunning = true;
-  win.once('close', () => {
+  win.addListener('close', () => {
     if (preferenceManager.getPreference('saveConfigToFile')) {
       preferenceManager.saveToFile('config.json');
     }
@@ -100,10 +117,25 @@ function getRegionSelector(position: string): (region: Region) => Region {
     app.quit();
   });
   const engineWin = await createEngineWindow();
+  engineWin.addListener('close', (e) => {
+    engineWin.hide();
+    e.preventDefault();
+  });
+  const regionWin = await createRegionWindow();
+  const hideRegionWindow = () => {
+    regionWin.hide();
+    win.show();
+    mouse.setActive(true);
+  };
+  regionWin.addListener('close', (e) => {
+    hideRegionWindow();
+    e.preventDefault();
+  });
   const sendToApp = (channel: string, ...args: unknown[]) => {
     if (appRunning) {
       win.webContents.send(channel, ...args);
       engineWin.webContents.send(channel, ...args);
+      regionWin.webContents.send(channel, ...args);
     }
   }
   const updateStatus = (status: string) => {
@@ -179,9 +211,11 @@ function getRegionSelector(position: string): (region: Region) => Region {
   });
   agent.onPromotion(() => sendToApp('promotion'));
   const actionCallbacks: Record<Action, () => void> = {
-    newRegion: () => void regionManager.selectNewRegion(),
-    showRegion: () => regionManager.showRegion(),
-    removeRegion: () => regionManager.setRegion(null),
+    showRegion: () => {
+      regionWin.show();
+      mouse.setActive(false);
+    },
+    hideRegion: () => hideRegionWindow(),
     loadHashes: () => {
       const perspective = preferenceManager.getPreference('perspective');
       recognizer.load(perspective).then(
@@ -254,17 +288,6 @@ function getRegionSelector(position: string): (region: Region) => Region {
       regionSelector: getRegionSelector(actionRegions[name]!)
     });
   }
-  const regionManager = new RegionManager();
-  regionManager.onUpdateStatus(updateStatus);
-  regionManager.onUpdateRegion((region) => {
-    preferenceManager.setPreference('region', region);
-  });
-  regionManager.onUpdateRegionStatus((value) => {
-    const region = preferenceManager.getPreference('region');
-    actionRegionManager.setRegion(value === 'selecting' ? null : region);
-    sendToApp('update-variable', 'regionStatus', value);
-  });
-  regionManager.setRegion(preferenceManager.getPreference('region'));
   preferenceManager.onUpdate((name, value) => {
     sendToApp('update-preference', name, value);
   });

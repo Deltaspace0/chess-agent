@@ -13,7 +13,7 @@ function App() {
   const [internalLines, setInternalLines] = useState<JSX.Element[]>([]);
   const [externalLines, setExternalLines] = useState<JSX.Element[]>([]);
   const [externalActive, setExternalActive] = useState(false);
-  const autoScrollDiv = useRef<HTMLDivElement>(null);
+  const autoScrollDivRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     electron.onEngineData((name, data) => {
       if (name === 'external-event') {
@@ -34,7 +34,7 @@ function App() {
   }, [electron]);
   const handleEngineSend = () => {
     setTimeout(() => {
-      autoScrollDiv.current?.scrollIntoView(false);
+      autoScrollDivRef.current?.scrollIntoView(false);
     }, 50);
     electron.sendToEngine(engineType, engineInput);
     setEngineInput('');
@@ -58,7 +58,7 @@ function App() {
       <p className='text'>Name: {engineInfo.name}</p>
       <p className='text'>Author: {engineInfo.author}</p>
       <div className='engine-uci-div'>
-        <div ref={autoScrollDiv} style={{minHeight: '8px'}}></div>
+        <div ref={autoScrollDivRef} style={{minHeight: '8px'}}></div>
         {isInternalEngine ? internalLines : externalLines}
       </div>
       {(isInternalEngine || externalActive) ? (<div className='flex-row'>

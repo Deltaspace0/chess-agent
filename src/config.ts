@@ -99,7 +99,6 @@ export const preferenceNames = Object.keys(preferenceConfig) as Preference[];
 
 export const defaultVariables: Variables = {
   status: '',
-  regionStatus: 'none',
   positionFEN: '',
   positionInfo: {
     whiteCastlingRights: { 'k': true, 'q': true },
@@ -112,9 +111,8 @@ export const defaultVariables: Variables = {
 }
 
 export const actionLabels: Record<Action, string> = {
-  newRegion: 'Select new region',
-  showRegion: 'Show region',
-  removeRegion: 'Remove region',
+  showRegion: 'Region',
+  hideRegion: 'Return',
   loadHashes: 'Load hashes',
   scanMove: 'Scan move',
   skipMove: 'Skip move',
@@ -135,7 +133,7 @@ export const actionLabels: Record<Action, string> = {
 export const actionNames = Object.keys(actionLabels) as Action[];
 
 export const actionRegions: Partial<Record<Action | Preference, string>> = {
-  newRegion: 'E1',
+  showRegion: 'E1',
   loadHashes: 'E7',
   scanMove: 'S7',
   skipMove: 'S6',

@@ -189,21 +189,48 @@ p {
   white-space: pre;
 }
 
-.actions {
-  padding: 2px 12px;
+.region-div {
+  min-width: 48px;
+  min-height: 48px;
+  position: absolute;
+  resize: both;
+  overflow: auto;
+  background-color: rgba(24, 71, 255, 0.4);
+  cursor: move;
+  z-index: 2;
+}
+
+.region-panel {
+  top: 0;
+  display: flex;
+  padding: 4px;
+  margin: 0 auto;
+  width: 400px;
+  height: 48px;
+  z-index: 32;
+}
+
+.region-panel > button {
+  font-size: 14px;
+}
+
+.region-highlight {
+  background-color: rgba(68, 255, 0, 0.4);
+  position: absolute;
+  z-index: 1;
 }
 
 .scroll-field {
-  height: 150px;
+  height: calc(100vh - 410px);
   overflow-y: scroll;
 }
 
 .full-field {
-  height: 150px;
+  height: calc(100vh - 410px);
 }
 
 .pv {
-  height: 82px;
+  height: calc(100vh - 486px);
   overflow-y: scroll;
   padding: 2px 12px;
 }
@@ -231,6 +258,16 @@ p {
   display: flex;
   padding: 4px;
   color: white;
+}
+
+.Region {
+  background-color: rgba(255, 255, 255, 0.3);
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  color: white;
+  position: relative;
+  user-select: none;
 }
 
 .flex-center {

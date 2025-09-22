@@ -15,9 +15,7 @@ function App() {
   const electron = window.electronAPI;
   const prefs = usePreferences();
   const statusText = useVariable('status');
-  const regionStatus = useVariable('regionStatus');
-  const isNoRegion = regionStatus !== 'exist';
-  const isSelectingRegion = regionStatus === 'selecting';
+  const isNoRegion = !prefs.region.value;
   const engineInfo = useVariable('engineInfo');
   const principalVariations = useVariable('principalVariations');
   const positionInfo = useVariable('positionInfo');
@@ -93,10 +91,9 @@ function App() {
       return true;
     }
   };
-  const engineButton = <ActionButton name='showEngine' style={{width: '64px'}}/>;
   const panels = {
     main: <>
-      <fieldset className='actions'>
+      <fieldset>
         <legend>Actions</legend>
         <div className='flex-row'>
           <ActionButton name='bestMove' disabled={isNoRegion}/>
@@ -110,19 +107,18 @@ function App() {
           <ActionButton name='recognizeBoard' disabled={isNoRegion}/>
           <ActionButton name='loadHashes' disabled={isNoRegion}/>
           <ActionButton name='undoMove'/>
-          <ActionButton name='skipMove'/>
+          <ActionButton name='showRegion'/>
         </div>
       </fieldset>
-      {prefs.showLines.value ? (<fieldset className='pv'>
-        <legend>{engineButton}</legend>
+      <fieldset className='pv'>
+        <legend>Principal variations</legend>
         <p className='text'>
           Depth: {engineInfo.depth}, time: {engineInfo.time} ms,
           nodes: {engineInfo.nodes}
         </p>
-        {principalVariations.map((x) => <p className='text'>{x}</p>)}
-      </fieldset>) : (
-        <div className='flex-row'>{engineButton}</div>
-      )}
+        {prefs.showLines.value &&
+          principalVariations.map((x) => <p className='text'>{x}</p>)}
+      </fieldset>
     </>,
     settings: <>
       <fieldset className='scroll-field'>
@@ -278,14 +274,6 @@ function App() {
     <div className='App'>
       <div className='flex-column'>
         <div className='flex-row'>
-          <ActionButton
-            name='newRegion'
-            label={isSelectingRegion ? 'Cancel selection' : undefined}
-          />
-          <ActionButton name='showRegion' disabled={isNoRegion}/>
-          <ActionButton name='removeRegion' disabled={isNoRegion}/>
-        </div>
-        <div className='flex-row'>
           <div className='board'>
             <Chessboard/>
           </div>
@@ -294,16 +282,17 @@ function App() {
             evaluation={engineInfo.evaluation}
           />}
         </div>
-        <div className='flex-row'>
-          <p className='status'>{statusText}</p>
-          {['main', 'promotion'].includes(panelType) ? (<>
-            <button onClick={() => setPanelType('edit')}>Edit board</button>
-            <button onClick={() => setPanelType('settings')}>Settings</button>
-          </>) : (
-            <button onClick={() => setPanelType('main')}>Return</button>
-          )}
-        </div>
+        <p className='status'>{statusText}</p>
         {panels[panelType]}
+        <div className='flex-row'>
+          <ActionButton name='showEngine'/>
+          {panelType === 'edit'
+            ? <button onClick={() => setPanelType('main')}>Return</button>
+            : <button onClick={() => setPanelType('edit')}>Edit board</button>}
+          {panelType === 'settings'
+            ? <button onClick={() => setPanelType('main')}>Return</button>
+            : <button onClick={() => setPanelType('settings')}>Settings</button>}
+        </div>
       </div>
     </div>
   </ChessboardProvider>);
