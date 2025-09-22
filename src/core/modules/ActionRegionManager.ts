@@ -1,4 +1,4 @@
-import { mouse, Region } from '@nut-tree-fork/nut-js';
+import { mouse } from '@nut-tree-fork/nut-js';
 import mouseEvents from 'global-mouse-events';
 
 interface ActionRegion {

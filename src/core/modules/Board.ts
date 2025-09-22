@@ -1,4 +1,4 @@
-import { mouse, sleep, straightTo, Point, Region } from '@nut-tree-fork/nut-js';
+import { mouse, sleep, straightTo, Point } from '@nut-tree-fork/nut-js';
 import mouseEvents from 'global-mouse-events';
 import { coordsToSquare, squareToCoords } from '../util.ts';
 import { preferenceConfig } from '../../config.ts';

@@ -1,4 +1,5 @@
-import { screen, sleep, Region } from '@nut-tree-fork/nut-js';
+import { screen, sleep, Region as NutRegion } from '@nut-tree-fork/nut-js';
+import type { Image } from '@nut-tree-fork/nut-js';
 import type { Color, Piece, PieceSymbol } from 'chess.js';
 import { preferenceConfig } from '../../config.ts';
 
@@ -25,7 +26,10 @@ function compareHashes(hash1: string, hash2: string): number {
   return residual;
 }
 
-function getChangedSquares(oldHashes: string[][], newHashes: string[][]): [number, number][] {
+function getChangedSquares(
+  oldHashes: string[][],
+  newHashes: string[][]
+): [number, number][] {
   const changedSquares: [number, number][] = [];
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
@@ -43,11 +47,16 @@ class Recognizer {
   private scanning: boolean = false;
   private pieceHashes: Record<string, string> = {};
 
-  private async grabBoard(): Promise<Buffer[][][]> {
+  private async grabRegion(): Promise<Image> {
     if (this.region === null) {
       throw new Error('No region set');
     }
-    const image = await screen.grabRegion(this.region);
+    const { left, top, width, height } = this.region;
+    return screen.grabRegion(new NutRegion(left, top, width, height));
+  }
+
+  private async grabBoard(): Promise<Buffer[][][]> {
+    const image = await this.grabRegion();
     const bufferRows: Buffer[] = [];
     for (let i = 0; i < image.data.byteLength; i += image.byteWidth) {
       bufferRows.push(image.data.subarray(i, i+image.byteWidth));
@@ -62,8 +71,7 @@ class Recognizer {
       const row: Buffer[][] = [];
       for (let j = 0; j < 8; j++) {
         const left = Math.floor(squareWidth*j+5);
-        const region = new Region(left, top, width, height);
-        row.push(getBufferSquare(bufferRows, region));
+        row.push(getBufferSquare(bufferRows, { left, top, width, height }));
       }
       grid.push(row);
     }

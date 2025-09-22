@@ -1,4 +1,4 @@
-import { mouse, screen, Point, Region } from '@nut-tree-fork/nut-js';
+import { mouse, screen, Point, Region as NutRegion } from '@nut-tree-fork/nut-js';
 import mouseEvents from 'global-mouse-events';
 import StatusNotifier from './StatusNotifier.ts';
 
@@ -25,7 +25,12 @@ class RegionManager extends StatusNotifier {
           p2 = point;
         }
         if (p1 !== null && p2 !== null) {
-          res(new Region(p1.x, p1.y, p2.x-p1.x, p2.y-p1.y));
+          res({
+            left: p1.x,
+            top: p1.y,
+            width: p2.x-p1.x,
+            height: p2.y-p1.y
+          });
         }
       };
       const res = (value: Region | null) => {
@@ -64,8 +69,8 @@ class RegionManager extends StatusNotifier {
       this.statusCallback('Region is too small');
       return null;
     }
-    screen.highlight(region);
     this.setRegion(region);
+    this.showRegion();
     this.statusCallback('Ready');
     return region;
   }
@@ -78,7 +83,8 @@ class RegionManager extends StatusNotifier {
 
   async showRegion() {
     if (this.region) {
-      return screen.highlight(this.region);
+      const { left, top, width, height } = this.region;
+      return screen.highlight(new NutRegion(left, top, width, height));
     }
   }
 

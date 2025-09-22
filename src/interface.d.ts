@@ -1,7 +1,13 @@
-import type { Region } from '@nut-tree-fork/nut-js';
 import type { Piece } from 'chess.js';
 
 declare global {
+  interface Region {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  }
+
   type Preference = keyof Preferences;
 
   type BooleanPreference = {

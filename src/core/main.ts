@@ -1,5 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
-import { mouse, Region } from '@nut-tree-fork/nut-js';
+import { mouse } from '@nut-tree-fork/nut-js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ActionRegionManager from './modules/ActionRegionManager.ts';
@@ -54,23 +54,35 @@ async function createEngineWindow(): Promise<BrowserWindow> {
 function getRegionSelector(position: string): (region: Region) => Region {
   const index = Number(position[1]);
   if (position[0] === 'N') {
-    return ({ left, top, width, height }) => {
-      return new Region(left+width*(index-1)/8, top-height/16, width/8, height/16);
-    }
+    return ({ left, top, width, height }) => ({
+      left: left+width*(index-1)/8,
+      top: top-height/16,
+      width: width/8,
+      height: height/16
+    });
   }
   if (position[0] === 'S') {
-    return ({ left, top, width, height }) => {
-      return new Region(left+width*(index-1)/8, top+height, width/8, height/16);
-    }
+    return ({ left, top, width, height }) => ({
+      left: left+width*(index-1)/8,
+      top: top+height,
+      width: width/8,
+      height: height/16
+    });
   }
   if (position[0] === 'W') {
-    return ({ left, top, width, height }) => {
-      return new Region(left-width/16, top+height*(index-1)/8, width/16, height/8);
-    }
+    return ({ left, top, width, height }) => ({
+      left: left-width/16,
+      top: top+height*(index-1)/8,
+      width: width/16,
+      height: height/8
+    });
   }
-  return ({ left, top, width, height }) => {
-    return new Region(left+width, top+height*(index-1)/8, width/16, height/8);
-  }
+  return ({ left, top, width, height }) => ({
+    left: left+width,
+    top: top+height*(index-1)/8,
+    width: width/16,
+    height: height/8
+  });
 }
 
 (async () => {
