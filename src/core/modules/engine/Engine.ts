@@ -1,6 +1,16 @@
 import EngineProcess from './EngineProcess.ts';
 import { preferenceConfig } from '../../../config.ts';
 
+interface EngineOptions {
+  multiPV: number;
+  threads: number;
+}
+
+const optionNames: Record<keyof EngineOptions, string> = {
+  multiPV: 'MultiPV',
+  threads: 'Threads'
+};
+
 function getNumberValue(words: string[], name: string): number {
   return Number(words[words.indexOf(name)+1]);
 }
@@ -14,10 +24,13 @@ class Engine {
   private ponderMove: string | null = null;
   private engineInfo: EngineInfo = {};
   private analysisDuration: number = preferenceConfig.analysisDuration.defaultValue;
-  private multiPV: number = preferenceConfig.multiPV.defaultValue;
-  private threads: number = preferenceConfig.engineThreads.defaultValue;
+  private options: EngineOptions = {
+    multiPV: preferenceConfig.multiPV.defaultValue,
+    threads: preferenceConfig.engineThreads.defaultValue
+  };
   private principalMoves: string[] = [];
   private sendingEngineInfo: boolean = false;
+  private sendingOptions: Partial<Record<keyof EngineOptions, boolean>> = {};
   private processListener: (data: string) => void = this.processData.bind(this);
   private idListener: () => void = this.sendEngineId.bind(this);
   private principalMovesCallback: (value: string[]) => void = () => {};
@@ -39,7 +52,7 @@ class Engine {
         return;
       }
       const pv = getNumberValue(words, 'multipv')-1;
-      if (pv > this.multiPV-1) {
+      if (pv > this.options.multiPV-1) {
         return;
       }
       this.engineInfo.depth = depth;
@@ -110,14 +123,10 @@ class Engine {
     this.sendToProcess(`go movetime ${this.analysisDuration}`);
   }
 
-  private sendMultiPV() {
-    this.sendToProcess(`stop`);
-    this.sendToProcess(`setoption name MultiPV value ${this.multiPV}`);
-  }
-
-  private sendThreads() {
-    this.sendToProcess(`stop`);
-    this.sendToProcess(`setoption name Threads value ${this.threads}`);
+  private sendOptionToProcess(name: keyof EngineOptions) {
+    this.sendToProcess('stop');
+    const value = this.options[name];
+    this.sendToProcess(`setoption name ${optionNames[name]} value ${value}`);
   }
 
   async setProcess(process: EngineProcess) {
@@ -129,8 +138,8 @@ class Engine {
     this.sendEngineId();
     const uciSupported = await this.process.expect('uciok', 2000, 'uci');
     if (uciSupported) {
-      this.sendMultiPV();
-      this.sendThreads();
+      this.sendOptionToProcess('multiPV');
+      this.sendOptionToProcess('threads');
       this.analyzePosition();
     }
   }
@@ -151,15 +160,18 @@ class Engine {
     this.analysisDuration = value;
   }
 
-  setMultiPV(value: number) {
-    this.multiPV = value;
-    this.sendMultiPV();
-    this.analyzePosition();
-  }
-
-  setThreads(value: number) {
-    this.threads = value;
-    this.sendThreads();
+  setOption<T extends keyof EngineOptions>(name: T, value: EngineOptions[T]) {
+    this.options[name] = value;
+    if (!this.sendingOptions[name]) {
+      this.sendingOptions[name] = true;
+      setTimeout(() => {
+        this.sendOptionToProcess(name);
+        if (name === 'multiPV') {
+          this.analyzePosition();
+        }
+        this.sendingOptions[name] = false;
+      }, 200);
+    }
   }
 
   onPrincipalMoves(callback: (value: string[]) => void) {

@@ -264,8 +264,8 @@ function getRegionSelector(position: string): (region: Region) => Region {
     draggingMode: (value) => board.setDraggingMode(value),
     actionRegion: (value) => actionRegionManager.setActive(value),
     analysisDuration: (value) => engine.setAnalysisDuration(value),
-    multiPV: (value) => engine.setMultiPV(value),
-    engineThreads: (value) => engine.setThreads(value),
+    multiPV: (value) => engine.setOption('multiPV', value),
+    engineThreads: (value) => engine.setOption('threads', value),
     mouseSpeed: (value) => { mouse.config.mouseSpeed = value; },
     region: (value) => {
       actionRegionManager.setRegion(value);
