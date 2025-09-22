@@ -58,7 +58,7 @@ function App() {
       <p className='text'>Name: {engineInfo.name}</p>
       <p className='text'>Author: {engineInfo.author}</p>
       <div className='engine-uci-div'>
-        <div ref={autoScrollDiv}/>
+        <div ref={autoScrollDiv} style={{minHeight: '8px'}}></div>
         {isInternalEngine ? internalLines : externalLines}
       </div>
       {(isInternalEngine || externalActive) ? (<div className='flex-row'>
