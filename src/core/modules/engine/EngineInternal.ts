@@ -15,12 +15,11 @@ class EngineInternal extends EngineProcess {
     this.worker = new Worker(url, { type: 'module' });
     this.worker.addEventListener('message', (e) => {
       const stream = e.data.type === 'error' ? 'stderr' : 'stdout';
-      for (const listener of this.listeners[stream]) {
-        listener(e.data.message);
-      }
+      this.sendToListeners(stream, e.data.message);
     });
     for (const name in this.options) {
-      this.worker.postMessage(`setoption name ${name} value ${this.options[name]}`);
+      const value = this.options[name];
+      this.worker.postMessage(`setoption name ${name} value ${value}`);
     }
   }
 
@@ -28,9 +27,7 @@ class EngineInternal extends EngineProcess {
     if (message.includes('Threads')) {
       return;
     }
-    for (const listener of this.listeners.stdin) {
-      listener(message);
-    }
+    this.sendToListeners('stdin', message);
     if (message === 'stop') {
       this.worker.terminate();
       this.useNextWorker();

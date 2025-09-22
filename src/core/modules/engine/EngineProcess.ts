@@ -2,30 +2,32 @@ type ListenerType = 'stdin' | 'stdout' | 'stderr' | 'exit' | 'id';
 type Listener = (data: string) => void;
 
 abstract class EngineProcess {
-  protected listeners: Record<ListenerType, Set<Listener>> = {
+  private listeners: Record<ListenerType, Set<Listener>> = {
     stdin: new Set(),
     stdout: new Set(),
     stderr: new Set(),
     exit: new Set(),
     id: new Set()
   };
-  protected engineName: string = '';
-  protected engineAuthor: string = '';
+  private engineName: string = '';
+  private engineAuthor: string = '';
 
   constructor() {
     this.listeners.stdout.add((data) => {
       if (data.startsWith('id name')) {
         this.engineName = data.slice('id name'.length);
-        for (const listener of this.listeners.id) {
-          listener('name');
-        }
+        this.sendToListeners('id', 'name');
       } else if (data.startsWith('id author')) {
         this.engineAuthor = data.slice('id author'.length);
-        for (const listener of this.listeners.id) {
-          listener('author');
-        }
+        this.sendToListeners('id', 'author');
       }
     });
+  }
+
+  protected sendToListeners(type: ListenerType, data: string) {
+    for (const listener of this.listeners[type]) {
+      listener(data);
+    }
   }
 
   protected resetEngineInfo() {

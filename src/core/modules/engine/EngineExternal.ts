@@ -13,17 +13,13 @@ class EngineExternal extends EngineProcess {
       return false;
     }
     this.process.on('exit', (code) => {
-      for (const listener of this.listeners.exit) {
-        listener(JSON.stringify(code));
-      }
+      this.sendToListeners('exit', JSON.stringify(code));
     });
-    for (const t of ['stdout', 'stderr'] as const) {
-      this.process[t].on('data', (data) => {
+    for (const stream of ['stdout', 'stderr'] as const) {
+      this.process[stream].on('data', (data) => {
         const dataLines = data.toString().split('\n').slice(0, -1);
-        for (const listener of this.listeners[t]) {
-          for (const line of dataLines) {
-            listener(line);
-          }
+        for (const line of dataLines) {
+          this.sendToListeners(stream, line);
         }
       });
     }
@@ -41,9 +37,7 @@ class EngineExternal extends EngineProcess {
   send(message: string) {
     if (this.process) {
       this.process.stdin.write(message+'\n');
-      for (const listener of this.listeners.stdin) {
-        listener(message);
-      }
+      this.sendToListeners('stdin', message);
     }
   }
 }
