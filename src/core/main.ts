@@ -169,7 +169,13 @@ function getRegionSelector(position: string): (region: Region) => Region {
   const recognizer = new Recognizer();
   const agent = new Agent({ engine, game, recognizer });
   agent.onUpdateStatus(updateStatus);
-  agent.onBestMove((move) => board.playMove(move));
+  agent.onBestMove((move) => {
+    if (preferenceManager.getPreference('region')) {
+      board.playMove(move);
+    } else {
+      updateStatus('Select region first to play moves');
+    }
+  });
   agent.onPromotion(() => sendToApp('promotion'));
   const actionCallbacks: Record<Action, () => void> = {
     newRegion: () => void regionManager.selectNewRegion(),
