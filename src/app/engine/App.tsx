@@ -1,11 +1,12 @@
 import '../App.css';
 import { type JSX, useEffect, useRef, useState } from 'react';
 import ActionButton from '../components/ActionButton.tsx';
-import { usePreferences } from '../hooks.ts';
+import { usePreferences, useVariable } from '../hooks.ts';
 
 function App() {
   const electron = window.electronAPI;
   const prefs = usePreferences();
+  const engineInfo = useVariable('engineInfo');
   const engineType = prefs.enginePath.value ? 'external' : 'internal';
   const isInternalEngine = prefs.enginePath.value === null;
   const [engineInput, setEngineInput] = useState('');
@@ -54,6 +55,8 @@ function App() {
         value={prefs.enginePath.value ?? '(Internal engine)'}
         readOnly={true}
       />
+      <p className='text'>Name: {engineInfo.name}</p>
+      <p className='text'>Author: {engineInfo.author}</p>
       <div className='engine-uci-div'>
         <div ref={autoScrollDiv}/>
         {isInternalEngine ? internalLines : externalLines}

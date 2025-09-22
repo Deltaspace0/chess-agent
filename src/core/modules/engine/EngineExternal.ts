@@ -5,6 +5,7 @@ class EngineExternal extends EngineProcess {
   private process: ChildProcessWithoutNullStreams | null = null;
 
   spawn(path: string): boolean {
+    this.resetEngineInfo();
     this.kill();
     try {
       this.process = spawn(path);

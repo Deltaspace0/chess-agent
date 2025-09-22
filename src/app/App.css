@@ -182,7 +182,7 @@ p {
   font-family: 'Courier New', Courier, monospace;
   font-size: 11px;
   margin: 6px;
-  height: calc(100vh - 112px);
+  height: calc(100vh - 148px);
   overflow: scroll;
   display: flex;
   flex-direction: column-reverse;
@@ -218,15 +218,11 @@ p {
   min-width: 200px;
 }
 
-.variation {
+.text {
   margin: 1px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-.text {
-  margin: 1px;
 }
 
 .App {

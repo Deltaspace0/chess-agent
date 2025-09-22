@@ -54,6 +54,8 @@ declare global {
     nodes?: number;
     nodesPerSecond?: number;
     time?: number;
+    name?: string;
+    author?: string;
   }
 
   interface PositionInfo {

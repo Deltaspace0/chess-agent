@@ -115,11 +115,11 @@ function App() {
       </fieldset>
       {prefs.showLines.value ? (<fieldset className='pv'>
         <legend>{engineButton}</legend>
-        <p className='variation'>
+        <p className='text'>
           Depth: {engineInfo.depth}, time: {engineInfo.time} ms,
           nodes: {engineInfo.nodes}
         </p>
-        {principalVariations.map((x) => <p className='variation'>{x}</p>)}
+        {principalVariations.map((x) => <p className='text'>{x}</p>)}
       </fieldset>) : (
         <div className='flex-row'>{engineButton}</div>
       )}

@@ -19,6 +19,7 @@ class Engine {
   private principalMoves: string[] = [];
   private sendingEngineInfo: boolean = false;
   private processListener: (data: string) => void = this.processData.bind(this);
+  private idListener: () => void = this.sendEngineId.bind(this);
   private principalMovesCallback: (value: string[]) => void = () => {};
   private bestMoveCallback: (value: string) => void = () => {};
   private engineInfoCallback: (value: EngineInfo) => void = () => {};
@@ -61,6 +62,12 @@ class Engine {
     }
   }
 
+  private sendEngineId() {
+    this.engineInfo.name = this.process?.getEngineName();
+    this.engineInfo.author = this.process?.getEngineAuthor();
+    this.sendEngineInfo();
+  }
+
   private signEvaluation(evaluation: string) {
     if ((this.moves.length+Number(this.whiteFirst)) % 2 === 0) {
       const [type, n] = evaluation.split(' ');
@@ -89,7 +96,10 @@ class Engine {
     this.principalMoves = [];
     this.bestMove = null;
     this.ponderMove = null;
-    this.engineInfo = {};
+    this.engineInfo = {
+      name: this.engineInfo.name,
+      author: this.engineInfo.author
+    };
     this.sendToProcess('stop');
   }
 
@@ -110,14 +120,19 @@ class Engine {
     this.sendToProcess(`setoption name Threads value ${this.threads}`);
   }
 
-  setProcess(process: EngineProcess) {
+  async setProcess(process: EngineProcess) {
     this.process?.removeListener('stdout', this.processListener);
+    this.process?.removeListener('id', this.idListener);
     this.process = process;
     this.process.addListener('stdout', this.processListener);
-    this.sendToProcess('uci');
-    this.sendMultiPV();
-    this.sendThreads();
-    this.analyzePosition();
+    this.process.addListener('id', this.idListener);
+    this.sendEngineId();
+    const uciSupported = await this.process.expect('uciok', 2000, 'uci');
+    if (uciSupported) {
+      this.sendMultiPV();
+      this.sendThreads();
+      this.analyzePosition();
+    }
   }
 
   getBestMove(): string | null {
