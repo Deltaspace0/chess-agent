@@ -124,6 +124,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
       sendToApp('engine-data', 'external-event', 'start');
       updateStatus('Ready');
     } else {
+      sendToApp('engine-data', 'external-event', 'exit');
       updateStatus('Failed to load external engine');
     }
   };

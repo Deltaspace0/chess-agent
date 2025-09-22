@@ -12,6 +12,9 @@ class EngineExternal extends EngineProcess {
     } catch (e) {
       return false;
     }
+    this.process.on('error', (e) => {
+      this.sendToListeners('stderr', e.message);
+    });
     this.process.on('exit', (code) => {
       this.sendToListeners('exit', JSON.stringify(code));
     });
