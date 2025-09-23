@@ -1,5 +1,4 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
-import { mouse } from '@nut-tree-fork/nut-js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ActionRegionManager from './modules/ActionRegionManager.ts';
@@ -12,6 +11,7 @@ import Game from './modules/Game.ts';
 import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
 import RegionManager from './modules/RegionManager.ts';
+import { PhysicalMouse } from './modules/Mouse.ts';
 import { actionNames, actionRegions, defaultVariables } from '../config.ts';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -86,6 +86,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
 }
 
 (async () => {
+  const mouse = new PhysicalMouse();
   const preferenceManager = new PreferenceManager();
   preferenceManager.loadFromFile('config.json');
   await app.whenReady();
@@ -109,7 +110,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
     console.log(status);
     sendToApp('update-variable', 'status', status);
   };
-  const board = new Board();
+  const board = new Board(mouse);
   board.onMove((move) => agent.processMove(move));
   board.onMouseDownSquare(() => recognizer.stopScanning());
   const engineExternal = new EngineExternal();
@@ -237,7 +238,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
       updateStatus(`Analysis duration: ${newDuration} ms`);
     }
   };
-  const actionRegionManager = new ActionRegionManager();
+  const actionRegionManager = new ActionRegionManager(mouse);
   for (const name of actionNames) {
     const regionLocation = actionRegions[name];
     if (regionLocation) {
@@ -284,7 +285,7 @@ function getRegionSelector(position: string): (region: Region) => Region {
     analysisDuration: (value) => engine.setAnalysisDuration(value),
     multiPV: (value) => engine.setOption('multiPV', value),
     engineThreads: (value) => engine.setOption('threads', value),
-    mouseSpeed: (value) => { mouse.config.mouseSpeed = value; },
+    mouseSpeed: (value) => mouse.setSpeed(value),
     region: (value) => {
       actionRegionManager.setRegion(value);
       board.setRegion(value);

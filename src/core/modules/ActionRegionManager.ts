@@ -1,5 +1,4 @@
-import { mouse } from '@nut-tree-fork/nut-js';
-import mouseEvents from 'global-mouse-events';
+import type { Mouse } from './Mouse.ts';
 
 interface ActionRegion {
   callback: () => Promise<void> | void;
@@ -7,20 +6,21 @@ interface ActionRegion {
 }
 
 class ActionRegionManager {
-  private region: Region | null;
-  private active: boolean = false;
+  private mouse: Mouse;
+  private region: Region | null = null;
+  private isActive: boolean = false;
   private actionRegions: ActionRegion[] = [];
-  private actionCallback: () => void = () => this.performAction();
 
-  constructor(region?: Region) {
-    this.region = region ?? null;
+  constructor(mouse: Mouse) {
+    this.mouse = mouse;
+    mouse.addListener('mouseup', () => this.performAction());
   }
 
   private async performAction() {
-    if (this.region === null) {
+    if (this.region === null || !this.isActive) {
       return;
     }
-    const { x, y } = await mouse.getPosition();
+    const { x, y } = await this.mouse.getPosition();
     for (const { callback, regionSelector } of this.actionRegions) {
       const { left, top, width, height } = regionSelector(this.region);
       if (x >= left && y >= top && x <= left+width && y <= top+height) {
@@ -33,17 +33,9 @@ class ActionRegionManager {
   addActionRegion(actionRegion: ActionRegion) {
     this.actionRegions.push(actionRegion);
   }
-  
+
   setActive(value: boolean) {
-    if (this.active === value) {
-      return;
-    }
-    this.active = value;
-    if (value) {
-      mouseEvents.on('mouseup', this.actionCallback);
-    } else {
-      mouseEvents.off('mouseup', this.actionCallback);
-    }
+    this.isActive = value;
   }
 
   setRegion(region: Region | null) {
