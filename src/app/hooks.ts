@@ -69,7 +69,7 @@ export function usePreference<T extends Preference>(name: T) {
   const [value, setValue] = useState(preferenceConfig[name].defaultValue);
   useEffect(() => {
     const listener = setValue as PreferenceListeners[T];
-    window.electronAPI.onUpdatePreference(name, listener);
+    return window.electronAPI.onPreference(name, listener);
   }, [name]);
   const sendValue = (x: Preferences[T]) => {
     window.electronAPI.preferenceValue(name, x);
@@ -81,7 +81,7 @@ export function useVariable<T extends Variable>(name: T) {
   const [value, setValue] = useState(defaultVariables[name]);
   useEffect(() => {
     const listener = setValue as VariableListeners[T];
-    window.electronAPI.onUpdateVariable(name, listener);
+    return window.electronAPI.onVariable(name, listener);
   }, [name]);
   return value;
 }

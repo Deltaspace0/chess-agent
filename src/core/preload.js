@@ -2,13 +2,15 @@ const { contextBridge } = require('electron');
 const { ipcRenderer } = require('electron/renderer');
 
 function addListener(channel) {
-  let ipcListener = null;
-  return (listener) => {
-    if (ipcListener) {
-      ipcRenderer.off(channel, ipcListener);
+  const ipcListeners = new Set();
+  ipcRenderer.addListener(channel, (_, ...value) => {
+    for (const listener of ipcListeners) {
+      listener(...value);
     }
-    ipcListener = (_, ...value) => listener(...value);
-    ipcRenderer.on(channel, ipcListener);
+  });
+  return (listener) => {
+    ipcListeners.add(listener);
+    return () => ipcListeners.delete(listener);
   };
 }
 
@@ -20,20 +22,32 @@ const preferenceListeners = {};
 const variableListeners = {};
 ipcRenderer.on('update-preference', (_, name, value) => {
   if (name in preferenceListeners) {
-    preferenceListeners[name](value);
+    for (const listener of preferenceListeners[name]) {
+      listener(value);
+    }
   }
 });
 ipcRenderer.on('update-variable', (_, name, value) => {
   if (name in variableListeners) {
-    variableListeners[name](value);
+    for (const listener of variableListeners[name]) {
+      listener(value);
+    }
   }
 });
 contextBridge.exposeInMainWorld('electronAPI', {
-  onUpdatePreference: (name, listener) => {
-    preferenceListeners[name] = listener;
+  onPreference: (name, listener) => {
+    if (!(name in preferenceListeners)) {
+      preferenceListeners[name] = new Set();
+    }
+    preferenceListeners[name].add(listener);
+    return () => preferenceListeners[name].delete(listener);
   },
-  onUpdateVariable: (name, listener) => {
-    variableListeners[name] = listener;
+  onVariable: (name, listener) => {
+    if (!(name in variableListeners)) {
+      variableListeners[name] = new Set();
+    }
+    variableListeners[name].add(listener);
+    return () => variableListeners[name].delete(listener);
   },
   onPromotion: addListener('promotion'),
   onEngineData: addListener('engine-data'),

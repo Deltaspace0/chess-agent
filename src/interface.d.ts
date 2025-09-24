@@ -18,7 +18,9 @@ declare global {
     [T in Preference]: Preferences[T] extends number ? T : never;
   }[Preference];
 
-  type PreferenceListeners = { [T in Preference]: (value: Preferences[T]) => void };
+  type PreferenceListeners = {
+    [T in Preference]: (value: Preferences[T]) => void;
+  };
 
   interface Preferences {
     alwaysOnTop: boolean;
@@ -107,10 +109,16 @@ declare global {
     | 'promoteKnight';
 
   interface IElectronAPI {
-    onUpdatePreference<T extends Preference>(name: T, listener: PreferenceListeners[T]);
-    onUpdateVariable<T extends Variable>(name: T, listener: VariableListeners[T]);
-    onPromotion(listener: () => void);
-    onEngineData(listener: (name: string, data: string) => void);
+    onPreference<T extends Preference>(
+      name: T,
+      listener: PreferenceListeners[T]
+    ): () => void;
+    onVariable<T extends Variable>(
+      name: T,
+      listener: VariableListeners[T]
+    ): () => void;
+    onPromotion(listener: () => void): () => void;
+    onEngineData(listener: (name: string, data: string) => void): () => void;
     preferenceValue<T extends Preference>(name: T, value: Preferences[T]);
     pieceDropped(value: DroppedPiece);
     pieceDroppedEdit(value: DroppedPiece);

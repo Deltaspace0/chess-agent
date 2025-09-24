@@ -25,12 +25,12 @@ function App() {
   const [arrows2, setArrows2] = useState<Arrow[]>([]);
   const [panelType, setPanelType] = useState<Panel>('main');
   useEffect(() => {
-    electron.onUpdateVariable('positionFEN', (value) => {
+    const offPosition = electron.onVariable('positionFEN', (value) => {
       setPositionFEN(value);
       setInputFEN(value);
       setPanelType((x) => x === 'promotion' ? 'main' : x);
     });
-    electron.onUpdateVariable('highlightMoves', (evalMoves) => {
+    const offHighlight = electron.onVariable('highlightMoves', (evalMoves) => {
       const newArrows1: Arrow[] = [];
       const newArrows2: Arrow[] = [];
       for (let i = evalMoves.length-1; i >= 0; i--) {
@@ -64,7 +64,12 @@ function App() {
       setArrows1(newArrows1);
       setArrows2(newArrows2);
     });
-    electron.onPromotion(() => setPanelType('promotion'));
+    const offPromotion = electron.onPromotion(() => setPanelType('promotion'));
+    return () => {
+      offPosition();
+      offHighlight();
+      offPromotion();
+    };
   }, [electron]);
   const chessboardOptions: ChessboardOptions = {
     showNotation: prefs.showNotation.value,
