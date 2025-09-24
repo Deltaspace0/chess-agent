@@ -32,7 +32,6 @@ class Engine {
   private sendingEngineInfo: boolean = false;
   private sendingOptions: Partial<Record<keyof EngineOptions, boolean>> = {};
   private processListener: (data: string) => void = this.processData.bind(this);
-  private idListener: () => void = this.sendEngineId.bind(this);
   private principalMovesCallback: (value: string[]) => void = () => {};
   private bestMoveCallback: (value: string) => void = () => {};
   private engineInfoCallback: (value: EngineInfo) => void = () => {};
@@ -44,6 +43,15 @@ class Engine {
   }
 
   private processData(data: string) {
+    if (data.startsWith('id')) {
+      if (data.startsWith('id name')) {
+        this.engineInfo.name = data.slice('id name'.length);
+      } else if (data.startsWith('id author')) {
+        this.engineInfo.author = data.slice('id author'.length);
+      }
+      this.sendEngineInfo();
+      return;
+    }
     const words = data.split(' ');
     if (words.includes('depth')) {
       const depth = getNumberValue(words, 'depth');
@@ -73,12 +81,6 @@ class Engine {
       this.ponderMove = words[words.indexOf('ponder')+1];
       this.bestMoveCallback(move);
     }
-  }
-
-  private sendEngineId() {
-    this.engineInfo.name = this.process?.getEngineName();
-    this.engineInfo.author = this.process?.getEngineAuthor();
-    this.sendEngineInfo();
   }
 
   private signEvaluation(evaluation: string) {
@@ -130,14 +132,12 @@ class Engine {
   }
 
   async setProcess(process: EngineProcess) {
+    this.engineInfo = {};
     this.process?.removeListener('stdout', this.processListener);
-    this.process?.removeListener('id', this.idListener);
-    this.process = process;
-    this.process.addListener('stdout', this.processListener);
-    this.process.addListener('id', this.idListener);
-    this.sendEngineId();
-    const uciSupported = await this.process.expect('uciok', 2000, 'uci');
+    process.addListener('stdout', this.processListener);
+    const uciSupported = await process.expect('uciok', 2000, 'uci');
     if (uciSupported) {
+      this.process = process;
       this.sendOptionToProcess('multiPV');
       this.sendOptionToProcess('threads');
       this.analyzePosition();
