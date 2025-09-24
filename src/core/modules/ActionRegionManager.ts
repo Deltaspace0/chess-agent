@@ -2,12 +2,11 @@ import type { Mouse } from './Mouse.ts';
 
 interface ActionRegion {
   callback: () => Promise<void> | void;
-  regionSelector: (region: Region) => Region;
+  getRegion: () => Region | null;
 }
 
 class ActionRegionManager {
   private mouse: Mouse;
-  private region: Region | null = null;
   private isActive: boolean = false;
   private actionRegions: ActionRegion[] = [];
 
@@ -17,12 +16,16 @@ class ActionRegionManager {
   }
 
   private async performAction() {
-    if (this.region === null || !this.isActive) {
+    if (!this.isActive) {
       return;
     }
     const { x, y } = await this.mouse.getPosition();
-    for (const { callback, regionSelector } of this.actionRegions) {
-      const { left, top, width, height } = regionSelector(this.region);
+    for (const { callback, getRegion } of this.actionRegions) {
+      const region = getRegion();
+      if (!region) {
+        continue;
+      }
+      const { left, top, width, height } = region;
       if (x >= left && y >= top && x <= left+width && y <= top+height) {
         callback();
         return;
@@ -36,10 +39,6 @@ class ActionRegionManager {
 
   setActive(value: boolean) {
     this.isActive = value;
-  }
-
-  setRegion(region: Region | null) {
-    this.region = region;
   }
 }
 

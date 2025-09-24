@@ -1,3 +1,22 @@
+export const actionLocations: Partial<Record<Action | Preference, string>> = {
+  showRegion: 'E1',
+  loadHashes: 'E7',
+  scanMove: 'S7',
+  skipMove: 'S6',
+  undoMove: 'S5',
+  bestMove: 'S2',
+  resetPosition: 'S3',
+  recognizeBoard: 'S1',
+  promoteQueen: 'W1',
+  promoteRook: 'W2',
+  promoteBishop: 'W3',
+  promoteKnight: 'W4',
+  autoResponse: 'S4',
+  perspective: 'E8',
+  draggingMode: 'E2',
+  analysisDuration: 'S8'
+};
+
 export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
   alwaysOnTop: {
     label: 'Always on top',
@@ -131,22 +150,3 @@ export const actionLabels: Record<Action, string> = {
 };
 
 export const actionNames = Object.keys(actionLabels) as Action[];
-
-export const actionRegions: Partial<Record<Action | Preference, string>> = {
-  showRegion: 'E1',
-  loadHashes: 'E7',
-  scanMove: 'S7',
-  skipMove: 'S6',
-  undoMove: 'S5',
-  bestMove: 'S2',
-  resetPosition: 'S3',
-  recognizeBoard: 'S1',
-  promoteQueen: 'W1',
-  promoteRook: 'W2',
-  promoteBishop: 'W3',
-  promoteKnight: 'W4',
-  autoResponse: 'S4',
-  perspective: 'E8',
-  draggingMode: 'E2',
-  analysisDuration: 'S8'
-};

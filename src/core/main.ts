@@ -11,7 +11,7 @@ import Game from './modules/Game.ts';
 import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
 import { PhysicalMouse } from './modules/Mouse.ts';
-import { actionNames, actionRegions, defaultVariables } from '../config.ts';
+import { actionNames, actionLocations, defaultVariables } from '../config.ts';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const preloadPath = path.join(dirname, 'preload.js');
@@ -68,38 +68,39 @@ async function createRegionWindow(): Promise<BrowserWindow> {
   return win;
 }
 
-function getRegionSelector(position: string): (region: Region) => Region {
-  const index = Number(position[1]);
-  if (position[0] === 'N') {
-    return ({ left, top, width, height }) => ({
+function selectRegion(region: Region, location: string): Region {
+  const { left, top, width, height } = region;
+  const index = Number(location[1]);
+  if (location[0] === 'N') {
+    return {
       left: left+width*(index-1)/8,
       top: top-height/16,
       width: width/8,
       height: height/16
-    });
+    };
   }
-  if (position[0] === 'S') {
-    return ({ left, top, width, height }) => ({
+  if (location[0] === 'S') {
+    return {
       left: left+width*(index-1)/8,
       top: top+height,
       width: width/8,
       height: height/16
-    });
+    };
   }
-  if (position[0] === 'W') {
-    return ({ left, top, width, height }) => ({
+  if (location[0] === 'W') {
+    return {
       left: left-width/16,
       top: top+height*(index-1)/8,
       width: width/16,
       height: height/8
-    });
+    };
   }
-  return ({ left, top, width, height }) => ({
+  return {
     left: left+width,
     top: top+height*(index-1)/8,
     width: width/16,
     height: height/8
-  });
+  };
 }
 
 (async () => {
@@ -274,18 +275,24 @@ function getRegionSelector(position: string): (region: Region) => Region {
   };
   const actionRegionManager = new ActionRegionManager(mouse);
   for (const name of actionNames) {
-    const regionLocation = actionRegions[name];
-    if (regionLocation) {
+    const location = actionLocations[name];
+    if (location) {
       actionRegionManager.addActionRegion({
         callback: actionCallbacks[name],
-        regionSelector: getRegionSelector(regionLocation)
+        getRegion: () => {
+          const region = preferenceManager.getPreference('region');
+          return region && selectRegion(region, location);
+        }
       });
     }
   }
   for (const name of Object.keys(preferenceTogglers) as Preference[]) {
     actionRegionManager.addActionRegion({
       callback: preferenceTogglers[name]!,
-      regionSelector: getRegionSelector(actionRegions[name]!)
+      getRegion: () => {
+        const region = preferenceManager.getPreference('region');
+        return region && selectRegion(region, actionLocations[name]!);
+      }
     });
   }
   preferenceManager.onUpdate((name, value) => {
@@ -310,7 +317,6 @@ function getRegionSelector(position: string): (region: Region) => Region {
     engineThreads: (value) => engine.setOption('threads', value),
     mouseSpeed: (value) => mouse.setSpeed(value),
     region: (value) => {
-      actionRegionManager.setRegion(value);
       board.setRegion(value);
       recognizer.setRegion(value);
     },
