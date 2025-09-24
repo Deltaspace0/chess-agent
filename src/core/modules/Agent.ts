@@ -1,7 +1,6 @@
 import Engine from './engine/Engine.ts';
 import Game from './Game.ts';
 import Recognizer from './Recognizer.ts';
-import StatusNotifier from './StatusNotifier.ts';
 import { preferenceConfig } from '../../config.ts';
 
 interface AgentModules {
@@ -10,7 +9,7 @@ interface AgentModules {
   recognizer: Recognizer;
 }
 
-class Agent extends StatusNotifier {
+class Agent {
   private engine: Engine;
   private game: Game;
   private recognizer: Recognizer;
@@ -21,9 +20,9 @@ class Agent extends StatusNotifier {
   private stopBestMove: (() => void) | null = null;
   private bestMoveCallback: (value: string) => void = () => {};
   private promotionCallback: () => void = () => {};
+  private statusCallback: (status: string) => void = console.log;
 
   constructor(modules: AgentModules) {
-    super();
     this.engine = modules.engine;
     this.game = modules.game;
     this.recognizer = modules.recognizer;
@@ -245,6 +244,10 @@ class Agent extends StatusNotifier {
 
   onPromotion(callback: () => void) {
     this.promotionCallback = callback;
+  }
+
+  onUpdateStatus(callback: (status: string) => void) {
+    this.statusCallback = callback;
   }
 }
 
