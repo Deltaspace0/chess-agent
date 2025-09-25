@@ -24,6 +24,12 @@ class PreferenceManager {
     return this.preferences[name];
   }
 
+  togglePreference(name: BooleanPreference): boolean {
+    const value = !this.preferences[name];
+    this.setPreference(name, value);
+    return value;
+  }
+
   onUpdate(listener: typeof this.generalListener) {
     this.generalListener = listener;
     for (const name of preferenceNames) {

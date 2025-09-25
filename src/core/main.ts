@@ -245,24 +245,20 @@ async function createActionWindow(parent: BrowserWindow): Promise<BrowserWindow>
     promoteBishop: () => agent.promoteTo('b'),
     promoteKnight: () => agent.promoteTo('n'),
     autoResponse: () => {
-      const autoResponse = !preferenceManager.getPreference('autoResponse');
-      preferenceManager.setPreference('autoResponse', autoResponse);
-      updateStatus(`Auto response is ${autoResponse ? 'enabled' : 'disabled'}`);
+      const value = preferenceManager.togglePreference('autoResponse');
+      updateStatus(`Auto response is ${value ? 'enabled' : 'disabled'}`);
     },
     perspective: () => {
-      const isWhite = !preferenceManager.getPreference('perspective');
-      preferenceManager.setPreference('perspective', isWhite);
-      updateStatus(`${isWhite ? 'White' : 'Black'} perspective`);
+      const value = preferenceManager.togglePreference('perspective');
+      updateStatus(`${value ? 'White' : 'Black'} perspective`);
     },
     draggingMode: () => {
-      const draggingMode = !preferenceManager.getPreference('draggingMode');
-      preferenceManager.setPreference('draggingMode', draggingMode);
-      updateStatus(`${draggingMode ? 'Dragging' : 'Clicking'} mode`);
+      const value = preferenceManager.togglePreference('draggingMode');
+      updateStatus(`${value ? 'Dragging' : 'Clicking'} mode`);
     },
     actionRegion: () => {
-      const actionRegion = !preferenceManager.getPreference('actionRegion');
-      preferenceManager.setPreference('actionRegion', actionRegion);
-      updateStatus(`Action regions are ${actionRegion ? 'enabled' : 'disabled'}`);
+      const value = preferenceManager.togglePreference('actionRegion');
+      updateStatus(`Action regions are ${value ? 'enabled' : 'disabled'}`);
     },
     analysisDuration: () => {
       const duration = preferenceManager.getPreference('analysisDuration');
