@@ -1,6 +1,6 @@
 import { sleep } from '@nut-tree-fork/nut-js';
 import type { Mouse, Point } from './Mouse.ts';
-import { coordsToSquare, squareToCoords } from '../util.ts';
+import { coordsToSquare, squareToCoords } from '../../util.ts';
 import { preferenceConfig } from '../../config.ts';
 
 class Board {

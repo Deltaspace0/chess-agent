@@ -1,7 +1,7 @@
 import type { Mouse } from './Mouse.ts';
 
 interface ActionRegion {
-  callback: () => Promise<void> | void;
+  callback: () => void;
   getRegion: () => Region | null;
 }
 

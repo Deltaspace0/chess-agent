@@ -1,20 +1,27 @@
-export const actionLocations: Partial<Record<Action | Preference, string>> = {
-  showRegion: 'E1',
-  loadHashes: 'E7',
-  scanMove: 'S7',
-  skipMove: 'S6',
-  undoMove: 'S5',
-  bestMove: 'S2',
-  resetPosition: 'S3',
-  recognizeBoard: 'S1',
-  promoteQueen: 'W1',
-  promoteRook: 'W2',
-  promoteBishop: 'W3',
-  promoteKnight: 'W4',
-  autoResponse: 'S4',
-  perspective: 'E8',
-  draggingMode: 'E2',
-  analysisDuration: 'S8'
+export const possibleLocations = [
+  'N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7', 'N8',
+  'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8',
+  'W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8',
+  'E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E8'
+] as const;
+
+export const defaultActionLocations: ActionLocations = {
+  S1: 'recognizeBoard',
+  S2: 'bestMove',
+  S3: 'resetPosition',
+  S4: 'autoResponse',
+  S5: 'undoMove',
+  S6: 'skipMove',
+  S7: 'scanMove',
+  S8: 'analysisDuration',
+  W1: 'promoteQueen',
+  W2: 'promoteRook',
+  W3: 'promoteBishop',
+  W4: 'promoteKnight',
+  E1: 'showRegion',
+  E2: 'draggingMode',
+  E7: 'loadHashes',
+  E8: 'perspective'
 };
 
 export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
@@ -49,9 +56,14 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     type: 'boolean'
   },
   actionRegion: {
-    label: 'Invisible action regions',
+    label: 'Actions',
     defaultValue: false,
     type: 'boolean'
+  },
+  actionLocations: {
+    label: 'Action regions',
+    defaultValue: defaultActionLocations,
+    type: 'other'
   },
   showEvalBar: {
     label: 'Show eval bar',
@@ -126,8 +138,9 @@ export const defaultVariables: Variables = {
   },
   engineInfo: {},
   highlightMoves: [],
-  principalVariations: []
-}
+  principalVariations: [],
+  editedActionLocation: 'N1'
+};
 
 export const actionLabels: Record<Action, string> = {
   showRegion: 'Region',
@@ -146,7 +159,31 @@ export const actionLabels: Record<Action, string> = {
   promoteQueen: 'Queen',
   promoteRook: 'Rook',
   promoteBishop: 'Bishop',
-  promoteKnight: 'Knight'
+  promoteKnight: 'Knight',
+  autoResponse: preferenceConfig.autoResponse.label,
+  perspective: preferenceConfig.perspective.label,
+  draggingMode: preferenceConfig.draggingMode.label,
+  actionRegion: preferenceConfig.actionRegion.label,
+  analysisDuration: preferenceConfig.analysisDuration.label
 };
 
-export const actionNames = Object.keys(actionLabels) as Action[];
+export const actionDescriptions: Partial<Record<Action, string>> = {
+  showRegion: 'Go to region selection mode',
+  loadHashes: 'Load piece image hashes',
+  scanMove: 'Start detecting a move',
+  skipMove: 'Skip current move',
+  undoMove: 'Undo last move',
+  bestMove: 'Play the best move',
+  resetPosition: 'Reset the game to start position',
+  recognizeBoard: 'Recognize current position on the board',
+  showEngine: 'Open engine UCI terminal',
+  promoteQueen: 'Promote the pawn to Queen',
+  promoteRook: 'Promote the pawn to Rook',
+  promoteBishop: 'Promote the pawn to Bishop',
+  promoteKnight: 'Promote the pawn to Knight',
+  autoResponse: 'Toggle auto response',
+  perspective: 'Toggle board orientation',
+  draggingMode: 'Toggle dragging/clicking mode',
+  actionRegion: 'Disable invisible action regions',
+  analysisDuration: 'Switch analysis duration'
+};

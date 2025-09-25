@@ -137,7 +137,6 @@ function App() {
             <Checkbox {...prefs.autoResponse.checkboxProps}/>
             <Checkbox {...prefs.autoScan.checkboxProps}/>
             <Checkbox {...prefs.autoQueen.checkboxProps}/>
-            <Checkbox {...prefs.actionRegion.checkboxProps}/>
             <Checkbox {...prefs.draggingMode.checkboxProps}/>
             <Checkbox {...prefs.saveConfigToFile.checkboxProps}/>
           </div>

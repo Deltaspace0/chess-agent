@@ -57,5 +57,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sendToEngine: sendValue('send-to-engine'),
   setPosition: sendValue('set-position'),
   setPositionInfo: sendValue('set-position-info'),
+  editActionLocation: sendValue('edit-action-location'),
   doAction: sendValue('action')
 });

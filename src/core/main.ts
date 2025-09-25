@@ -11,7 +11,8 @@ import Game from './modules/Game.ts';
 import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
 import { PhysicalMouse } from './modules/Mouse.ts';
-import { actionNames, actionLocations, defaultVariables } from '../config.ts';
+import { defaultVariables, possibleLocations } from '../config.ts';
+import { selectRegion } from '../util.ts';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const preloadPath = path.join(dirname, 'preload.js');
@@ -48,10 +49,12 @@ async function createEngineWindow(): Promise<BrowserWindow> {
   return win;
 }
 
-async function createRegionWindow(): Promise<BrowserWindow> {
+async function createRegionWindow(parent: BrowserWindow): Promise<BrowserWindow> {
   const primaryDisplay = screen.getPrimaryDisplay();
   const win = new BrowserWindow({
+    parent,
     alwaysOnTop: true,
+    center: true,
     frame: false,
     width: primaryDisplay.size.width-4,
     height: primaryDisplay.size.height,
@@ -68,39 +71,25 @@ async function createRegionWindow(): Promise<BrowserWindow> {
   return win;
 }
 
-function selectRegion(region: Region, location: string): Region {
-  const { left, top, width, height } = region;
-  const index = Number(location[1]);
-  if (location[0] === 'N') {
-    return {
-      left: left+width*(index-1)/8,
-      top: top-height/16,
-      width: width/8,
-      height: height/16
-    };
-  }
-  if (location[0] === 'S') {
-    return {
-      left: left+width*(index-1)/8,
-      top: top+height,
-      width: width/8,
-      height: height/16
-    };
-  }
-  if (location[0] === 'W') {
-    return {
-      left: left-width/16,
-      top: top+height*(index-1)/8,
-      width: width/16,
-      height: height/8
-    };
-  }
-  return {
-    left: left+width,
-    top: top+height*(index-1)/8,
-    width: width/16,
-    height: height/8
-  };
+async function createActionWindow(parent: BrowserWindow): Promise<BrowserWindow> {
+  const win = new BrowserWindow({
+    parent,
+    modal: true,
+    minimizable: false,
+    maximizable: false,
+    resizable: false,
+    width: 320,
+    height: 320,
+    show: false,
+    icon: 'images/chess-icon.png',
+    useContentSize: true,
+    webPreferences: {
+      preload: preloadPath
+    }
+  });
+  win.removeMenu();
+  await win.loadURL('http://localhost:5173/src/app/action/');
+  return win;
 }
 
 (async () => {
@@ -122,7 +111,7 @@ function selectRegion(region: Region, location: string): Region {
     engineWin.hide();
     e.preventDefault();
   });
-  const regionWin = await createRegionWindow();
+  const regionWin = await createRegionWindow(win);
   const hideRegionWindow = () => {
     regionWin.hide();
     win.show();
@@ -132,11 +121,17 @@ function selectRegion(region: Region, location: string): Region {
     hideRegionWindow();
     e.preventDefault();
   });
+  const actionWin = await createActionWindow(regionWin);
+  actionWin.addListener('close', (e) => {
+    actionWin.hide();
+    e.preventDefault();
+  });
   const sendToApp = (channel: string, ...args: unknown[]) => {
     if (appRunning) {
       win.webContents.send(channel, ...args);
       engineWin.webContents.send(channel, ...args);
       regionWin.webContents.send(channel, ...args);
+      actionWin.webContents.send(channel, ...args);
     }
   }
   const updateStatus = (status: string) => {
@@ -248,13 +243,11 @@ function selectRegion(region: Region, location: string): Region {
     promoteQueen: () => agent.promoteTo('q'),
     promoteRook: () => agent.promoteTo('r'),
     promoteBishop: () => agent.promoteTo('b'),
-    promoteKnight: () => agent.promoteTo('n')
-  };
-  const preferenceTogglers: Partial<Record<Preference, () => void>> = {
+    promoteKnight: () => agent.promoteTo('n'),
     autoResponse: () => {
       const autoResponse = !preferenceManager.getPreference('autoResponse');
       preferenceManager.setPreference('autoResponse', autoResponse);
-      updateStatus(`Auto response is ${autoResponse ? 'on' : 'off'}`);
+      updateStatus(`Auto response is ${autoResponse ? 'enabled' : 'disabled'}`);
     },
     perspective: () => {
       const isWhite = !preferenceManager.getPreference('perspective');
@@ -266,6 +259,11 @@ function selectRegion(region: Region, location: string): Region {
       preferenceManager.setPreference('draggingMode', draggingMode);
       updateStatus(`${draggingMode ? 'Dragging' : 'Clicking'} mode`);
     },
+    actionRegion: () => {
+      const actionRegion = !preferenceManager.getPreference('actionRegion');
+      preferenceManager.setPreference('actionRegion', actionRegion);
+      updateStatus(`Action regions are ${actionRegion ? 'enabled' : 'disabled'}`);
+    },
     analysisDuration: () => {
       const duration = preferenceManager.getPreference('analysisDuration');
       const newDuration = duration > 300 ? 300 : 5000;
@@ -274,24 +272,21 @@ function selectRegion(region: Region, location: string): Region {
     }
   };
   const actionRegionManager = new ActionRegionManager(mouse);
-  for (const name of actionNames) {
-    const location = actionLocations[name];
-    if (location) {
-      actionRegionManager.addActionRegion({
-        callback: actionCallbacks[name],
-        getRegion: () => {
-          const region = preferenceManager.getPreference('region');
-          return region && selectRegion(region, location);
-        }
-      });
-    }
-  }
-  for (const name of Object.keys(preferenceTogglers) as Preference[]) {
+  for (const location of possibleLocations) {
     actionRegionManager.addActionRegion({
-      callback: preferenceTogglers[name]!,
+      callback: () => {
+        const locations = preferenceManager.getPreference('actionLocations');
+        const action = locations[location];
+        if (action) {
+          actionCallbacks[action]();
+        }
+      },
       getRegion: () => {
         const region = preferenceManager.getPreference('region');
-        return region && selectRegion(region, actionLocations[name]!);
+        if (!region) {
+          return null;
+        }
+        return selectRegion(region, location);
       }
     });
   }
@@ -351,6 +346,10 @@ function selectRegion(region: Region, location: string): Region {
   });
   ipcMain.on('set-position', (_, value) => agent.loadPosition(value));
   ipcMain.on('set-position-info', (_, value) => agent.loadPositionInfo(value));
+  ipcMain.on('edit-action-location', (_, value) => {
+    sendToApp('update-variable', 'editedActionLocation', value);
+    actionWin.show();
+  });
   ipcMain.on('action', (_, value) => actionCallbacks[value as Action]());
   updateStatus('Ready');
 })();

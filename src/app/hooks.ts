@@ -9,7 +9,6 @@ interface PreferenceHook<T> {
 interface BooleanPreferenceHook extends PreferenceHook<boolean> {
   checkboxProps: {
     label: string;
-    type: string;
     checked: boolean;
     onChange: (x: boolean) => void;
   };
@@ -41,7 +40,6 @@ export function usePreferences(): PreferenceHooks {
     if (preferenceConfig[name].type === 'boolean') {
       const checkboxProps = {
         label: preferenceConfig[name].label,
-        type: 'checkbox',
         checked: value,
         onChange: send
       };

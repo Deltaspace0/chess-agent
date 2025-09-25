@@ -1,4 +1,5 @@
 import type { Piece } from 'chess.js';
+import { possibleLocations } from './config';
 
 declare global {
   interface Region {
@@ -22,6 +23,9 @@ declare global {
     [T in Preference]: (value: Preferences[T]) => void;
   };
 
+  type Location = typeof possibleLocations[number];
+  type ActionLocations = { [T in Location]?: Action; };
+
   interface Preferences {
     alwaysOnTop: boolean;
     autoResponse: boolean;
@@ -30,6 +34,7 @@ declare global {
     perspective: boolean;
     draggingMode: boolean;
     actionRegion: boolean;
+    actionLocations: ActionLocations;
     showEvalBar: boolean;
     showArrows: boolean;
     showLines: boolean;
@@ -82,6 +87,7 @@ declare global {
     engineInfo: EngineInfo;
     highlightMoves: string[][];
     principalVariations: string[];
+    editedActionLocation: Location;
   }
 
   interface DroppedPiece {
@@ -90,7 +96,17 @@ declare global {
     piece: string;
   }
 
-  type Action = 'showRegion'
+  type ToggleablePreference = keyof Pick<Preferences
+    , 'autoResponse'
+    | 'perspective'
+    | 'draggingMode'
+    | 'actionRegion'
+    | 'analysisDuration'
+  >;
+
+  type Action
+    = ToggleablePreference
+    | 'showRegion'
     | 'hideRegion'
     | 'loadHashes'
     | 'scanMove'
@@ -125,6 +141,7 @@ declare global {
     sendToEngine(name: string, data: string);
     setPosition(value: string);
     setPositionInfo(value: PositionInfo);
+    editActionLocation(value: Location);
     doAction(name: Action);
   }
 

@@ -220,6 +220,14 @@ p {
   z-index: 1;
 }
 
+.region-action {
+  border: solid;
+  border-width: 1px;
+  position: absolute;
+  cursor: pointer;
+  z-index: 1;
+}
+
 .scroll-field {
   height: calc(100vh - 410px);
   overflow-y: scroll;
@@ -227,6 +235,12 @@ p {
 
 .full-field {
   height: calc(100vh - 410px);
+}
+
+.action-field {
+  height: calc(100vh - 40px);
+  overflow-y: scroll;
+  margin: 0 auto;
 }
 
 .pv {

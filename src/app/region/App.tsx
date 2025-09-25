@@ -1,8 +1,11 @@
 import '../App.css';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type JSX } from 'react';
 import ActionButton from '../components/ActionButton.tsx';
 import RegionSelection from '../components/RegionSelection.tsx';
+import ToggleButton from '../components/ToggleButton.tsx';
 import { usePreferences } from '../hooks.ts';
+import { actionDescriptions, possibleLocations } from '../../config.ts';
+import { selectRegion } from '../../util.ts';
 
 const defaultRegion = {
   left: 50,
@@ -39,22 +42,37 @@ function App() {
   const handleSetRegion = () => {
     prefs.region.send(multiplyRegion(region, dpr));
   }
+  const actionRegionDivs: JSX.Element[] = [];
+  for (const location of possibleLocations) {
+    const selectedRegion = selectRegion(region, location);
+    const action = prefs.actionLocations.value[location];
+    const backgroundColor = action
+      ? 'rgba(255, 0, 0, 0.8)'
+      : 'rgba(255, 255, 255, 0.8)';
+    actionRegionDivs.push(<div
+      onClick={() => window.electronAPI.editActionLocation(location)}
+      title={action && actionDescriptions[action]}
+      className='region-action'
+      style={{...selectedRegion, backgroundColor}}></div>);
+  }
   return (<div className='Region'>
     <div className='region-panel'>
-      <button
-        onClick={() => setSquareAspect(!squareAspect)}
-        style={squareAspect ? {backgroundColor: 'blue'} : {}}>
-          Square
-      </button>
       <button onClick={handleSetRegion}>Set region</button>
       <button
         onClick={() => prefs.region.send(null)}
         disabled={!prefRegion}>
-          Remove region
+          Remove
       </button>
+      <ToggleButton
+        label='Square'
+        checked={squareAspect}
+        onChange={setSquareAspect}
+      />
+      <ToggleButton {...prefs.actionRegion.checkboxProps}/>
       <ActionButton name='hideRegion'/>
     </div>
     {prefRegion && <div className='region-highlight' style={prefRegion}/>}
+    {prefs.actionRegion.value && actionRegionDivs}
     <RegionSelection
       region={region}
       setRegion={setRegion}

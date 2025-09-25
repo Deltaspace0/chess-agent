@@ -1,6 +1,6 @@
 import { Chess } from 'chess.js';
 import type { Color, Piece, PieceSymbol, Square } from 'chess.js';
-import { coordsToSquare } from '../util.ts';
+import { coordsToSquare } from '../../util.ts';
 import { preferenceConfig } from '../../config.ts';
 
 class Game {
