@@ -30,6 +30,7 @@ function App() {
     return multiplyRegion(prefs.region.value, 1/dpr);
   }, [prefs.region.value, dpr]);
   const [region, setRegion] = useState<Region>(defaultRegion);
+  const [squareAspect, setSquareAspect] = useState(true);
   useEffect(() => {
     if (prefRegion) {
       setRegion(prefRegion);
@@ -40,6 +41,11 @@ function App() {
   }
   return (<div className='Region'>
     <div className='region-panel'>
+      <button
+        onClick={() => setSquareAspect(!squareAspect)}
+        style={squareAspect ? {backgroundColor: 'blue'} : {}}>
+          Square
+      </button>
       <button onClick={handleSetRegion}>Set region</button>
       <button
         onClick={() => prefs.region.send(null)}
@@ -49,7 +55,11 @@ function App() {
       <ActionButton name='hideRegion'/>
     </div>
     {prefRegion && <div className='region-highlight' style={prefRegion}/>}
-    <RegionSelection region={region} setRegion={setRegion}/>
+    <RegionSelection
+      region={region}
+      setRegion={setRegion}
+      isSquare={squareAspect}
+    />
   </div>);
 }
 

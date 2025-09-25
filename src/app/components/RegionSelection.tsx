@@ -3,29 +3,42 @@ import { useEffect, useRef } from 'react';
 interface RegionSelectionProps {
   region: Region;
   setRegion: (setter: (region: Region) => Region) => void;
+  isSquare?: boolean;
 }
 
-function RegionSelection({ region, setRegion }: RegionSelectionProps) {
+function RegionSelection({ region, setRegion, isSquare }: RegionSelectionProps) {
   const regionDivRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const resizeObserver = new ResizeObserver(entries => {
       for (const entry of entries) {
-        const newWidth = entry.contentRect.width;
-        const newHeight = entry.contentRect.height;
-        setRegion(({ left, top }) => {
+        let newWidth = entry.contentRect.width;
+        let newHeight = entry.contentRect.height;
+        setRegion(({ left, top, width, height }) => {
+          if (isSquare) {
+            if (Math.abs(width-newWidth) > Math.abs(height-newHeight)) {
+              newHeight = newWidth;
+            } else {
+              newWidth = newHeight;
+            }
+          }
           return { left, top, width: newWidth, height: newHeight };
         });
       }
     });
+    if (regionDivRef.current) {
+      resizeObserver.observe(regionDivRef.current);
+    }
+    return () => resizeObserver.disconnect();
+  }, [setRegion, isSquare]);
+  useEffect(() => {
     const regionDiv = regionDivRef.current;
     if (!regionDiv) {
       return;
     }
-    resizeObserver.observe(regionDiv);
     let dragging = false;
     let dx = 0;
     let dy = 0;
-    regionDiv.addEventListener('mousedown', (e) => {
+    const downListener = (e: MouseEvent) => {
       const { offsetLeft, offsetTop, offsetWidth, offsetHeight } = regionDiv;
       const isNearRight = e.screenX+24 > offsetLeft+offsetWidth;
       const isNearBottom = e.screenY+24 > offsetTop+offsetHeight;
@@ -35,8 +48,8 @@ function RegionSelection({ region, setRegion }: RegionSelectionProps) {
       dragging = true;
       dx = e.screenX-offsetLeft;
       dy = e.screenY-offsetTop;
-    });
-    window.addEventListener('mousemove', (e) => {
+    };
+    const moveListener = (e: MouseEvent) => {
       if (!dragging) {
         return;
       }
@@ -50,13 +63,30 @@ function RegionSelection({ region, setRegion }: RegionSelectionProps) {
       setRegion(({ width, height }) => {
         return { left: newLeft, top: newTop, width, height };
       });
-    });
-    window.addEventListener('mouseup', () => {
+    };
+    const upListener = () => {
       dragging = false;
-    });
+    };
+    regionDiv.addEventListener('mousedown', downListener);
+    window.addEventListener('mousemove', moveListener);
+    window.addEventListener('mouseup', upListener);
+    return () => {
+      regionDiv.removeEventListener('mousedown', downListener);
+      window.removeEventListener('mousemove', moveListener);
+      window.removeEventListener('mouseup', upListener);
+    };
   }, [setRegion]);
   return (
-    <div ref={regionDivRef} className='region-div' style={region}/>
+    <div
+      ref={regionDivRef}
+      className='region-div'
+      style={isSquare ? {
+        ...region,
+        resize: 'horizontal',
+        maxWidth: '100vh',
+        maxHeight: '100vw'
+      } : region}
+    />
   );
 }
 
