@@ -1,8 +1,8 @@
 import '../App.css';
 import { useEffect, useMemo, useState, type JSX } from 'react';
 import ActionButton from '../components/ActionButton.tsx';
-import RegionSelection from '../components/RegionSelection.tsx';
 import ToggleButton from '../components/ToggleButton.tsx';
+import RegionSelection from './RegionSelection.tsx';
 import { usePreferences } from '../hooks.ts';
 import { actionDescriptions, possibleLocations } from '../../config.ts';
 import { selectRegion } from '../../util.ts';

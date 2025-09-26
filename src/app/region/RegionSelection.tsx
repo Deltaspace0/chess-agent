@@ -6,10 +6,11 @@ interface RegionSelectionProps {
   isSquare?: boolean;
 }
 
-function RegionSelection({ region, setRegion, isSquare }: RegionSelectionProps) {
+function RegionSelection(props: RegionSelectionProps) {
+  const { region, setRegion, isSquare } = props;
   const regionDivRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const resizeObserver = new ResizeObserver(entries => {
+    const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         let newWidth = entry.contentRect.width;
         let newHeight = entry.contentRect.height;

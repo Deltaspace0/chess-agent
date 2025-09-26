@@ -1,12 +1,12 @@
 import '../App.css';
-import React, { useEffect, useState } from 'react';
-import { Chessboard, ChessboardProvider, SparePiece } from 'react-chessboard';
+import { useEffect, useState } from 'react';
+import { Chessboard, ChessboardProvider } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import ActionButton from '../components/ActionButton.tsx';
 import Checkbox from '../components/Checkbox.tsx';
 import Gauge from '../components/Gauge.tsx';
-import Radio from '../components/Radio.tsx';
 import Slider from '../components/Slider.tsx';
+import EditPanel from './EditPanel.tsx';
 import { usePreferences, useVariable } from '../hooks.ts';
 
 type Panel = 'main' | 'settings' | 'promotion' | 'edit';
@@ -18,9 +18,7 @@ function App() {
   const isNoRegion = !prefs.region.value;
   const engineInfo = useVariable('engineInfo');
   const principalVariations = useVariable('principalVariations');
-  const positionInfo = useVariable('positionInfo');
   const [positionFEN, setPositionFEN] = useState('');
-  const [inputFEN, setInputFEN] = useState('');
   const [arrows1, setArrows1] = useState<Arrow[]>([]);
   const [arrows2, setArrows2] = useState<Arrow[]>([]);
   const [panelType, setPanelType] = useState<Panel>('main');
@@ -28,7 +26,6 @@ function App() {
   useEffect(() => {
     const offPosition = electron.onVariable('positionFEN', (value) => {
       setPositionFEN(value);
-      setInputFEN(value);
       setPanelType((x) => x === 'promotion' ? 'main' : x);
     });
     const offHighlight = electron.onVariable('highlightMoves', (evalMoves) => {
@@ -130,156 +127,42 @@ function App() {
           principalVariations.map((x) => <p className='text'>{x}</p>)}
       </fieldset>
     </>,
-    settings: <>
-      <fieldset className='scroll-field'>
-        <legend>Settings</legend>
-        <Slider {...prefs.analysisDuration.sliderProps}/>
-        <Slider {...prefs.multiPV.sliderProps}/>
-        <Slider {...prefs.engineThreads.sliderProps}/>
-        <Slider {...prefs.mouseSpeed.sliderProps}/>
-        <div className='flex-row'>
-          <div className='flex-column'>
-            <Checkbox {...prefs.autoResponse.checkboxProps}/>
-            <Checkbox {...prefs.autoScan.checkboxProps}/>
-            <Checkbox {...prefs.autoQueen.checkboxProps}/>
-            <Checkbox {...prefs.draggingMode.checkboxProps}/>
-            <Checkbox {...prefs.saveConfigToFile.checkboxProps}/>
-          </div>
-          <div className='flex-column'>
-            <Checkbox {...prefs.alwaysOnTop.checkboxProps}/>
-            <Checkbox {...prefs.showEvalBar.checkboxProps}/>
-            <Checkbox {...prefs.showArrows.checkboxProps}/>
-            <Checkbox {...prefs.showLines.checkboxProps}/>
-            <Checkbox {...prefs.showNotation.checkboxProps}/>
-          </div>
-        </div>
-      </fieldset>
-    </>,
-    promotion: <>
-      <fieldset>
-        <legend>Promote pawn to</legend>
-        <div className='flex-row'>
-          <ActionButton name='promoteQueen'/>
-          <ActionButton name='promoteRook'/>
-          <ActionButton name='promoteBishop'/>
-          <ActionButton name='promoteKnight'/>
-        </div>
-        <div className='flex-row'>
-          <button onClick={() => setPanelType('main')}>Cancel</button>
-        </div>
-      </fieldset>
-    </>,
-    edit: <>
-      <fieldset className='scroll-field'>
-        <legend>Edit board</legend>
+    settings: <fieldset className='scroll-field'>
+      <legend>Settings</legend>
+      <Slider {...prefs.analysisDuration.sliderProps}/>
+      <Slider {...prefs.multiPV.sliderProps}/>
+      <Slider {...prefs.engineThreads.sliderProps}/>
+      <Slider {...prefs.mouseSpeed.sliderProps}/>
+      <div className='flex-row'>
         <div className='flex-column'>
-          <div className='flex-row'>
-            <SparePiece pieceType='wP'/>
-            <SparePiece pieceType='wR'/>
-            <SparePiece pieceType='wN'/>
-            <SparePiece pieceType='wB'/>
-            <SparePiece pieceType='wQ'/>
-            <SparePiece pieceType='wK'/>
-            <SparePiece pieceType='bP'/>
-            <SparePiece pieceType='bR'/>
-            <SparePiece pieceType='bN'/>
-            <SparePiece pieceType='bB'/>
-            <SparePiece pieceType='bQ'/>
-            <SparePiece pieceType='bK'/>
-          </div>
-          <div className='flex-row'>
-            <input
-              type='text'
-              style={{minWidth: 'calc(100% - 80px)'}}
-              value={inputFEN}
-              onChange={(e) => setInputFEN(e.target.value)}
-              onKeyDown={(e: React.KeyboardEvent) => {
-                if (e.key === 'Enter') {
-                  electron.setPosition(inputFEN);
-                  e.preventDefault();
-                }
-              }}
-            />
-            <button
-              onClick={() => electron.setPosition(inputFEN)}
-              style={{width: 60}}>
-                Set FEN
-            </button>
-          </div>
-          <div className='flex-row'>
-            <div className='flex-column' style={{margin: '16px 0'}}>
-              <ActionButton name='resetPosition' style={{width: '64px'}}/>
-              <ActionButton name='clearPosition' style={{width: '64px'}}/>
-            </div>
-            <div className='flex-column'>
-              <p style={{margin: '4px 0'}}>Turn:</p>
-              <Radio
-                label='White'
-                name='turn'
-                value='w'
-                checked={positionInfo.isWhiteTurn}
-                onChange={() => {
-                  const newPositionInfo = structuredClone(positionInfo);
-                  newPositionInfo.isWhiteTurn = true;
-                  electron.setPositionInfo(newPositionInfo);
-                }}/>
-              <Radio
-                label='Black'
-                name='turn'
-                value='b'
-                checked={!positionInfo.isWhiteTurn}
-                onChange={() => {
-                  const newPositionInfo = structuredClone(positionInfo);
-                  newPositionInfo.isWhiteTurn = false;
-                  electron.setPositionInfo(newPositionInfo);
-                }}/>
-            </div>
-            <div className='flex-column'>
-              <p style={{margin: '4px 0'}}>White:</p>
-              <Checkbox
-                label='O-O'
-                checked={positionInfo.whiteCastlingRights.k}
-                onChange={(value) => {
-                  const newPositionInfo = structuredClone(positionInfo);
-                  newPositionInfo.whiteCastlingRights.k = value;
-                  electron.setPositionInfo(newPositionInfo);
-                }}
-              />
-              <Checkbox
-                label='O-O-O'
-                checked={positionInfo.whiteCastlingRights.q}
-                onChange={(value) => {
-                  const newPositionInfo = structuredClone(positionInfo);
-                  newPositionInfo.whiteCastlingRights.q = value;
-                  electron.setPositionInfo(newPositionInfo);
-                }}
-              />
-            </div>
-            <div className='flex-column'>
-              <p style={{margin: '4px 0'}}>Black:</p>
-              <Checkbox
-                label='O-O'
-                checked={positionInfo.blackCastlingRights.k}
-                onChange={(value) => {
-                  const newPositionInfo = structuredClone(positionInfo);
-                  newPositionInfo.blackCastlingRights.k = value;
-                  electron.setPositionInfo(newPositionInfo);
-                }}
-              />
-              <Checkbox
-                label='O-O-O'
-                checked={positionInfo.blackCastlingRights.q}
-                onChange={(value) => {
-                  const newPositionInfo = structuredClone(positionInfo);
-                  newPositionInfo.blackCastlingRights.q = value;
-                  electron.setPositionInfo(newPositionInfo);
-                }}
-              />
-            </div>
-          </div>
+          <Checkbox {...prefs.autoResponse.checkboxProps}/>
+          <Checkbox {...prefs.autoScan.checkboxProps}/>
+          <Checkbox {...prefs.autoQueen.checkboxProps}/>
+          <Checkbox {...prefs.draggingMode.checkboxProps}/>
+          <Checkbox {...prefs.saveConfigToFile.checkboxProps}/>
         </div>
-      </fieldset>
-    </>
+        <div className='flex-column'>
+          <Checkbox {...prefs.alwaysOnTop.checkboxProps}/>
+          <Checkbox {...prefs.showEvalBar.checkboxProps}/>
+          <Checkbox {...prefs.showArrows.checkboxProps}/>
+          <Checkbox {...prefs.showLines.checkboxProps}/>
+          <Checkbox {...prefs.showNotation.checkboxProps}/>
+        </div>
+      </div>
+    </fieldset>,
+    promotion: <fieldset>
+      <legend>Promote pawn to</legend>
+      <div className='flex-row'>
+        <ActionButton name='promoteQueen'/>
+        <ActionButton name='promoteRook'/>
+        <ActionButton name='promoteBishop'/>
+        <ActionButton name='promoteKnight'/>
+      </div>
+      <div className='flex-row'>
+        <button onClick={() => setPanelType('main')}>Cancel</button>
+      </div>
+    </fieldset>,
+    edit: <EditPanel positionFEN={positionFEN}/>
   };
   return (<ChessboardProvider options={chessboardOptions}>
     <div className='App'>
