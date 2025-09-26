@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, screen } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, screen } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ActionRegionManager from './modules/ActionRegionManager.ts';
@@ -28,7 +28,6 @@ async function createWindow(): Promise<BrowserWindow> {
       preload: preloadPath
     }
   });
-  win.removeMenu();
   await win.loadURL('http://localhost:5173/src/app/main/');
   return win;
 }
@@ -44,7 +43,6 @@ async function createEngineWindow(): Promise<BrowserWindow> {
       preload: preloadPath
     }
   });
-  win.removeMenu();
   await win.loadURL('http://localhost:5173/src/app/engine/');
   return win;
 }
@@ -66,7 +64,6 @@ async function createRegionWindow(parent: BrowserWindow): Promise<BrowserWindow>
       preload: preloadPath
     }
   });
-  win.removeMenu();
   await win.loadURL('http://localhost:5173/src/app/region/');
   return win;
 }
@@ -87,12 +84,12 @@ async function createActionWindow(parent: BrowserWindow): Promise<BrowserWindow>
       preload: preloadPath
     }
   });
-  win.removeMenu();
   await win.loadURL('http://localhost:5173/src/app/action/');
   return win;
 }
 
 (async () => {
+  Menu.setApplicationMenu(null);
   const mouse = new PhysicalMouse();
   const preferenceManager = new PreferenceManager();
   preferenceManager.loadFromFile('config.json');
