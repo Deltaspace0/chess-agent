@@ -115,6 +115,10 @@ async function createActionWindow(parent: BrowserWindow): Promise<BrowserWindow>
     win.show();
     mouse.setActive(true);
   };
+  regionWin.addListener('show', () => {
+    setTimeout(() => regionWin.setOpacity(1), 100);
+  });
+  regionWin.addListener('hide', () => regionWin.setOpacity(0));
   regionWin.addListener('close', (e) => {
     hideRegionWindow();
     e.preventDefault();
