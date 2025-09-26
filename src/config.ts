@@ -27,100 +27,119 @@ export const defaultActionLocations: ActionLocations = {
 export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
   alwaysOnTop: {
     label: 'Always on top',
+    description: 'Always show this window on top of other windows',
     defaultValue: true,
     type: 'boolean'
   },
   autoResponse: {
     label: 'Auto response',
+    description: 'Automatically play the best move after the opponent\'s move',
     defaultValue: false,
     type: 'boolean'
   },
   autoScan: {
     label: 'Auto scan',
+    description: 'Automatically start detecting a move after making a move',
     defaultValue: false,
     type: 'boolean'
   },
   autoQueen: {
     label: 'Auto queen',
+    description: 'Pawns are automatically assumed to be promoted to Queen',
     defaultValue: true,
     type: 'boolean'
   },
   perspective: {
     label: 'Is White\'s perspective',
+    description: 'Board orientation',
     defaultValue: true,
     type: 'boolean'
   },
   draggingMode: {
-    label: 'Dragging mode',
+    label: 'Dragging',
+    description: 'Whether the mouse should perform dragging or clicking motion',
     defaultValue: true,
     type: 'boolean'
   },
   actionRegion: {
     label: 'Actions',
+    description: 'Enable invisible action regions',
     defaultValue: false,
     type: 'boolean'
   },
   actionLocations: {
     label: 'Action regions',
+    description: 'Locations of invisible action regions',
     defaultValue: defaultActionLocations,
     type: 'other'
   },
   showEvalBar: {
     label: 'Show eval bar',
+    description: 'Show the evaluation bar',
     defaultValue: true,
     type: 'boolean'
   },
   showArrows: {
     label: 'Show arrows',
+    description: 'Highlight best moves with arrows on the board',
     defaultValue: true,
     type: 'boolean'
   },
   showLines: {
     label: 'Show lines',
+    description: 'Show best engine lines (principal variations)',
     defaultValue: true,
     type: 'boolean'
   },
   showNotation: {
     label: 'Show notation',
+    description: 'Show coordinates (1-8 and a-h) on the board',
     defaultValue: true,
     type: 'boolean'
   },
   analysisDuration: {
     label: 'Analysis duration (ms)',
+    description: 'Time allotted for the engine to find the best move',
     defaultValue: 1000,
     type: 'number',
     sliderValues: [100, 300, 1000, 3000, 5000, 10000]
   },
   multiPV: {
     label: 'Multiple lines',
+    description: 'How many best moves to calculate',
     defaultValue: 1,
     type: 'number',
     sliderValues: [1, 2, 3, 4, 5, 10, 20]
   },
   engineThreads: {
     label: 'Threads',
+    description: 'How many threads can the engine use',
     defaultValue: 1,
     type: 'number',
     sliderValues: [...Array(33).keys()].slice(1)
   },
   mouseSpeed: {
     label: 'Mouse speed',
+    description: 'How fast the mouse should move when playing a move',
     defaultValue: 3000,
     type: 'number',
     sliderValues: [500, 1000, 3000, 5000, 10000]
   },
   region: {
     label: 'Region',
+    description: 'Region on the screen where the game board is located',
     defaultValue: null,
     type: 'other'
   },
   saveConfigToFile: {
-    label: 'Save config on exit',
+    label: 'Save config',
+    description: 'Save current settings to config.json on exit',
     defaultValue: true,
     type: 'boolean'
   },
   enginePath: {
     label: 'Engine path',
+    description: 'Path to the external engine',
     defaultValue: null,
     type: 'other'
   }

@@ -9,6 +9,7 @@ interface PreferenceHook<T> {
 interface BooleanPreferenceHook extends PreferenceHook<boolean> {
   checkboxProps: {
     label: string;
+    title?: string;
     checked: boolean;
     onChange: (x: boolean) => void;
   };
@@ -17,6 +18,7 @@ interface BooleanPreferenceHook extends PreferenceHook<boolean> {
 interface NumberPreferenceHook extends PreferenceHook<number> {
   sliderProps: {
     label: string;
+    title?: string;
     value: number;
     setValue: (x: number) => void;
     min: number;
@@ -40,6 +42,7 @@ export function usePreferences(): PreferenceHooks {
     if (preferenceConfig[name].type === 'boolean') {
       const checkboxProps = {
         label: preferenceConfig[name].label,
+        title: preferenceConfig[name].description,
         checked: value,
         onChange: send
       };
@@ -48,6 +51,7 @@ export function usePreferences(): PreferenceHooks {
       const list = preferenceConfig[name].sliderValues ?? [];
       const sliderProps = {
         label: preferenceConfig[name].label,
+        title: preferenceConfig[name].description,
         value: list.indexOf(value as number),
         setValue: send,
         min: 0,

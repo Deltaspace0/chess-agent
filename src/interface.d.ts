@@ -50,6 +50,7 @@ declare global {
 
   interface PreferenceConfig<T extends Preference> {
     label: string;
+    description?: string;
     defaultValue: Preferences[T];
     type: Preferences[T] extends boolean
       ? 'boolean' : Preferences[T] extends number ? 'number' : 'other';

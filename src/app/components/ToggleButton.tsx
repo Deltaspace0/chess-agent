@@ -1,15 +1,17 @@
 interface ToggleButtonProps {
   label: string;
+  title?: string;
   checked: boolean;
   onChange: (value: boolean) => void;
 }
 
-function ToggleButton({ label, checked, onChange }: ToggleButtonProps) {
+function ToggleButton(props: ToggleButtonProps) {
   return (
     <button
-      onClick={() => onChange(!checked)}
-      style={checked ? {backgroundColor: 'blue'} : {}}>
-        {label}
+      title={props.title}
+      onClick={() => props.onChange(!props.checked)}
+      style={props.checked ? {backgroundColor: 'blue'} : {}}>
+        {props.label}
     </button>
   );
 }

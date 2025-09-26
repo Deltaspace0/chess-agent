@@ -1,18 +1,19 @@
 interface CheckboxProps {
   label: string;
+  title?: string;
   checked: boolean;
   onChange: (value: boolean) => void;
 }
 
-function Checkbox({ label, checked, onChange }: CheckboxProps) {
+function Checkbox(props: CheckboxProps) {
   return (
-    <label>
+    <label title={props.title}>
       <input
         type='checkbox'
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
+        checked={props.checked}
+        onChange={(e) => props.onChange(e.target.checked)}
       />
-      <p>{label}</p>
+      <p>{props.label}</p>
     </label>
   );
 }

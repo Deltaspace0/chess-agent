@@ -105,8 +105,10 @@ function App() {
           <ActionButton name='bestMove' disabled={isNoRegion}/>
           <ActionButton name='scanMove' disabled={isNoRegion}/>
           <ActionButton name='resetPosition'/>
-          <button onClick={() => prefs.perspective.send(!prefs.perspective.value)}>
-            {prefs.perspective.value ? 'White' : 'Black'} (flip)
+          <button
+            title={prefs.perspective.checkboxProps.title}
+            onClick={() => prefs.perspective.send(!prefs.perspective.value)}>
+              {prefs.perspective.value ? 'White' : 'Black'} (flip)
           </button>
         </div>
         <div className='flex-row'>

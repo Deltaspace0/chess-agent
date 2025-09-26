@@ -1,5 +1,6 @@
 interface SliderProps {
   label: string;
+  title?: string;
   value: number;
   setValue: (i: number) => void;
   min: number;
@@ -9,20 +10,24 @@ interface SliderProps {
   disabled?: boolean;
 }
 
-function Slider({ label, value, setValue, min, max, step, map, disabled }: SliderProps) {
-  map = map || ((x) => x);
+function Slider(props: SliderProps) {
+  const map = props.map || ((x) => x);
   return (
     <div className='flex-center'>
       <input
         type='range'
-        min={min}
-        max={max}
-        value={value}
-        step={step}
-        onInput={(e) => setValue(map(Number((e.target as HTMLInputElement).value)))}
-        disabled={disabled}
+        title={props.title}
+        min={props.min}
+        max={props.max}
+        value={props.value}
+        step={props.step}
+        onInput={(e) => {
+          const targetValue = (e.target as HTMLInputElement).value;
+          props.setValue(map(Number(targetValue)));
+        }}
+        disabled={props.disabled}
       />
-      <p>{label}: {map(value)}</p>
+      <p>{props.label}: {map(props.value)}</p>
     </div>
   );
 }
