@@ -246,6 +246,14 @@ async function createActionWindow(parent: BrowserWindow): Promise<BrowserWindow>
       const value = preferenceManager.togglePreference('autoResponse');
       updateStatus(`Auto response is ${value ? 'enabled' : 'disabled'}`);
     },
+    autoScan: () => {
+      const value = preferenceManager.togglePreference('autoScan');
+      updateStatus(`Auto scan is ${value ? 'enabled' : 'disabled'}`);
+    },
+    autoQueen: () => {
+      const value = preferenceManager.togglePreference('autoQueen');
+      updateStatus(`Auto queen is ${value ? 'enabled' : 'disabled'}`);
+    },
     perspective: () => {
       const value = preferenceManager.togglePreference('perspective');
       updateStatus(`${value ? 'White' : 'Black'} perspective`);
@@ -259,10 +267,16 @@ async function createActionWindow(parent: BrowserWindow): Promise<BrowserWindow>
       updateStatus(`Action regions are ${value ? 'enabled' : 'disabled'}`);
     },
     analysisDuration: () => {
-      const duration = preferenceManager.getPreference('analysisDuration');
-      const newDuration = duration > 300 ? 300 : 5000;
-      preferenceManager.setPreference('analysisDuration', newDuration);
-      updateStatus(`Analysis duration: ${newDuration} ms`);
+      const value = preferenceManager.getPreference('analysisDuration');
+      const newValue = value > 300 ? 300 : 5000;
+      preferenceManager.setPreference('analysisDuration', newValue);
+      updateStatus(`Analysis duration: ${newValue} ms`);
+    },
+    mouseSpeed: () => {
+      const value = preferenceManager.getPreference('mouseSpeed');
+      const newValue = value > 500 ? 500 : 10000;
+      preferenceManager.setPreference('mouseSpeed', newValue);
+      updateStatus(`Mouse speed: ${newValue}`);
     }
   };
   const actionRegionManager = new ActionRegionManager(mouse);

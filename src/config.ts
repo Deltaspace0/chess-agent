@@ -123,7 +123,7 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     description: 'How fast the mouse should move when playing a move',
     defaultValue: 3000,
     type: 'number',
-    sliderValues: [500, 1000, 3000, 5000, 10000]
+    sliderValues: [500, 1000, 2000, 10000, 50000]
   },
   region: {
     label: 'Region',
@@ -180,10 +180,13 @@ export const actionLabels: Record<Action, string> = {
   promoteBishop: 'Bishop',
   promoteKnight: 'Knight',
   autoResponse: preferenceConfig.autoResponse.label,
+  autoScan: preferenceConfig.autoScan.label,
+  autoQueen: preferenceConfig.autoQueen.label,
   perspective: preferenceConfig.perspective.label,
   draggingMode: preferenceConfig.draggingMode.label,
   actionRegion: preferenceConfig.actionRegion.label,
-  analysisDuration: preferenceConfig.analysisDuration.label
+  analysisDuration: preferenceConfig.analysisDuration.label,
+  mouseSpeed: preferenceConfig.mouseSpeed.label
 };
 
 export const actionDescriptions: Partial<Record<Action, string>> = {
@@ -201,8 +204,11 @@ export const actionDescriptions: Partial<Record<Action, string>> = {
   promoteBishop: 'Promote the pawn to Bishop',
   promoteKnight: 'Promote the pawn to Knight',
   autoResponse: 'Toggle auto response',
+  autoScan: 'Toggle auto scan',
+  autoQueen: 'Toggle auto queen',
   perspective: 'Toggle board orientation',
   draggingMode: 'Toggle dragging/clicking mode',
   actionRegion: 'Disable invisible action regions',
-  analysisDuration: 'Switch analysis duration'
+  analysisDuration: 'Switch analysis duration',
+  mouseSpeed: 'Switch mouse speed'
 };

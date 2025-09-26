@@ -99,10 +99,13 @@ declare global {
 
   type ToggleablePreference = keyof Pick<Preferences
     , 'autoResponse'
+    | 'autoScan'
+    | 'autoQueen'
     | 'perspective'
     | 'draggingMode'
     | 'actionRegion'
     | 'analysisDuration'
+    | 'mouseSpeed'
   >;
 
   type Action
