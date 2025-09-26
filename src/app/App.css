@@ -229,12 +229,12 @@ p {
 }
 
 .scroll-field {
-  height: calc(100vh - 410px);
+  height: 100%;
   overflow-y: scroll;
 }
 
 .full-field {
-  height: calc(100vh - 410px);
+  height: 100%;
 }
 
 .action-field {
@@ -243,8 +243,8 @@ p {
   margin: 0 auto;
 }
 
-.pv {
-  height: calc(100vh - 486px);
+.pv-field {
+  height: 100%;
   overflow-y: scroll;
   padding: 2px 12px;
 }
@@ -297,6 +297,7 @@ p {
 
 .flex-column {
   width: 100%;
+  max-height: calc(100vh - 8px);
   display: flex;
   flex-direction: column;
 }

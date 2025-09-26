@@ -24,6 +24,7 @@ function App() {
   const [arrows1, setArrows1] = useState<Arrow[]>([]);
   const [arrows2, setArrows2] = useState<Arrow[]>([]);
   const [panelType, setPanelType] = useState<Panel>('main');
+  const [showActions, setShowActions] = useState(true);
   useEffect(() => {
     const offPosition = electron.onVariable('positionFEN', (value) => {
       setPositionFEN(value);
@@ -98,7 +99,7 @@ function App() {
   };
   const panels = {
     main: <>
-      <fieldset>
+      {showActions ? (<fieldset>
         <legend>Actions</legend>
         <div className='flex-row'>
           <ActionButton name='bestMove' disabled={isNoRegion}/>
@@ -112,10 +113,12 @@ function App() {
           <ActionButton name='recognizeBoard' disabled={isNoRegion}/>
           <ActionButton name='loadHashes' disabled={isNoRegion}/>
           <ActionButton name='undoMove'/>
-          <ActionButton name='showRegion'/>
+          <button onClick={() => setShowActions(false)}>Hide actions</button>
         </div>
-      </fieldset>
-      <fieldset className='pv'>
+      </fieldset>) : (<div className='flex-row'>
+        <button onClick={() => setShowActions(true)}>Show actions</button>
+      </div>)}
+      <fieldset className='pv-field'>
         <legend>Principal variations</legend>
         <p className='text'>
           Depth: {engineInfo.depth}, time: {engineInfo.time} ms,
@@ -289,6 +292,7 @@ function App() {
         <p className='status'>{statusText}</p>
         {panels[panelType]}
         <div className='flex-row'>
+          <ActionButton name='showRegion'/>
           <ActionButton name='showEngine'/>
           {panelType === 'edit'
             ? <button onClick={() => setPanelType('main')}>Return</button>
