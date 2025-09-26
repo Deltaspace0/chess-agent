@@ -154,8 +154,9 @@ button {
 }
 
 fieldset {
-  margin: 0 6px;
   min-width: 100px;
+  max-width: calc(100vw - 48px);
+  margin: 0 auto;
 }
 
 legend {
@@ -233,10 +234,6 @@ p {
   overflow-y: scroll;
 }
 
-.full-field {
-  height: 100%;
-}
-
 .action-field {
   height: calc(100vh - 40px);
   overflow-y: scroll;
@@ -244,6 +241,7 @@ p {
 }
 
 .pv-field {
+  width: 100%;
   height: 100%;
   overflow-y: scroll;
   padding: 2px 12px;
@@ -291,8 +289,10 @@ p {
 
 .flex-row {
   width: 100%;
+  max-width: 380px;
   display: flex;
   justify-content: center;
+  margin: 0 auto;
 }
 
 .flex-column {
@@ -302,10 +302,24 @@ p {
   flex-direction: column;
 }
 
+.uci-input-div {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.board-gauge-div {
+  min-width: 240px;
+  width: min(calc(100vw - 8px), calc(100vh - 192px));
+  display: flex;
+  margin: 0 auto;
+}
+
 .gauge {
   position: relative;
   width: 32px;
-  height: 320px;
+  height: min(calc(100vw - 64px), calc(100vh - 240px));
+  min-height: 200px;
   background-color: #666666;
   margin: 4px auto;
   display: flex;
@@ -330,8 +344,11 @@ p {
 }
 
 .board {
-  width: 320px;
-  height: 320px;
+  min-width: 200px;
+  min-height: 200px;
+  width: min(calc(100vw - 64px), calc(100vh - 240px));
+  height: min(calc(100vw - 64px), calc(100vh - 240px));
+  aspect-ratio: 1/1;
   margin: 4px auto;
-  position: relative;
+  flex-shrink: 0;
 }

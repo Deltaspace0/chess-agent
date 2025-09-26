@@ -168,7 +168,7 @@ function App() {
       </fieldset>
     </>,
     edit: <>
-      <fieldset className='full-field'>
+      <fieldset className='scroll-field'>
         <legend>Edit board</legend>
         <div className='flex-column'>
           <div className='flex-row'>
@@ -188,7 +188,7 @@ function App() {
           <div className='flex-row'>
             <input
               type='text'
-              style={{minWidth: '240px'}}
+              style={{minWidth: 'calc(100% - 80px)'}}
               value={inputFEN}
               onChange={(e) => setInputFEN(e.target.value)}
               onKeyDown={(e: React.KeyboardEvent) => {
@@ -198,8 +198,10 @@ function App() {
                 }
               }}
             />
-            <button onClick={() => electron.setPosition(inputFEN)}>
-              Set FEN
+            <button
+              onClick={() => electron.setPosition(inputFEN)}
+              style={{width: 60}}>
+                Set FEN
             </button>
           </div>
           <div className='flex-row'>
@@ -280,15 +282,17 @@ function App() {
   return (<ChessboardProvider options={chessboardOptions}>
     <div className='App'>
       <div className='flex-column'>
-        <div className='flex-row'>
+        {prefs.showEvalBar.value ? (<div className='board-gauge-div'>
           <div className='board'>
             <Chessboard/>
           </div>
-          {prefs.showEvalBar.value && <Gauge
+          <Gauge
             perspective={prefs.perspective.value}
             evaluation={engineInfo.evaluation}
-          />}
-        </div>
+          />
+        </div>) : (<div className='board'>
+          <Chessboard/>
+        </div>)}
         <p className='status'>{statusText}</p>
         {panels[panelType]}
         <div className='flex-row'>

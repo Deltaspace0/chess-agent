@@ -61,7 +61,7 @@ function App() {
         <div ref={autoScrollDivRef} style={{minHeight: '8px'}}></div>
         {isInternalEngine ? internalLines : externalLines}
       </div>
-      {(isInternalEngine || externalActive) ? (<div className='flex-row'>
+      {(isInternalEngine || externalActive) ? (<div className='uci-input-div'>
         <input
           type='text'
           style={{minWidth: 'calc(100vw - 100px)'}}
