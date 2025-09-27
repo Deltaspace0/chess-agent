@@ -123,6 +123,7 @@ declare global {
     | 'dialogEngine'
     | 'reloadEngine'
     | 'showEngine'
+    | 'showSettings'
     | 'promoteQueen'
     | 'promoteRook'
     | 'promoteBishop'

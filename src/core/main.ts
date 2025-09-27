@@ -16,6 +16,7 @@ import { selectRegion } from '../util.ts';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const preloadPath = path.join(dirname, 'preload.js');
+const iconPath = 'images/chess-icon.png';
 
 async function createWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({
@@ -23,7 +24,7 @@ async function createWindow(): Promise<BrowserWindow> {
     minHeight: 240,
     width: 380,
     height: 580,
-    icon: 'images/chess-icon.png',
+    icon: iconPath,
     useContentSize: true,
     webPreferences: {
       preload: preloadPath
@@ -38,7 +39,7 @@ async function createEngineWindow(): Promise<BrowserWindow> {
     minWidth: 320,
     minHeight: 320,
     show: false,
-    icon: 'images/chess-icon.png',
+    icon: iconPath,
     useContentSize: true,
     webPreferences: {
       preload: preloadPath
@@ -81,13 +82,33 @@ async function createActionWindow(parent: BrowserWindow): Promise<BrowserWindow>
     minHeight: 100,
     height: 320,
     show: false,
-    icon: 'images/chess-icon.png',
+    icon: iconPath,
     useContentSize: true,
     webPreferences: {
       preload: preloadPath
     }
   });
   await win.loadURL('http://localhost:5173/src/app/action/');
+  return win;
+}
+
+async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindow> {
+  const win = new BrowserWindow({
+    parent,
+    modal: true,
+    minimizable: false,
+    maximizable: false,
+    resizable: false,
+    width: 280,
+    height: 240,
+    show: false,
+    icon: iconPath,
+    useContentSize: true,
+    webPreferences: {
+      preload: preloadPath
+    }
+  });
+  await win.loadURL('http://localhost:5173/src/app/settings/');
   return win;
 }
 
@@ -130,12 +151,18 @@ async function createActionWindow(parent: BrowserWindow): Promise<BrowserWindow>
     actionWin.hide();
     e.preventDefault();
   });
+  const settingsWin = await createSettingsWindow(win);
+  settingsWin.addListener('close', (e) => {
+    settingsWin.hide();
+    e.preventDefault();
+  });
   const sendToApp = (channel: string, ...args: unknown[]) => {
     if (appRunning) {
       win.webContents.send(channel, ...args);
       engineWin.webContents.send(channel, ...args);
       regionWin.webContents.send(channel, ...args);
       actionWin.webContents.send(channel, ...args);
+      settingsWin.webContents.send(channel, ...args);
     }
   }
   const updateStatus = (status: string) => {
@@ -250,6 +277,7 @@ async function createActionWindow(parent: BrowserWindow): Promise<BrowserWindow>
     },
     reloadEngine: () => reloadExternalEngine(),
     showEngine: () => engineWin.show(),
+    showSettings: () => settingsWin.show(),
     promoteQueen: () => agent.promoteTo('q'),
     promoteRook: () => agent.promoteTo('r'),
     promoteBishop: () => agent.promoteTo('b'),

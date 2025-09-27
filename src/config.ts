@@ -175,6 +175,7 @@ export const actionLabels: Record<Action, string> = {
   dialogEngine: 'Load engine',
   reloadEngine: 'Reload',
   showEngine: 'Engine',
+  showSettings: 'Settings',
   promoteQueen: 'Queen',
   promoteRook: 'Rook',
   promoteBishop: 'Bishop',

@@ -1,15 +1,13 @@
 import '../App.css';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Chessboard, ChessboardProvider, SparePiece } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import ActionButton from '../components/ActionButton.tsx';
-import Checkbox from '../components/Checkbox.tsx';
 import Gauge from '../components/Gauge.tsx';
-import Slider from '../components/Slider.tsx';
 import EditPanel from './EditPanel.tsx';
 import { usePreferences, useVariable } from '../hooks.ts';
 
-type Panel = 'main' | 'settings' | 'promotion' | 'edit';
+type Panel = 'main' | 'promotion' | 'edit';
 
 function App() {
   const electron = window.electronAPI;
@@ -23,19 +21,6 @@ function App() {
   const [arrows2, setArrows2] = useState<Arrow[]>([]);
   const [panelType, setPanelType] = useState<Panel>('main');
   const [showActions, setShowActions] = useState(true);
-  const [verticalSettings, setVerticalSettings] = useState(true);
-  const settingsFieldRef = useRef<HTMLFieldSetElement>(null);
-  useEffect(() => {
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setVerticalSettings(entry.contentRect.height > 160);
-      }
-    });
-    if (settingsFieldRef.current) {
-      resizeObserver.observe(settingsFieldRef.current);
-    }
-    return () => resizeObserver.disconnect();
-  }, [panelType]);
   useEffect(() => {
     const offPosition = electron.onVariable('positionFEN', (value) => {
       setPositionFEN(value);
@@ -140,52 +125,6 @@ function App() {
           principalVariations.map((x) => <p className='text'>{x}</p>)}
       </fieldset>
     </>,
-    settings: <fieldset ref={settingsFieldRef} className='scroll-field'>
-      <legend>Settings</legend>
-      {verticalSettings ? (<>
-        <Slider {...prefs.analysisDuration.sliderProps}/>
-        <Slider {...prefs.multiPV.sliderProps}/>
-        <Slider {...prefs.engineThreads.sliderProps}/>
-        <Slider {...prefs.mouseSpeed.sliderProps}/>
-        <div className='flex-row'>
-          <div className='flex-column'>
-            <Checkbox {...prefs.autoResponse.checkboxProps}/>
-            <Checkbox {...prefs.autoScan.checkboxProps}/>
-            <Checkbox {...prefs.autoQueen.checkboxProps}/>
-            <Checkbox {...prefs.draggingMode.checkboxProps}/>
-            <Checkbox {...prefs.saveConfigToFile.checkboxProps}/>
-          </div>
-          <div className='flex-column'>
-            <Checkbox {...prefs.alwaysOnTop.checkboxProps}/>
-            <Checkbox {...prefs.showEvalBar.checkboxProps}/>
-            <Checkbox {...prefs.showArrows.checkboxProps}/>
-            <Checkbox {...prefs.showLines.checkboxProps}/>
-            <Checkbox {...prefs.showNotation.checkboxProps}/>
-          </div>
-        </div>
-      </>) : (<div className='flex-fit-row'>
-        <div className='flex-column' style={{width: 260, margin: 'auto'}}>
-          <Slider {...prefs.analysisDuration.sliderProps}/>
-          <Slider {...prefs.multiPV.sliderProps}/>
-          <Slider {...prefs.engineThreads.sliderProps}/>
-          <Slider {...prefs.mouseSpeed.sliderProps}/>
-        </div>
-        <div className='flex-column' style={{width: 120, margin: 'auto'}}>
-          <Checkbox {...prefs.autoResponse.checkboxProps}/>
-          <Checkbox {...prefs.autoScan.checkboxProps}/>
-          <Checkbox {...prefs.autoQueen.checkboxProps}/>
-          <Checkbox {...prefs.draggingMode.checkboxProps}/>
-          <Checkbox {...prefs.saveConfigToFile.checkboxProps}/>
-        </div>
-        <div className='flex-column' style={{width: 120, margin: 'auto'}}>
-          <Checkbox {...prefs.alwaysOnTop.checkboxProps}/>
-          <Checkbox {...prefs.showEvalBar.checkboxProps}/>
-          <Checkbox {...prefs.showArrows.checkboxProps}/>
-          <Checkbox {...prefs.showLines.checkboxProps}/>
-          <Checkbox {...prefs.showNotation.checkboxProps}/>
-        </div>
-      </div>)}
-    </fieldset>,
     promotion: <fieldset>
       <legend>Promote pawn to</legend>
       <div className='flex-row'>
@@ -243,9 +182,7 @@ function App() {
           {panelType === 'edit'
             ? <button onClick={() => setPanelType('main')}>Return</button>
             : <button onClick={() => setPanelType('edit')}>Edit board</button>}
-          {panelType === 'settings'
-            ? <button onClick={() => setPanelType('main')}>Return</button>
-            : <button onClick={() => setPanelType('settings')}>Settings</button>}
+          <ActionButton name='showSettings'/>
         </div>
       </div>
     </div>

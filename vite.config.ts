@@ -14,7 +14,8 @@ export default defineConfig({
         main: resolve(__dirname, 'src/app/main/index.html'),
         action: resolve(__dirname, 'src/app/action/index.html'),
         engine: resolve(__dirname, 'src/app/engine/index.html'),
-        region: resolve(__dirname, 'src/app/region/index.html')
+        region: resolve(__dirname, 'src/app/region/index.html'),
+        settings: resolve(__dirname, 'src/app/settings/index.html')
       }
     }
   }

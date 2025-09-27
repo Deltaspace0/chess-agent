@@ -1,0 +1,34 @@
+import '../App.css';
+import Checkbox from '../components/Checkbox.tsx';
+import Slider from '../components/Slider.tsx';
+import { usePreferences } from '../hooks.ts';
+
+function App() {
+  const prefs = usePreferences();
+  return (<div className='App'>
+    <div className='flex-column'>
+      <Slider {...prefs.analysisDuration.sliderProps}/>
+      <Slider {...prefs.multiPV.sliderProps}/>
+      <Slider {...prefs.engineThreads.sliderProps}/>
+      <Slider {...prefs.mouseSpeed.sliderProps}/>
+      <div className='flex-row'>
+        <div className='flex-column'>
+          <Checkbox {...prefs.autoResponse.checkboxProps}/>
+          <Checkbox {...prefs.autoScan.checkboxProps}/>
+          <Checkbox {...prefs.autoQueen.checkboxProps}/>
+          <Checkbox {...prefs.draggingMode.checkboxProps}/>
+          <Checkbox {...prefs.saveConfigToFile.checkboxProps}/>
+        </div>
+        <div className='flex-column'>
+          <Checkbox {...prefs.alwaysOnTop.checkboxProps}/>
+          <Checkbox {...prefs.showEvalBar.checkboxProps}/>
+          <Checkbox {...prefs.showArrows.checkboxProps}/>
+          <Checkbox {...prefs.showLines.checkboxProps}/>
+          <Checkbox {...prefs.showNotation.checkboxProps}/>
+        </div>
+      </div>
+    </div>
+  </div>);
+}
+
+export default App;
