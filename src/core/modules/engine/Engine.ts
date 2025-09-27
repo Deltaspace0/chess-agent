@@ -2,11 +2,12 @@ import EngineProcess from './EngineProcess.ts';
 import { preferenceConfig } from '../../../config.ts';
 
 interface EngineOptions {
+  duration: number;
   multiPV: number;
   threads: number;
 }
 
-const optionNames: Record<keyof EngineOptions, string> = {
+const optionNames: Partial<Record<keyof EngineOptions, string>> = {
   multiPV: 'MultiPV',
   threads: 'Threads'
 };
@@ -23,8 +24,8 @@ class Engine {
   private bestMove: string | null = null;
   private ponderMove: string | null = null;
   private engineInfo: EngineInfo = {};
-  private analysisDuration: number = preferenceConfig.analysisDuration.defaultValue;
   private options: EngineOptions = {
+    duration: preferenceConfig.analysisDuration.defaultValue,
     multiPV: preferenceConfig.multiPV.defaultValue,
     threads: preferenceConfig.engineThreads.defaultValue
   };
@@ -122,7 +123,7 @@ class Engine {
     this.resetAnalysis();
     const pos = this.fen === null ? 'startpos' : `fen ${this.fen}`;
     this.sendToProcess(`position ${pos} moves ${this.moves.join(' ')}`);
-    this.sendToProcess(`go movetime ${this.analysisDuration}`);
+    this.sendToProcess(`go movetime ${this.options.duration}`);
   }
 
   private sendOptionToProcess(name: keyof EngineOptions) {
@@ -156,12 +157,11 @@ class Engine {
     return this.moves.join(' ');
   }
 
-  setAnalysisDuration(value: number) {
-    this.analysisDuration = value;
-  }
-
   setOption<T extends keyof EngineOptions>(name: T, value: EngineOptions[T]) {
     this.options[name] = value;
+    if (!(name in optionNames)) {
+      return;
+    }
     if (!this.sendingOptions[name]) {
       this.sendingOptions[name] = true;
       setTimeout(() => {

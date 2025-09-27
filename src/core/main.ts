@@ -367,7 +367,7 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
     },
     draggingMode: (value) => board.setDraggingMode(value),
     actionRegion: (value) => actionRegionManager.setActive(value),
-    analysisDuration: (value) => engine.setAnalysisDuration(value),
+    analysisDuration: (value) => engine.setOption('duration', value),
     multiPV: (value) => engine.setOption('multiPV', value),
     engineThreads: (value) => engine.setOption('threads', value),
     mouseSpeed: (value) => mouse.setSpeed(value),
