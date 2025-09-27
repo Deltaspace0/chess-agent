@@ -67,7 +67,7 @@ function EditPanel({ positionFEN }: EditProps) {
       </div>}
       <div className='flex-row'>
         {!separateButtonRow &&
-          <div className='flex-column' style={{margin: '16px 0'}}>
+          <div className='flex-column' style={{margin: 'auto'}}>
             <ActionButton name='resetPosition' style={{width: '64px'}}/>
             <ActionButton name='clearPosition' style={{width: '64px'}}/>
           </div>}
