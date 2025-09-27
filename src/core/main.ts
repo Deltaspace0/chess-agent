@@ -1,6 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, screen } from 'electron';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import ActionRegionManager from './modules/ActionRegionManager.ts';
 import Agent from './modules/Agent.ts';
 import Board from './modules/Board.ts';
@@ -14,8 +13,7 @@ import { PhysicalMouse } from './modules/Mouse.ts';
 import { defaultVariables, possibleLocations } from '../config.ts';
 import { selectRegion } from '../util.ts';
 
-const dirname = path.dirname(fileURLToPath(import.meta.url));
-const preloadPath = path.join(dirname, 'preload.js');
+const preloadPath = path.join(import.meta.dirname, 'preload.js');
 const iconPath = 'images/chess-icon.png';
 
 async function createWindow(): Promise<BrowserWindow> {
@@ -164,7 +162,7 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
       actionWin.webContents.send(channel, ...args);
       settingsWin.webContents.send(channel, ...args);
     }
-  }
+  };
   const updateStatus = (status: string) => {
     console.log(status);
     sendToApp('update-variable', 'status', status);
