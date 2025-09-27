@@ -32,6 +32,9 @@ function App() {
       });
     });
   }, [electron]);
+  useEffect(() => {
+    document.title = engineInfo.name || 'Engine';
+  }, [engineInfo.name]);
   const handleEngineSend = () => {
     setTimeout(() => {
       autoScrollDivRef.current?.scrollIntoView(false);
