@@ -16,6 +16,7 @@ class EngineExternal extends EngineProcess {
     });
     this.process.on('exit', (code) => {
       this.sendToListeners('exit', JSON.stringify(code));
+      this.kill();
     });
     for (const stream of ['stdout', 'stderr'] as const) {
       this.process[stream].on('data', (data) => {
@@ -34,6 +35,10 @@ class EngineExternal extends EngineProcess {
       this.process.kill();
       this.process = null;
     }
+  }
+
+  isRunning(): boolean {
+    return this.process !== null;
   }
 
   send(message: string) {

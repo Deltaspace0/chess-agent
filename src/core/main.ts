@@ -154,7 +154,7 @@ async function createActionWindow(parent: BrowserWindow): Promise<BrowserWindow>
     sendToApp('engine-data', 'external', '!>> '+data);
   });
   engineExternal.addListener('exit', (code) => {
-    updateStatus('Please reload the engine');
+    updateStatus('Engine has been closed');
     sendToApp('engine-data', 'external-event', 'exit');
     sendToApp('engine-data', 'external', `Exit code: ${code}`);
     for (const name of ['highlightMoves', 'principalVariations', 'engineInfo']) {
@@ -169,6 +169,12 @@ async function createActionWindow(parent: BrowserWindow): Promise<BrowserWindow>
     } else {
       sendToApp('engine-data', 'external-event', 'exit');
       updateStatus('Failed to load external engine');
+    }
+  };
+  const reloadExternalEngine = () => {
+    const path = preferenceManager.getPreference('enginePath');
+    if (path) {
+      spawnExternalEngine(path);
     }
   };
   const engineInternal = new EngineInternal();
@@ -224,7 +230,12 @@ async function createActionWindow(parent: BrowserWindow): Promise<BrowserWindow>
     skipMove: () => agent.skipMove(),
     undoMove: () => agent.undoMove(),
     bestMove: () => agent.playBestMove(),
-    resetPosition: () => agent.resetPosition(),
+    resetPosition: () => {
+      agent.resetPosition();
+      if (!engineExternal.isRunning()) {
+        reloadExternalEngine();
+      }
+    },
     clearPosition: () => agent.clearPosition(),
     recognizeBoard: () => agent.recognizeBoard(),
     dialogEngine: async () => {
@@ -235,12 +246,7 @@ async function createActionWindow(parent: BrowserWindow): Promise<BrowserWindow>
         preferenceManager.setPreference('enginePath', result.filePaths[0]);
       }
     },
-    reloadEngine: () => {
-      const path = preferenceManager.getPreference('enginePath');
-      if (path) {
-        spawnExternalEngine(path);
-      }
-    },
+    reloadEngine: () => reloadExternalEngine(),
     showEngine: () => engineWin.show(),
     promoteQueen: () => agent.promoteTo('q'),
     promoteRook: () => agent.promoteTo('r'),
