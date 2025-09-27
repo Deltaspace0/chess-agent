@@ -19,8 +19,8 @@ const preloadPath = path.join(dirname, 'preload.js');
 
 async function createWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({
-    minWidth: 300,
-    minHeight: 400,
+    minWidth: 240,
+    minHeight: 240,
     width: 380,
     height: 580,
     icon: 'images/chess-icon.png',

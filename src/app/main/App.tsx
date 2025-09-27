@@ -1,6 +1,6 @@
 import '../App.css';
 import { useEffect, useRef, useState } from 'react';
-import { Chessboard, ChessboardProvider } from 'react-chessboard';
+import { Chessboard, ChessboardProvider, SparePiece } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import ActionButton from '../components/ActionButton.tsx';
 import Checkbox from '../components/Checkbox.tsx';
@@ -200,20 +200,41 @@ function App() {
     </fieldset>,
     edit: <EditPanel positionFEN={positionFEN}/>
   };
+  const whiteSparePieces = <div className='flex-row' style={{width: '60%'}}>
+    <SparePiece pieceType='wP'/>
+    <SparePiece pieceType='wR'/>
+    <SparePiece pieceType='wN'/>
+    <SparePiece pieceType='wB'/>
+    <SparePiece pieceType='wQ'/>
+    <SparePiece pieceType='wK'/>
+  </div>;
+  const blackSparePieces = <div className='flex-row' style={{width: '60%'}}>
+    <SparePiece pieceType='bP'/>
+    <SparePiece pieceType='bR'/>
+    <SparePiece pieceType='bN'/>
+    <SparePiece pieceType='bB'/>
+    <SparePiece pieceType='bQ'/>
+    <SparePiece pieceType='bK'/>
+  </div>;
+  const chessboardComponent = <div className='board-with-pieces'>
+    {panelType === 'edit' ? (<>
+      {prefs.perspective.value ? blackSparePieces : whiteSparePieces}
+      <div className='board'>
+        <Chessboard/>
+      </div>
+      {prefs.perspective.value ? whiteSparePieces : blackSparePieces}
+    </>) : <Chessboard/>}
+  </div>;
   return (<ChessboardProvider options={chessboardOptions}>
     <div className='App'>
       <div className='flex-column'>
         {prefs.showEvalBar.value ? (<div className='board-gauge-div'>
-          <div className='board'>
-            <Chessboard/>
-          </div>
+          {chessboardComponent}
           <Gauge
             perspective={prefs.perspective.value}
             evaluation={engineInfo.evaluation}
           />
-        </div>) : (<div className='board'>
-          <Chessboard/>
-        </div>)}
+        </div>) : chessboardComponent}
         <p className='status'>{statusText}</p>
         {panels[panelType]}
         <div className='flex-row'>

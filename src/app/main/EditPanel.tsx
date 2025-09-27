@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { SparePiece } from 'react-chessboard';
 import ActionButton from '../components/ActionButton.tsx';
 import Checkbox from '../components/Checkbox.tsx';
 import Radio from '../components/Radio.tsx';
@@ -13,13 +12,13 @@ function EditPanel({ positionFEN }: EditProps) {
   const electron = window.electronAPI;
   const positionInfo = useVariable('positionInfo');
   const [inputFEN, setInputFEN] = useState('');
-  const [separateButtonRow, setSeparateButtonRow] = useState(false);
+  const [separateCastlingRow, setSeparateCastlingRow] = useState(false);
   const editFieldRef = useRef<HTMLFieldSetElement>(null);
   useEffect(() => setInputFEN(positionFEN), [positionFEN]);
   useEffect(() => {
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        setSeparateButtonRow(entry.contentRect.width < 320);
+        setSeparateCastlingRow(entry.contentRect.width < 240);
       }
     });
     if (editFieldRef.current) {
@@ -27,23 +26,53 @@ function EditPanel({ positionFEN }: EditProps) {
     }
     return () => resizeObserver.disconnect();
   }, []);
+  const castlingCheckboxes = <>
+    <div className='flex-column'>
+      <p style={{margin: '4px 0'}}>White:</p>
+      <Checkbox
+        label='O-O'
+        checked={positionInfo.whiteCastlingRights.k}
+        onChange={(value) => {
+          const newPositionInfo = structuredClone(positionInfo);
+          newPositionInfo.whiteCastlingRights.k = value;
+          electron.setPositionInfo(newPositionInfo);
+        }}
+      />
+      <Checkbox
+        label='O-O-O'
+        checked={positionInfo.whiteCastlingRights.q}
+        onChange={(value) => {
+          const newPositionInfo = structuredClone(positionInfo);
+          newPositionInfo.whiteCastlingRights.q = value;
+          electron.setPositionInfo(newPositionInfo);
+        }}
+      />
+    </div>
+    <div className='flex-column'>
+      <p style={{margin: '4px 0'}}>Black:</p>
+      <Checkbox
+        label='O-O'
+        checked={positionInfo.blackCastlingRights.k}
+        onChange={(value) => {
+          const newPositionInfo = structuredClone(positionInfo);
+          newPositionInfo.blackCastlingRights.k = value;
+          electron.setPositionInfo(newPositionInfo);
+        }}
+      />
+      <Checkbox
+        label='O-O-O'
+        checked={positionInfo.blackCastlingRights.q}
+        onChange={(value) => {
+          const newPositionInfo = structuredClone(positionInfo);
+          newPositionInfo.blackCastlingRights.q = value;
+          electron.setPositionInfo(newPositionInfo);
+        }}
+      />
+    </div>
+  </>;
   return (<fieldset ref={editFieldRef} className='scroll-field'>
     <legend>Edit board</legend>
     <div className='flex-column'>
-      <div className='flex-row'>
-        <SparePiece pieceType='wP'/>
-        <SparePiece pieceType='wR'/>
-        <SparePiece pieceType='wN'/>
-        <SparePiece pieceType='wB'/>
-        <SparePiece pieceType='wQ'/>
-        <SparePiece pieceType='wK'/>
-        <SparePiece pieceType='bP'/>
-        <SparePiece pieceType='bR'/>
-        <SparePiece pieceType='bN'/>
-        <SparePiece pieceType='bB'/>
-        <SparePiece pieceType='bQ'/>
-        <SparePiece pieceType='bK'/>
-      </div>
       <div className='flex-row'>
         <input
           type='text'
@@ -61,17 +90,12 @@ function EditPanel({ positionFEN }: EditProps) {
           Set FEN
         </button>
       </div>
-      {separateButtonRow && <div className='flex-row'>
+      <div className='flex-row'>
         <ActionButton name='resetPosition'/>
         <ActionButton name='clearPosition'/>
-      </div>}
+      </div>
       <div className='flex-row'>
-        {!separateButtonRow &&
-          <div className='flex-column' style={{margin: 'auto'}}>
-            <ActionButton name='resetPosition' style={{width: '64px'}}/>
-            <ActionButton name='clearPosition' style={{width: '64px'}}/>
-          </div>}
-        <div className='flex-column'>
+        <div className={separateCastlingRow ? 'flex-row' : 'flex-column'}>
           <p style={{margin: '4px 0'}}>Turn:</p>
           <Radio
             label='White'
@@ -94,49 +118,11 @@ function EditPanel({ positionFEN }: EditProps) {
               electron.setPositionInfo(newPositionInfo);
             }}/>
         </div>
-        <div className='flex-column'>
-          <p style={{margin: '4px 0'}}>White:</p>
-          <Checkbox
-            label='O-O'
-            checked={positionInfo.whiteCastlingRights.k}
-            onChange={(value) => {
-              const newPositionInfo = structuredClone(positionInfo);
-              newPositionInfo.whiteCastlingRights.k = value;
-              electron.setPositionInfo(newPositionInfo);
-            }}
-          />
-          <Checkbox
-            label='O-O-O'
-            checked={positionInfo.whiteCastlingRights.q}
-            onChange={(value) => {
-              const newPositionInfo = structuredClone(positionInfo);
-              newPositionInfo.whiteCastlingRights.q = value;
-              electron.setPositionInfo(newPositionInfo);
-            }}
-          />
-        </div>
-        <div className='flex-column'>
-          <p style={{margin: '4px 0'}}>Black:</p>
-          <Checkbox
-            label='O-O'
-            checked={positionInfo.blackCastlingRights.k}
-            onChange={(value) => {
-              const newPositionInfo = structuredClone(positionInfo);
-              newPositionInfo.blackCastlingRights.k = value;
-              electron.setPositionInfo(newPositionInfo);
-            }}
-          />
-          <Checkbox
-            label='O-O-O'
-            checked={positionInfo.blackCastlingRights.q}
-            onChange={(value) => {
-              const newPositionInfo = structuredClone(positionInfo);
-              newPositionInfo.blackCastlingRights.q = value;
-              electron.setPositionInfo(newPositionInfo);
-            }}
-          />
-        </div>
+        {!separateCastlingRow && castlingCheckboxes}
       </div>
+      {separateCastlingRow && <div className='flex-row'>
+        {castlingCheckboxes}
+      </div>}
     </div>
   </fieldset>);
 }
