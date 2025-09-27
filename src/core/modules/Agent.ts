@@ -1,7 +1,6 @@
 import Engine from './engine/Engine.ts';
 import Game from './Game.ts';
 import Recognizer from './Recognizer.ts';
-import { preferenceConfig } from '../../config.ts';
 
 interface AgentModules {
   engine: Engine;
@@ -13,10 +12,9 @@ class Agent {
   private engine: Engine;
   private game: Game;
   private recognizer: Recognizer;
-  private autoResponse: boolean = preferenceConfig.autoResponse.defaultValue;
-  private autoScan: boolean = preferenceConfig.autoScan.defaultValue;
   private promotionMove: string = '';
   private stopBestMove: (() => void) | null = null;
+  private afterMoveCallback: (value: string) => void = () => {};
   private bestMoveCallback: (value: string) => void = () => {};
   private promotionCallback: () => void = () => {};
   private statusCallback: (status: string) => void = console.log;
@@ -67,11 +65,7 @@ class Agent {
       this.recognizer.stopScanning();
       return true;
     }
-    if (this.autoResponse && this.game.isMyTurn()) {
-      this.playBestMove();
-    } else if (this.autoScan) {
-      this.scanMove();
-    }
+    this.afterMoveCallback(move);
     return true;
   }
 
@@ -174,16 +168,6 @@ class Agent {
     this.game.printBoard();
   }
 
-  setAutoResponse(value: boolean) {
-    this.autoResponse = value;
-    this.statusCallback(`Auto response is ${value ? 'enabled' : 'disabled'}`);
-  }
-
-  setAutoScan(value: boolean) {
-    this.autoScan = value;
-    this.statusCallback(`Auto scan is ${value ? 'enabled' : 'disabled'}`);
-  }
-
   resetPosition() {
     this.recognizer.stopScanning();
     this.game.reset();
@@ -228,6 +212,10 @@ class Agent {
     if (this.promotionMove) {
       this.processMove(this.promotionMove+piece);
     }
+  }
+
+  onMove(callback: (value: string) => void) {
+    this.afterMoveCallback = callback;
   }
 
   onBestMove(callback: (value: string) => void) {

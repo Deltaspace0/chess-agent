@@ -233,11 +233,19 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
   const recognizer = new Recognizer();
   const agent = new Agent({ engine, game, recognizer });
   agent.onUpdateStatus(updateStatus);
+  agent.onMove(() => {
+    if (!preferenceManager.getPreference('region')) {
+      return;
+    }
+    if (preferenceManager.getPreference('autoResponse') && game.isMyTurn()) {
+      agent.playBestMove();
+    } else if (preferenceManager.getPreference('autoScan')) {
+      agent.scanMove();
+    }
+  });
   agent.onBestMove((move) => {
     if (preferenceManager.getPreference('region')) {
       board.playMove(move);
-    } else {
-      updateStatus('Select region first to play moves');
     }
   });
   agent.onPromotion(() => {
@@ -350,8 +358,6 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
       win.setAlwaysOnTop(value, 'normal');
       engineWin.setAlwaysOnTop(value, 'normal');
     },
-    autoResponse: (value) => agent.setAutoResponse(value),
-    autoScan: (value) => agent.setAutoScan(value),
     perspective: (value) => {
       board.setPerspective(value);
       game.setPerspective(value);
