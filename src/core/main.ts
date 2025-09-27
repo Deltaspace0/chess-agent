@@ -382,6 +382,7 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
         updateStatus('Ready');
       } else {
         spawnExternalEngine(value);
+        engineInternal.kill();
       }
     }
   };
