@@ -124,6 +124,7 @@ declare global {
     | 'reloadEngine'
     | 'showEngine'
     | 'showSettings'
+    | 'loadConfig'
     | 'promoteQueen'
     | 'promoteRook'
     | 'promoteBishop'

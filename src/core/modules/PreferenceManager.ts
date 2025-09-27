@@ -37,7 +37,10 @@ class PreferenceManager {
     }
   }
 
-  onUpdatePreference<T extends Preference>(name: T, listener: PreferenceListeners[T]) {
+  onUpdatePreference<T extends Preference>(
+    name: T,
+    listener: PreferenceListeners[T]
+  ) {
     this.listeners[name] = listener;
     try {
       listener(this.preferences[name]);
@@ -52,8 +55,11 @@ class PreferenceManager {
 
   loadFromFile(path: string) {
     try {
-      const preferences = JSON.parse(fs.readFileSync(path, {encoding: 'ascii'}));
-      this.preferences = {...this.preferences, ...preferences};
+      const data = fs.readFileSync(path, { encoding: 'ascii' });
+      const preferences = JSON.parse(data);
+      for (const name of Object.keys(preferences) as Preference[]) {
+        this.setPreference(name, preferences[name]);
+      }
     } catch (e) {
       console.log(e);
     }

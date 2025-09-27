@@ -1,4 +1,5 @@
 import '../App.css';
+import ActionButton from '../components/ActionButton.tsx';
 import Checkbox from '../components/Checkbox.tsx';
 import Slider from '../components/Slider.tsx';
 import { usePreferences } from '../hooks.ts';
@@ -7,6 +8,9 @@ function App() {
   const prefs = usePreferences();
   return (<div className='App'>
     <div className='flex-column'>
+      <div className='flex-row'>
+        <ActionButton name='loadConfig'/>
+      </div>
       <Slider {...prefs.analysisDuration.sliderProps}/>
       <Slider {...prefs.multiPV.sliderProps}/>
       <Slider {...prefs.engineThreads.sliderProps}/>

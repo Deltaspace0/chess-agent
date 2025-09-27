@@ -100,7 +100,7 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
     minimizable: false,
     resizable: false,
     width: 280,
-    height: 240,
+    height: 260,
     show: false,
     icon: iconPath,
     useContentSize: true,
@@ -295,6 +295,15 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
     reloadEngine: () => reloadExternalEngine(),
     showEngine: () => engineWin.show(),
     showSettings: () => settingsWin.show(),
+    loadConfig: async () => {
+      const result = await dialog.showOpenDialog(settingsWin, {
+        properties: ['openFile'],
+        filters: [{ name: 'Configuration file', extensions: ['json'] }]
+      });
+      if (result.filePaths.length > 0) {
+        preferenceManager.loadFromFile(result.filePaths[0]);
+      }
+    },
     promoteQueen: () => agent.promoteTo('q'),
     promoteRook: () => agent.promoteTo('r'),
     promoteBishop: () => agent.promoteTo('b'),
