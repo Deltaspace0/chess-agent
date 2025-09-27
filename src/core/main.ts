@@ -18,10 +18,13 @@ const iconPath = 'images/chess-icon.png';
 
 async function createWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({
+    maximizable: false,
     minWidth: 240,
     minHeight: 240,
     width: 380,
     height: 580,
+    maxWidth: 480,
+    maxHeight: 640,
     icon: iconPath,
     useContentSize: true,
     webPreferences: {
@@ -95,7 +98,6 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
     parent,
     modal: true,
     minimizable: false,
-    maximizable: false,
     resizable: false,
     width: 280,
     height: 240,

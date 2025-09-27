@@ -175,7 +175,6 @@ function App() {
           />
         </div>) : chessboardComponent}
         <p className='status'>{statusText}</p>
-        {panels[panelType]}
         <div className='flex-row'>
           <ActionButton name='showRegion'/>
           <ActionButton name='showEngine'/>
@@ -184,6 +183,7 @@ function App() {
             : <button onClick={() => setPanelType('edit')}>Edit board</button>}
           <ActionButton name='showSettings'/>
         </div>
+        {panels[panelType]}
       </div>
     </div>
   </ChessboardProvider>);
