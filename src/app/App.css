@@ -185,7 +185,7 @@ p {
   font-size: 11px;
   margin: 6px;
   height: calc(100vh - 148px);
-  overflow: scroll;
+  overflow: auto;
   display: flex;
   flex-direction: column-reverse;
   white-space: pre;
@@ -237,7 +237,7 @@ p {
 
 .action-field {
   height: calc(100vh - 40px);
-  overflow-y: scroll;
+  overflow: auto;
   margin: 0 auto;
 }
 
