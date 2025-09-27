@@ -15,7 +15,6 @@ class Agent {
   private recognizer: Recognizer;
   private autoResponse: boolean = preferenceConfig.autoResponse.defaultValue;
   private autoScan: boolean = preferenceConfig.autoScan.defaultValue;
-  private autoQueen: boolean = preferenceConfig.autoQueen.defaultValue;
   private promotionMove: string = '';
   private stopBestMove: (() => void) | null = null;
   private bestMoveCallback: (value: string) => void = () => {};
@@ -46,8 +45,6 @@ class Agent {
       }
       if (this.promotionMove.length === 5) {
         move = this.promotionMove;
-      } else if (this.autoQueen) {
-        move += 'q';
       } else {
         this.promotionMove = move;
         this.promotionCallback();
@@ -185,11 +182,6 @@ class Agent {
   setAutoScan(value: boolean) {
     this.autoScan = value;
     this.statusCallback(`Auto scan is ${value ? 'enabled' : 'disabled'}`);
-  }
-
-  setAutoQueen(value: boolean) {
-    this.autoQueen = value;
-    this.statusCallback(`Auto queen is ${value ? 'enabled' : 'disabled'}`);
   }
 
   resetPosition() {

@@ -240,7 +240,13 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
       updateStatus('Select region first to play moves');
     }
   });
-  agent.onPromotion(() => sendToApp('promotion'));
+  agent.onPromotion(() => {
+    if (preferenceManager.getPreference('autoQueen')) {
+      agent.promoteTo('q');
+    } else {
+      sendToApp('promotion');
+    }
+  });
   const actionCallbacks: Record<Action, () => void> = {
     showRegion: () => {
       regionWin.show();
@@ -346,7 +352,6 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
     },
     autoResponse: (value) => agent.setAutoResponse(value),
     autoScan: (value) => agent.setAutoScan(value),
-    autoQueen: (value) => agent.setAutoQueen(value),
     perspective: (value) => {
       board.setPerspective(value);
       game.setPerspective(value);
