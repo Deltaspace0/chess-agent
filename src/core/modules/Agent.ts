@@ -15,7 +15,6 @@ class Agent {
   private promotionMove: string = '';
   private stopBestMove: (() => void) | null = null;
   private afterMoveCallback: (value: string) => void = () => {};
-  private bestMoveCallback: (value: string) => void = () => {};
   private promotionCallback: () => void = () => {};
   private statusCallback: (status: string) => void = console.log;
 
@@ -69,13 +68,13 @@ class Agent {
     return true;
   }
 
-  async playBestMove() {
+  async findBestMove(): Promise<string | null> {
     if (this.stopBestMove) {
       this.stopBestMove();
-      return;
+      return null;
     }
     if (this.game.isGameOver()) {
-      return;
+      return null;
     }
     let move = this.engine.getBestMove();
     if (move === null) {
@@ -88,14 +87,14 @@ class Agent {
     this.stopBestMove = null;
     if (move === null) {
       this.statusCallback('Canceled best move');
-      return;
+      return null;
     }
     const ponderMove = this.engine.getPonderMove();
     this.statusCallback(`Best move: ${move}, ponder: ${ponderMove}`);
     if (move !== null) {
       this.promotionMove = move;
-      this.bestMoveCallback(move);
     }
+    return move;
   }
 
   async scanMove(): Promise<string | null> {
@@ -216,10 +215,6 @@ class Agent {
 
   onMove(callback: (value: string) => void) {
     this.afterMoveCallback = callback;
-  }
-
-  onBestMove(callback: (value: string) => void) {
-    this.bestMoveCallback = callback;
   }
 
   onPromotion(callback: () => void) {
