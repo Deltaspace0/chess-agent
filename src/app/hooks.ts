@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import type { CheckboxProps } from './components/Checkbox.tsx';
+import type { SliderProps } from './components/Slider.tsx';
 import { defaultVariables, preferenceConfig, preferenceNames } from '../config.ts';
 
 interface PreferenceHook<T> {
@@ -7,25 +9,11 @@ interface PreferenceHook<T> {
 }
 
 interface BooleanPreferenceHook extends PreferenceHook<boolean> {
-  checkboxProps: {
-    label: string;
-    title?: string;
-    checked: boolean;
-    onChange: (x: boolean) => void;
-  };
+  checkboxProps: CheckboxProps;
 }
 
 interface NumberPreferenceHook extends PreferenceHook<number> {
-  sliderProps: {
-    label: string;
-    title?: string;
-    value: number;
-    setValue: (x: number) => void;
-    min: number;
-    max: number;
-    step: number;
-    map: (x: number) => number;
-  };
+  sliderProps: SliderProps;
 }
 
 type PreferenceHooks = {
@@ -40,24 +28,20 @@ export function usePreferences(): PreferenceHooks {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [value, send] = usePreference(name);
     if (preferenceConfig[name].type === 'boolean') {
-      const checkboxProps = {
+      const checkboxProps: CheckboxProps = {
         label: preferenceConfig[name].label,
         title: preferenceConfig[name].description,
-        checked: value,
+        checked: value as boolean,
         onChange: send
       };
       preferences[name] = { value, send, checkboxProps };
     } else if (preferenceConfig[name].type === 'number') {
-      const list = preferenceConfig[name].sliderValues ?? [];
-      const sliderProps = {
+      const sliderProps: SliderProps = {
         label: preferenceConfig[name].label,
         title: preferenceConfig[name].description,
-        value: list.indexOf(value as number),
-        setValue: send,
-        min: 0,
-        max: list.length-1,
-        step: 1,
-        map: (x: number) => list[x]
+        list: preferenceConfig[name].sliderValues ?? [],
+        value: value as number,
+        setValue: send
       };
       preferences[name] = { value, send, sliderProps };
     } else {
