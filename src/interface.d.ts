@@ -37,14 +37,12 @@ declare global {
     actionLocations: ActionLocations;
     showEvalBar: boolean;
     showArrows: boolean;
-    showLines: boolean;
     showNotation: boolean;
     analysisDuration: number;
     multiPV: number;
     engineThreads: number;
     mouseSpeed: number;
     region: Region | null;
-    saveConfigToFile: boolean;
     enginePath: string | null;
   }
 

@@ -121,8 +121,7 @@ function App() {
           Depth: {engineInfo.depth}, time: {engineInfo.time} ms,
           nodes: {engineInfo.nodes}
         </p>
-        {prefs.showLines.value &&
-          principalVariations.map((x) => <p className='text'>{x}</p>)}
+        {principalVariations.map((x) => <p className='text'>{x}</p>)}
       </fieldset>
     </>,
     promotion: <fieldset>

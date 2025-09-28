@@ -22,13 +22,11 @@ function App() {
           <Checkbox {...prefs.autoScan.checkboxProps}/>
           <Checkbox {...prefs.autoQueen.checkboxProps}/>
           <Checkbox {...prefs.draggingMode.checkboxProps}/>
-          <Checkbox {...prefs.saveConfigToFile.checkboxProps}/>
         </div>
         <div className='flex-column'>
           <Checkbox {...prefs.alwaysOnTop.checkboxProps}/>
           <Checkbox {...prefs.showEvalBar.checkboxProps}/>
           <Checkbox {...prefs.showArrows.checkboxProps}/>
-          <Checkbox {...prefs.showLines.checkboxProps}/>
           <Checkbox {...prefs.showNotation.checkboxProps}/>
         </div>
       </div>

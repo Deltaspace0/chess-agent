@@ -11,7 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
-config.json
+*.json
 *.exe
 
 # Editor directories and files

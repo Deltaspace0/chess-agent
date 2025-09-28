@@ -100,7 +100,7 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
     minimizable: false,
     resizable: false,
     width: 280,
-    height: 260,
+    height: 240,
     show: false,
     icon: iconPath,
     useContentSize: true,
@@ -116,14 +116,10 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
   Menu.setApplicationMenu(null);
   const mouse = new PhysicalMouse();
   const preferenceManager = new PreferenceManager();
-  preferenceManager.loadFromFile('config.json');
   await app.whenReady();
   const win = await createWindow();
   let appRunning = true;
   win.addListener('close', () => {
-    if (preferenceManager.getPreference('saveConfigToFile')) {
-      preferenceManager.saveToFile('config.json');
-    }
     appRunning = false;
     app.quit();
   });

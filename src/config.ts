@@ -85,12 +85,6 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     defaultValue: true,
     type: 'boolean'
   },
-  showLines: {
-    label: 'Show lines',
-    description: 'Show best engine lines (principal variations)',
-    defaultValue: true,
-    type: 'boolean'
-  },
   showNotation: {
     label: 'Show notation',
     description: 'Show coordinates (1-8 and a-h) on the board',
@@ -121,7 +115,7 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
   mouseSpeed: {
     label: 'Mouse speed',
     description: 'How fast the mouse should move when playing a move',
-    defaultValue: 3000,
+    defaultValue: 10000,
     type: 'number',
     sliderValues: [500, 1000, 2000, 10000, 50000]
   },
@@ -130,12 +124,6 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     description: 'Region on the screen where the game board is located',
     defaultValue: null,
     type: 'other'
-  },
-  saveConfigToFile: {
-    label: 'Save config',
-    description: 'Save current settings to config.json on exit',
-    defaultValue: true,
-    type: 'boolean'
   },
   enginePath: {
     label: 'Engine path',
