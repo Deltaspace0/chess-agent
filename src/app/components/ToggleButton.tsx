@@ -1,4 +1,4 @@
-interface ToggleButtonProps {
+export interface ToggleButtonProps {
   label: string;
   title?: string;
   checked: boolean;

@@ -1,4 +1,4 @@
-interface GaugeProps {
+export interface GaugeProps {
   perspective: boolean;
   evaluation?: string;
 }

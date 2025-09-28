@@ -1,4 +1,4 @@
-interface RadioProps {
+export interface RadioProps {
   label: string;
   name: string;
   value?: string;
@@ -6,17 +6,17 @@ interface RadioProps {
   onChange: (value: string) => void;
 }
 
-function Radio({ label, name, value, checked, onChange }: RadioProps) {
+function Radio(props: RadioProps) {
   return (
     <label>
       <input
         type='radio'
-        name={name}
-        value={value}
-        checked={checked}
-        onChange={(e) => onChange(e.target.value)}
+        name={props.name}
+        value={props.value}
+        checked={props.checked}
+        onChange={(e) => props.onChange(e.target.value)}
       />
-      <p>{label}</p>
+      <p>{props.label}</p>
     </label>
   );
 }
