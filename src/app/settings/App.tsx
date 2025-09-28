@@ -11,6 +11,7 @@ function App() {
       <div className='flex-row'>
         <ActionButton name='loadConfig'/>
         <ActionButton name='saveConfig'/>
+        <ActionButton name='resetConfig'/>
       </div>
       <Slider {...prefs.analysisDuration.sliderProps}/>
       <Slider {...prefs.multiPV.sliderProps}/>

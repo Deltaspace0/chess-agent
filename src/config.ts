@@ -166,6 +166,7 @@ export const actionLabels: Record<Action, string> = {
   showSettings: 'Settings',
   loadConfig: 'Load config',
   saveConfig: 'Save config',
+  resetConfig: 'Reset config',
   promoteQueen: 'Queen',
   promoteRook: 'Rook',
   promoteBishop: 'Bishop',

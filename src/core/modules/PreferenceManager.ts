@@ -64,6 +64,12 @@ class PreferenceManager {
       console.log(e);
     }
   }
+
+  reset() {
+    for (const name of preferenceNames) {
+      this.setPreference(name, preferenceConfig[name].defaultValue);
+    }
+  }
 }
 
 export default PreferenceManager;

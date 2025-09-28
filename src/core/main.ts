@@ -309,6 +309,7 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
         preferenceManager.saveToFile(result.filePath);
       }
     },
+    resetConfig: () => preferenceManager.reset(),
     promoteQueen: () => agent.promoteTo('q'),
     promoteRook: () => agent.promoteTo('r'),
     promoteBishop: () => agent.promoteTo('b'),
