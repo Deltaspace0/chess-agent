@@ -125,6 +125,7 @@ declare global {
     | 'showEngine'
     | 'showSettings'
     | 'loadConfig'
+    | 'saveConfig'
     | 'promoteQueen'
     | 'promoteRook'
     | 'promoteBishop'

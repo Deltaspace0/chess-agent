@@ -304,6 +304,15 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
         preferenceManager.loadFromFile(result.filePaths[0]);
       }
     },
+    saveConfig: async () => {
+      const result = await dialog.showSaveDialog(settingsWin, {
+        properties: ['createDirectory'],
+        filters: [{ name: 'Configuration file', extensions: ['json'] }]
+      });
+      if (result.filePath) {
+        preferenceManager.saveToFile(result.filePath);
+      }
+    },
     promoteQueen: () => agent.promoteTo('q'),
     promoteRook: () => agent.promoteTo('r'),
     promoteBishop: () => agent.promoteTo('b'),

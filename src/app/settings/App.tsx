@@ -10,6 +10,7 @@ function App() {
     <div className='flex-column'>
       <div className='flex-row'>
         <ActionButton name='loadConfig'/>
+        <ActionButton name='saveConfig'/>
       </div>
       <Slider {...prefs.analysisDuration.sliderProps}/>
       <Slider {...prefs.multiPV.sliderProps}/>
