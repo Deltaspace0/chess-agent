@@ -12,17 +12,10 @@ function RegionSelection(props: RegionSelectionProps) {
   useEffect(() => {
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        let newWidth = entry.contentRect.width;
-        let newHeight = entry.contentRect.height;
-        setRegion(({ left, top, width, height }) => {
-          if (isSquare) {
-            if (Math.abs(width-newWidth) > Math.abs(height-newHeight)) {
-              newHeight = newWidth;
-            } else {
-              newWidth = newHeight;
-            }
-          }
-          return { left, top, width: newWidth, height: newHeight };
+        const width = entry.contentRect.width;
+        const height = isSquare ? width : entry.contentRect.height;
+        setRegion(({ left, top }) => {
+          return { left, top, width, height };
         });
       }
     });
