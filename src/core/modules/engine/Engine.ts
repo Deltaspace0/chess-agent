@@ -18,6 +18,9 @@ function getNumberValue(words: string[], name: string): number {
 
 class Engine {
   private process: EngineProcess | null = null;
+  private loadingProcess: EngineProcess | null = null;
+  private processLock: Promise<void> = Promise.resolve();
+  private optionLocks: Partial<Record<keyof EngineOptions, Promise<void>>> = {};
   private moves: string[] = [];
   private whiteFirst: boolean = true;
   private fen: string | null = null;
@@ -31,16 +34,24 @@ class Engine {
   };
   private principalMoves: string[] = [];
   private sendingEngineInfo: boolean = false;
-  private sendingOptions: Partial<Record<keyof EngineOptions, boolean>> = {};
   private processListener: (data: string) => void = this.processData.bind(this);
   private principalMovesCallback: (value: string[]) => void = () => {};
   private bestMoveCallback: (value: string) => void = () => {};
   private engineInfoCallback: (value: EngineInfo) => void = () => {};
 
-  private sendToProcess(data: string) {
-    if (this.process) {
-      this.process.send(data);
-    }
+  private async sendToProcess(data: string | string[]) {
+    await this.processLock;
+    this.processLock = new Promise((resolve) => {
+      if (typeof data === 'string') {
+        this.process?.send(data);
+      } else {
+        for (const line of data) {
+          this.process?.send(line);
+        }
+      }
+      resolve();
+    });
+    return this.processLock;
   }
 
   private processData(data: string) {
@@ -122,27 +133,51 @@ class Engine {
   private analyzePosition() {
     this.resetAnalysis();
     const pos = this.fen === null ? 'startpos' : `fen ${this.fen}`;
-    this.sendToProcess(`position ${pos} moves ${this.moves.join(' ')}`);
-    this.sendToProcess(`go movetime ${this.options.duration}`);
+    this.sendToProcess([
+      `position ${pos} moves ${this.moves.join(' ')}`,
+      `go movetime ${this.options.duration}`
+    ]);
   }
 
-  private sendOptionToProcess(name: keyof EngineOptions) {
-    this.sendToProcess('stop');
-    const value = this.options[name];
-    this.sendToProcess(`setoption name ${optionNames[name]} value ${value}`);
+  private async sendOption(option: keyof EngineOptions) {
+    if (this.optionLocks[option]) {
+      await this.optionLocks[option];
+      return;
+    }
+    this.optionLocks[option] = new Promise((resolve) => {
+      setTimeout(async () => {
+        const name = optionNames[option];
+        const value = this.options[option];
+        await this.sendToProcess([
+          'stop',
+          `setoption name ${name} value ${value}`
+        ]);
+        delete this.optionLocks[option];
+        resolve();
+      }, 200);
+    });
+    return this.optionLocks[option];
   }
 
   async setProcess(process: EngineProcess) {
+    if (this.loadingProcess === process) {
+      return;
+    }
+    this.loadingProcess = process;
     this.engineInfo = {};
     this.process?.removeListener('stdout', this.processListener);
     process.addListener('stdout', this.processListener);
     const uciSupported = await process.expect('uciok', 2000, 'uci');
-    if (uciSupported) {
+    if (uciSupported && process === this.loadingProcess) {
       this.process = process;
-      this.sendOptionToProcess('multiPV');
-      this.sendOptionToProcess('threads');
+      const promises = [];
+      for (const option in optionNames) {
+        promises.push(this.sendOption(option as keyof EngineOptions));
+      }
+      await Promise.all(promises);
       this.analyzePosition();
     }
+    this.loadingProcess = null;
   }
 
   getBestMove(): string | null {
@@ -157,20 +192,16 @@ class Engine {
     return this.moves.join(' ');
   }
 
-  setOption<T extends keyof EngineOptions>(name: T, value: EngineOptions[T]) {
-    this.options[name] = value;
-    if (!(name in optionNames)) {
-      return;
+  async setOption<T extends keyof EngineOptions>(
+    option: T,
+    value: EngineOptions[T]
+  ) {
+    this.options[option] = value;
+    if (option in optionNames) {
+      await this.sendOption(option);
     }
-    if (!this.sendingOptions[name]) {
-      this.sendingOptions[name] = true;
-      setTimeout(() => {
-        this.sendOptionToProcess(name);
-        if (name === 'multiPV') {
-          this.analyzePosition();
-        }
-        this.sendingOptions[name] = false;
-      }, 200);
+    if (option === 'multiPV') {
+      this.analyzePosition();
     }
   }
 
