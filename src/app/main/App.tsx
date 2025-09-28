@@ -68,6 +68,18 @@ function App() {
     };
   }, [electron]);
   const chessboardOptions: ChessboardOptions = {
+    lightSquareStyle: {
+      background: '#718fc6'
+    },
+    darkSquareStyle: {
+      background: '#2f4672'
+    },
+    lightSquareNotationStyle: {
+      color: '#26395c'
+    },
+    darkSquareNotationStyle: {
+      color: '#87a6de'
+    },
     showNotation: prefs.showNotation.value,
     arrows: prefs.showArrows.value
       ? (prefs.perspective.value ? arrows1 : arrows2) : [],
@@ -138,7 +150,7 @@ function App() {
     </fieldset>,
     edit: <EditPanel positionFEN={positionFEN}/>
   };
-  const whiteSparePieces = <div className='flex-row' style={{width: '60%'}}>
+  const whiteSparePieces = <div className='spare-pieces-div'>
     <SparePiece pieceType='wP'/>
     <SparePiece pieceType='wR'/>
     <SparePiece pieceType='wN'/>
@@ -146,7 +158,7 @@ function App() {
     <SparePiece pieceType='wQ'/>
     <SparePiece pieceType='wK'/>
   </div>;
-  const blackSparePieces = <div className='flex-row' style={{width: '60%'}}>
+  const blackSparePieces = <div className='spare-pieces-div'>
     <SparePiece pieceType='bP'/>
     <SparePiece pieceType='bR'/>
     <SparePiece pieceType='bN'/>

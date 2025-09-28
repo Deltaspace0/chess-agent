@@ -10,7 +10,7 @@ function ToggleButton(props: ToggleButtonProps) {
     <button
       title={props.title}
       onClick={() => props.onChange(!props.checked)}
-      style={props.checked ? {backgroundColor: 'blue'} : {}}>
+      style={props.checked ? {background: '#0f52ceff'} : {}}>
         {props.label}
     </button>
   );
