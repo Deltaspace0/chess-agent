@@ -31,6 +31,7 @@ function EditPanel({ positionFEN }: EditProps) {
       <p style={{margin: '4px 0'}}>White:</p>
       <Checkbox
         label='O-O'
+        title='White can castle kingside'
         checked={positionInfo.whiteCastlingRights.k}
         onChange={(value) => {
           const newPositionInfo = structuredClone(positionInfo);
@@ -40,6 +41,7 @@ function EditPanel({ positionFEN }: EditProps) {
       />
       <Checkbox
         label='O-O-O'
+        title='White can castle queenside'
         checked={positionInfo.whiteCastlingRights.q}
         onChange={(value) => {
           const newPositionInfo = structuredClone(positionInfo);
@@ -52,6 +54,7 @@ function EditPanel({ positionFEN }: EditProps) {
       <p style={{margin: '4px 0'}}>Black:</p>
       <Checkbox
         label='O-O'
+        title='Black can castle kingside'
         checked={positionInfo.blackCastlingRights.k}
         onChange={(value) => {
           const newPositionInfo = structuredClone(positionInfo);
@@ -61,6 +64,7 @@ function EditPanel({ positionFEN }: EditProps) {
       />
       <Checkbox
         label='O-O-O'
+        title='Black can castle queenside'
         checked={positionInfo.blackCastlingRights.q}
         onChange={(value) => {
           const newPositionInfo = structuredClone(positionInfo);
