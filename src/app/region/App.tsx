@@ -2,6 +2,7 @@ import '../App.css';
 import { useEffect, useMemo, useState, type JSX } from 'react';
 import ActionButton from '../components/ActionButton.tsx';
 import ToggleButton from '../components/ToggleButton.tsx';
+import ToggleButtonPref from '../components/ToggleButtonPref.tsx';
 import RegionSelection from './RegionSelection.tsx';
 import { usePreferences } from '../hooks.ts';
 import { actionDescriptions, possibleLocations } from '../../config.ts';
@@ -68,7 +69,7 @@ function App() {
         checked={squareAspect}
         onChange={setSquareAspect}
       />
-      <ToggleButton {...prefs.actionRegion.checkboxProps}/>
+      <ToggleButtonPref name='actionRegion'/>
       <ActionButton name='hideRegion'/>
     </div>
     {prefRegion && <div className='region-highlight' style={prefRegion}/>}
