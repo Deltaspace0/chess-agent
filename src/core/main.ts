@@ -9,7 +9,7 @@ import EngineInternal from './modules/engine/EngineInternal.ts';
 import Game from './modules/Game.ts';
 import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
-import { PhysicalMouse } from './modules/Mouse.ts';
+import { ConcreteMouse } from './modules/Mouse.ts';
 import { defaultVariables, possibleLocations } from '../config.ts';
 import { selectRegion } from '../util.ts';
 
@@ -114,7 +114,7 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
 
 (async () => {
   Menu.setApplicationMenu(null);
-  const mouse = new PhysicalMouse();
+  const mouse = new ConcreteMouse();
   const preferenceManager = new PreferenceManager();
   await app.whenReady();
   const win = await createWindow();

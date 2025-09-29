@@ -46,7 +46,7 @@ export abstract class Mouse {
   }
 }
 
-export class PhysicalMouse extends Mouse {
+export class ConcreteMouse extends Mouse {
   constructor() {
     super();
     mouseEvents.on('mousedown', () => this.notifyListeners('mousedown'));
