@@ -1,11 +1,9 @@
 import '../App.css';
 import ActionButton from '../components/ActionButton.tsx';
 import CheckboxPref from '../components/CheckboxPref.tsx';
-import Slider from '../components/Slider.tsx';
-import { usePreferences } from '../hooks.ts';
+import SliderPref from '../components/SliderPref.tsx';
 
 function App() {
-  const prefs = usePreferences();
   return (<div className='App'>
     <div className='flex-column'>
       <div className='flex-row'>
@@ -13,10 +11,10 @@ function App() {
         <ActionButton name='saveConfig'/>
         <ActionButton name='resetConfig'/>
       </div>
-      <Slider {...prefs.analysisDuration.sliderProps}/>
-      <Slider {...prefs.multiPV.sliderProps}/>
-      <Slider {...prefs.engineThreads.sliderProps}/>
-      <Slider {...prefs.mouseSpeed.sliderProps}/>
+      <SliderPref name='analysisDuration'/>
+      <SliderPref name='multiPV'/>
+      <SliderPref name='engineThreads'/>
+      <SliderPref name='mouseSpeed'/>
       <div className='flex-row'>
         <div className='flex-column'>
           <CheckboxPref name='autoResponse'/>
