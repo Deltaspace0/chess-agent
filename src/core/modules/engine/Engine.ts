@@ -200,7 +200,7 @@ class Engine {
     if (option in optionNames) {
       await this.sendOption(option);
     }
-    if (option === 'multiPV') {
+    if (option !== 'threads') {
       this.analyzePosition();
     }
   }
