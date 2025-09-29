@@ -1,11 +1,10 @@
 import '../App.css';
 import Radio from '../components/Radio.tsx';
-import { usePreferences, useVariable } from '../hooks.ts';
+import { usePreference, useVariable } from '../hooks.ts';
 import { actionDescriptions } from '../../config.ts';
 
 function App() {
-  const prefs = usePreferences();
-  const actionLocations = prefs.actionLocations.value;
+  const [actionLocations, sendLocations] = usePreference('actionLocations');
   const location = useVariable('editedActionLocation');
   const choiceComponents = [<Radio
     label='None'
@@ -14,7 +13,7 @@ function App() {
     onChange={() => {
       const newActionLocations = {...actionLocations};
       delete newActionLocations[location];
-      prefs.actionLocations.send(newActionLocations);
+      sendLocations(newActionLocations);
     }}
   />];
   for (const [action, description] of Object.entries(actionDescriptions)) {
@@ -26,7 +25,7 @@ function App() {
       onChange={() => {
         const newActionLocations = {...actionLocations};
         newActionLocations[location] = action as Action;
-        prefs.actionLocations.send(newActionLocations);
+        sendLocations(newActionLocations);
       }}
     />);
   }

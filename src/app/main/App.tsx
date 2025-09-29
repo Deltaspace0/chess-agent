@@ -5,6 +5,7 @@ import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import ActionButton from '../components/ActionButton.tsx';
 import Gauge from '../components/Gauge.tsx';
 import EditPanel from './EditPanel.tsx';
+import { preferenceConfig } from '../../config.ts';
 import { usePreferences, useVariable } from '../hooks.ts';
 
 type Panel = 'main' | 'promotion' | 'edit';
@@ -113,7 +114,7 @@ function App() {
           <ActionButton name='scanMove' disabled={isNoRegion}/>
           <ActionButton name='resetPosition'/>
           <button
-            title={prefs.perspective.checkboxProps.title}
+            title={preferenceConfig['perspective'].description}
             onClick={() => prefs.perspective.send(!prefs.perspective.value)}>
               {prefs.perspective.value ? 'White' : 'Black'} (flip)
           </button>

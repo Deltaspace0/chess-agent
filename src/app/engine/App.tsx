@@ -1,14 +1,14 @@
 import '../App.css';
 import { type JSX, useEffect, useRef, useState } from 'react';
 import ActionButton from '../components/ActionButton.tsx';
-import { usePreferences, useVariable } from '../hooks.ts';
+import { usePreference, useVariable } from '../hooks.ts';
 
 function App() {
   const electron = window.electronAPI;
-  const prefs = usePreferences();
+  const [enginePath, sendEnginePath] = usePreference('enginePath');
   const engineInfo = useVariable('engineInfo');
-  const engineType = prefs.enginePath.value ? 'external' : 'internal';
-  const isInternalEngine = prefs.enginePath.value === null;
+  const engineType = enginePath ? 'external' : 'internal';
+  const isInternalEngine = enginePath === null;
   const [engineInput, setEngineInput] = useState('');
   const [internalLines, setInternalLines] = useState<JSX.Element[]>([]);
   const [externalLines, setExternalLines] = useState<JSX.Element[]>([]);
@@ -48,14 +48,14 @@ function App() {
         <ActionButton name='dialogEngine'/>
         <ActionButton name='reloadEngine' disabled={isInternalEngine}/>
         <button
-          onClick={() => prefs.enginePath.send(null)}
+          onClick={() => sendEnginePath(null)}
           disabled={isInternalEngine}>
             Disable
         </button>
       </div>
       <input
         type='text'
-        value={prefs.enginePath.value ?? '(Internal engine)'}
+        value={enginePath ?? '(Internal engine)'}
         readOnly={true}
       />
       <p className='text'>Name: {engineInfo.name}</p>
