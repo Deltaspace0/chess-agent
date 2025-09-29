@@ -26,6 +26,52 @@ function compareHashes(hash1: string, hash2: string): number {
   return residual;
 }
 
+function getHash(squareGrid: Buffer[]): string {
+  const backPixels = [
+    squareGrid[0],
+    squareGrid[squareGrid.length-1],
+    squareGrid[0].subarray(squareGrid[0].length-4),
+    squareGrid[squareGrid.length-1].subarray(squareGrid[0].length-4)
+  ];
+  const squareWidth = Math.floor(squareGrid[0].byteLength/4);
+  const squareHeight = squareGrid.length;
+  let hash = '';
+  let startRow = 0;
+  for (let i = 0; i < 8; i++) {
+    const height = Math.floor((squareHeight-startRow)/(8-i));
+    let startCol = 0;
+    for (let j = 0; j < 8; j++) {
+      const width = Math.floor((squareWidth-startCol)/(8-j));
+      const bgr = [0, 0, 0];
+      for (let k = startRow; k < startRow+height; k++) {
+        for (let l = startCol; l < startCol+width; l++) {
+          let backResiduals = Infinity;
+          for (const backPixel of backPixels) {
+            let backResidual = 0;
+            for (let m = 0; m < 3; m++) {
+              backResidual += Math.abs(squareGrid[k][l*4+m]-backPixel[m]);
+            }
+            backResiduals = Math.min(backResiduals, backResidual);
+          }
+          if (backResiduals < 20) {
+            continue;
+          }
+          for (let m = 0; m < 3; m++) {
+            bgr[m] += squareGrid[k][l*4+m];
+          }
+        }
+      }
+      for (let k = 0; k < 3; k++) {
+        bgr[k] /= width*height;
+        hash += Math.floor(bgr[k]*9/255);
+      }
+      startCol += width;
+    }
+    startRow += height;
+  }
+  return hash;
+}
+
 function getChangedSquares(
   oldHashes: string[][],
   newHashes: string[][]
@@ -78,59 +124,13 @@ class Recognizer {
     return grid;
   }
 
-  private getHash(squareGrid: Buffer[]): string {
-    const backPixels = [
-      squareGrid[0],
-      squareGrid[squareGrid.length-1],
-      squareGrid[0].subarray(squareGrid[0].length-4),
-      squareGrid[squareGrid.length-1].subarray(squareGrid[0].length-4)
-    ];
-    const squareWidth = Math.floor(squareGrid[0].byteLength/4);
-    const squareHeight = squareGrid.length;
-    let hash = '';
-    let startRow = 0;
-    for (let i = 0; i < 8; i++) {
-      const height = Math.floor((squareHeight-startRow)/(8-i));
-      let startCol = 0;
-      for (let j = 0; j < 8; j++) {
-        const width = Math.floor((squareWidth-startCol)/(8-j));
-        const bgr = [0, 0, 0];
-        for (let k = startRow; k < startRow+height; k++) {
-          for (let l = startCol; l < startCol+width; l++) {
-            let backResiduals = Infinity;
-            for (const backPixel of backPixels) {
-              let backResidual = 0;
-              for (let m = 0; m < 3; m++) {
-                backResidual += Math.abs(squareGrid[k][l*4+m]-backPixel[m]);
-              }
-              backResiduals = Math.min(backResiduals, backResidual);
-            }
-            if (backResiduals < 20) {
-              continue;
-            }
-            for (let m = 0; m < 3; m++) {
-              bgr[m] += squareGrid[k][l*4+m];
-            }
-          }
-        }
-        for (let k = 0; k < 3; k++) {
-          bgr[k] /= width*height;
-          hash += Math.floor(bgr[k]*9/255);
-        }
-        startCol += width;
-      }
-      startRow += height;
-    }
-    return hash;
-  }
-
   private async getBoardHashes(): Promise<string[][]> {
     const grid = await this.grabBoard();
     const boardHashes: string[][] = [];
     for (let i = 0; i < 8; i++) {
       const rowHashes: string[] = [];
       for (let j = 0; j < 8; j++) {
-        rowHashes.push(this.getHash(grid[i][j]));
+        rowHashes.push(getHash(grid[i][j]));
       }
       boardHashes.push(rowHashes);
     }
@@ -183,7 +183,7 @@ class Recognizer {
     const grid = await this.grabBoard();
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
-        this.pieceHashes[pieces[i][j]] = this.getHash(grid[i][j]);
+        this.pieceHashes[pieces[i][j]] = getHash(grid[i][j]);
       }
     }
   }
@@ -196,7 +196,7 @@ class Recognizer {
     const pieces: [Piece, number, number][] = [];
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
-        const currentHash = this.getHash(grid[i][j]);
+        const currentHash = getHash(grid[i][j]);
         let minResidual = Infinity;
         let likelyPieceString = 'e';
         for (const pieceString in this.pieceHashes) {
