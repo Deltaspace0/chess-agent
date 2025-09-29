@@ -10,6 +10,7 @@ import Game from './modules/Game.ts';
 import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
 import { ConcreteMouse } from './modules/Mouse.ts';
+import { ConcreteScreen } from './modules/Screen.ts';
 import { defaultVariables, possibleLocations } from '../config.ts';
 import { selectRegion } from '../util.ts';
 
@@ -115,6 +116,7 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
 (async () => {
   Menu.setApplicationMenu(null);
   const mouse = new ConcreteMouse();
+  const screen = new ConcreteScreen();
   const preferenceManager = new PreferenceManager();
   await app.whenReady();
   const win = await createWindow();
@@ -228,7 +230,7 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
     sendToApp('update-variable', 'positionFEN', value);
   });
   game.reset();
-  const recognizer = new Recognizer();
+  const recognizer = new Recognizer(screen);
   const agent = new Agent({ engine, game, recognizer });
   const playBestMove = async () => {
     if (preferenceManager.getPreference('region')) {
@@ -390,7 +392,7 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
     mouseSpeed: (value) => mouse.setSpeed(value),
     region: (value) => {
       board.setRegion(value);
-      recognizer.setRegion(value);
+      screen.setRegion(value);
     },
     enginePath: (value) => {
       if (!value) {

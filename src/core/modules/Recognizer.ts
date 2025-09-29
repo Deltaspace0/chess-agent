@@ -1,7 +1,6 @@
-import { screen, sleep, Region as NutRegion } from '@nut-tree-fork/nut-js';
-import type { Image } from '@nut-tree-fork/nut-js';
+import { sleep } from '@nut-tree-fork/nut-js';
 import type { Color, Piece, PieceSymbol } from 'chess.js';
-import { preferenceConfig } from '../../config.ts';
+import { Screen } from './Screen.ts';
 
 interface MoveResidual {
   move: string | null;
@@ -89,25 +88,17 @@ function getChangedSquares(
 }
 
 class Recognizer {
-  private region: Region | null = preferenceConfig.region.defaultValue;
+  private screen: Screen;
   private scanning: boolean = false;
   private pieceHashes: Record<string, string> = {};
 
-  private async grabRegion(): Promise<Image> {
-    if (this.region === null) {
-      throw new Error('No region set');
-    }
-    const { left, top, width, height } = this.region;
-    return screen.grabRegion(new NutRegion(left, top, width, height));
+  constructor(screen: Screen) {
+    this.screen = screen;
   }
 
   private async grabBoard(): Promise<Buffer[][][]> {
-    const image = await this.grabRegion();
-    const bufferRows: Buffer[] = [];
-    for (let i = 0; i < image.data.byteLength; i += image.byteWidth) {
-      bufferRows.push(image.data.subarray(i, i+image.byteWidth));
-    }
-    const squareWidth = image.byteWidth/32;
+    const bufferRows = await this.screen.grabRegion();
+    const squareWidth = bufferRows[0].length/32;
     const squareHeight = bufferRows.length/8;
     const width = Math.floor(squareWidth-10);
     const height = Math.floor(squareHeight-10);
@@ -258,10 +249,6 @@ class Recognizer {
       prevBoardHashes = boardHashes;
     }
     throw new Error('stop');
-  }
-
-  setRegion(region: Region | null) {
-    this.region = region;
   }
 }
 
