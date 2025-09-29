@@ -35,7 +35,7 @@ input[type="checkbox"]:checked::after {
   left: 50%;
   width: 12px;
   height: 2px;
-  background: #00b3ff;
+  background: linear-gradient(45deg, #00b3ff, #00f2ff);
   transform: translate(-50%, -50%);
 }
 
@@ -75,7 +75,7 @@ input[type="radio"]:checked::after {
   left: 50%;
   width: 8px;
   height: 8px;
-  background: #00b3ff;
+  background: linear-gradient(45deg, #00b3ff, #00f2ff);
   border-radius: 50%;
   transform: translate(-50%, -50%);
 }
@@ -103,7 +103,7 @@ input[type="range"]::-webkit-slider-thumb {
   width: 16px;
   height: 12px;
   border-radius: 4px;
-  background: linear-gradient(45deg, #00b3ff, #0048ff);
+  background: linear-gradient(45deg, #00b3ff, #00f2ff);
   cursor: pointer;
   margin-top: 1px;
   transition: all 0.2s ease;
@@ -149,6 +149,7 @@ button {
   &:hover {
     border-radius: 4px;
     color: #0ec3c9;
+    background: #28234e;
   }
   &:active {
     background: #16002e;
@@ -158,6 +159,7 @@ button {
     cursor: not-allowed;
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: rgba(255, 255, 255, 0.3);
+    background: #0f0718;
   }
 }
 
