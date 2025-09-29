@@ -1,6 +1,6 @@
 import '../App.css';
 import ActionButton from '../components/ActionButton.tsx';
-import Checkbox from '../components/Checkbox.tsx';
+import CheckboxPref from '../components/CheckboxPref.tsx';
 import Slider from '../components/Slider.tsx';
 import { usePreferences } from '../hooks.ts';
 
@@ -19,16 +19,16 @@ function App() {
       <Slider {...prefs.mouseSpeed.sliderProps}/>
       <div className='flex-row'>
         <div className='flex-column'>
-          <Checkbox {...prefs.autoResponse.checkboxProps}/>
-          <Checkbox {...prefs.autoScan.checkboxProps}/>
-          <Checkbox {...prefs.autoQueen.checkboxProps}/>
-          <Checkbox {...prefs.draggingMode.checkboxProps}/>
+          <CheckboxPref name='autoResponse'/>
+          <CheckboxPref name='autoScan'/>
+          <CheckboxPref name='autoQueen'/>
+          <CheckboxPref name='draggingMode'/>
         </div>
         <div className='flex-column'>
-          <Checkbox {...prefs.alwaysOnTop.checkboxProps}/>
-          <Checkbox {...prefs.showEvalBar.checkboxProps}/>
-          <Checkbox {...prefs.showArrows.checkboxProps}/>
-          <Checkbox {...prefs.showNotation.checkboxProps}/>
+          <CheckboxPref name='alwaysOnTop'/>
+          <CheckboxPref name='showEvalBar'/>
+          <CheckboxPref name='showArrows'/>
+          <CheckboxPref name='showNotation'/>
         </div>
       </div>
     </div>
