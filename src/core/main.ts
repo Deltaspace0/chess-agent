@@ -10,7 +10,7 @@ import Game from './modules/Game.ts';
 import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
 import { ConcreteMouse } from './modules/Mouse.ts';
-import { ConcreteScreen } from './modules/Screen.ts';
+import { ConcreteScreen, getAdjustedRegion } from './modules/Screen.ts';
 import { defaultVariables, possibleLocations } from '../config.ts';
 import { selectRegion } from '../util.ts';
 
@@ -316,7 +316,7 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
     },
     resetConfig: () => preferenceManager.reset(),
     adjustRegion: async () => {
-      const adjustedRegion = await screen.getAdjustedRegion();
+      const adjustedRegion = await getAdjustedRegion(screen);
       preferenceManager.setPreference('region', adjustedRegion);
     },
     promoteQueen: () => agent.promoteTo('q'),
