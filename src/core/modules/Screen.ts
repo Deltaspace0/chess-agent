@@ -50,11 +50,11 @@ function isBoundary(grid: PixelGrid, row: number): boolean {
       start = null;
     }
   }
-  return boundarySize > (width-20)/2;
+  return boundarySize > (width-40)/2;
 }
 
 function getFirstBoundary(grid: PixelGrid): number | null {
-  for (let i = 20; i >= 0; i--) {
+  for (let i = 40; i >= 0; i--) {
     if (isBoundary(grid, i)) {
       return i;
     }
@@ -64,7 +64,7 @@ function getFirstBoundary(grid: PixelGrid): number | null {
 
 function getLastBoundary(grid: PixelGrid): number | null {
   const height = grid.getHeight();
-  for (let i = height-20; i < height-1; i++) {
+  for (let i = height-40; i < height-1; i++) {
     if (isBoundary(grid, i)) {
       return i;
     }
@@ -79,28 +79,26 @@ export async function getAdjustedRegion(screen: Screen): Promise<Region | null> 
   }
   const screenWidth = await nutScreen.width();
   const screenHeight = await nutScreen.height();
-  const expandedRegion = {
-    left: Math.max(0, region.left-10),
-    top: Math.max(0, region.top-10),
-    width: Math.min(screenWidth-region.left, region.width+20),
-    height: Math.min(screenHeight-region.top, region.height+20)
+  const expRegion = {
+    left: Math.max(0, region.left-20),
+    top: Math.max(0, region.top-20),
+    width: Math.min(screenWidth-region.left, region.width+40),
+    height: Math.min(screenHeight-region.top, region.height+40)
   };
-  const start = performance.now();
-  const grid = await screen.grabRegion(expandedRegion);
-  console.log('Grab time:', performance.now()-start);
+  const grid = await screen.grabRegion(expRegion);
   const top = getFirstBoundary(grid);
   const bottom = getLastBoundary(grid);
   grid.setTransposed(true);
   const left = getFirstBoundary(grid);
   const right = getLastBoundary(grid);
-  if (!top || !bottom || !left || !right) {
-    return region;
-  }
-  console.log('All time:', performance.now()-start);
+  const adjustLeft = left ? left+expRegion.left : region.left;
+  const adjustTop = top ? top+expRegion.top : region.top;
+  const adjustRight = right ? right+expRegion.left : region.left+region.width;
+  const adjustBottom = bottom ? bottom+expRegion.top : region.top+region.height;
   return {
-    left: left+expandedRegion.left,
-    top: top+expandedRegion.top,
-    width: right-left,
-    height: bottom-top
+    left: adjustLeft,
+    top: adjustTop,
+    width: adjustRight-adjustLeft,
+    height: adjustBottom-adjustTop
   };
 }
