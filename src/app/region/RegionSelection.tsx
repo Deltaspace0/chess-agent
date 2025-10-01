@@ -15,7 +15,9 @@ function RegionSelection(props: RegionSelectionProps) {
         const width = entry.contentRect.width;
         const height = isSquare ? width : entry.contentRect.height;
         setRegion(({ left, top }) => {
-          return { left, top, width, height };
+          const newLeft = Math.min(screen.width-width, left);
+          const newTop = Math.min(screen.height-height, top);
+          return { left: newLeft, top: newTop, width, height };
         });
       }
     });
