@@ -295,6 +295,14 @@ p {
   user-select: none;
 }
 
+.Region.hidden > * {
+  opacity: 0;
+}
+
+.Region.hidden > .region-panel {
+  opacity: 1;
+}
+
 .flex-center {
   display: flex;
   align-items: center;

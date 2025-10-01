@@ -40,6 +40,7 @@ function App() {
     if (prefRegion) {
       setRegion(prefRegion);
     }
+    setHideAll(false);
   }, [prefRegion]);
   const handleSetRegion = () => {
     setHideAll(true);
@@ -47,7 +48,6 @@ function App() {
       prefs.region.send(multiplyRegion(region, dpr));
       window.electronAPI.doAction('adjustRegion');
     }, 10);
-    setTimeout(() => setHideAll(false), 20);
   }
   const actionRegionDivs: JSX.Element[] = [];
   for (const location of possibleLocations) {
@@ -62,31 +62,29 @@ function App() {
       className='region-action'
       style={{...selectedRegion, backgroundColor}}></div>);
   }
-  return (<div className='Region'>
-    {!hideAll && <>
-      <div className='region-panel'>
-        <button onClick={handleSetRegion}>Set region</button>
-        <button
-          onClick={() => prefs.region.send(null)}
-          disabled={!prefRegion}>
-            Remove
-        </button>
-        <ToggleButton
-          label='Square'
-          checked={squareAspect}
-          onChange={setSquareAspect}
-        />
-        <ToggleButtonPref name='actionRegion'/>
-        <ActionButton name='hideRegion'/>
-      </div>
-      {prefRegion && <div className='region-highlight' style={prefRegion}/>}
-      {prefs.actionRegion.value && actionRegionDivs}
-      <RegionSelection
-        region={region}
-        setRegion={setRegion}
-        isSquare={squareAspect}
+  return (<div className={hideAll ? 'Region hidden' : 'Region'}>
+    <div className='region-panel'>
+      <button onClick={handleSetRegion}>Set region</button>
+      <button
+        onClick={() => prefs.region.send(null)}
+        disabled={!prefRegion}>
+          Remove
+      </button>
+      <ToggleButton
+        label='Square'
+        checked={squareAspect}
+        onChange={setSquareAspect}
       />
-    </>}
+      <ToggleButtonPref name='actionRegion'/>
+      <ActionButton name='hideRegion'/>
+    </div>
+    {prefRegion && <div className='region-highlight' style={prefRegion}/>}
+    {prefs.actionRegion.value && actionRegionDivs}
+    <RegionSelection
+      region={region}
+      setRegion={setRegion}
+      isSquare={squareAspect}
+    />
   </div>);
 }
 
