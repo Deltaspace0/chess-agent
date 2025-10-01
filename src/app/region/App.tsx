@@ -35,13 +35,19 @@ function App() {
   }, [prefs.region.value, dpr]);
   const [region, setRegion] = useState<Region>(defaultRegion);
   const [squareAspect, setSquareAspect] = useState(true);
+  const [hideAll, setHideAll] = useState(false);
   useEffect(() => {
     if (prefRegion) {
       setRegion(prefRegion);
     }
   }, [prefRegion]);
   const handleSetRegion = () => {
-    prefs.region.send(multiplyRegion(region, dpr));
+    setHideAll(true);
+    setTimeout(() => {
+      prefs.region.send(multiplyRegion(region, dpr));
+      window.electronAPI.doAction('adjustRegion');
+    }, 10);
+    setTimeout(() => setHideAll(false), 20);
   }
   const actionRegionDivs: JSX.Element[] = [];
   for (const location of possibleLocations) {
@@ -57,28 +63,30 @@ function App() {
       style={{...selectedRegion, backgroundColor}}></div>);
   }
   return (<div className='Region'>
-    <div className='region-panel'>
-      <button onClick={handleSetRegion}>Set region</button>
-      <button
-        onClick={() => prefs.region.send(null)}
-        disabled={!prefRegion}>
-          Remove
-      </button>
-      <ToggleButton
-        label='Square'
-        checked={squareAspect}
-        onChange={setSquareAspect}
+    {!hideAll && <>
+      <div className='region-panel'>
+        <button onClick={handleSetRegion}>Set region</button>
+        <button
+          onClick={() => prefs.region.send(null)}
+          disabled={!prefRegion}>
+            Remove
+        </button>
+        <ToggleButton
+          label='Square'
+          checked={squareAspect}
+          onChange={setSquareAspect}
+        />
+        <ToggleButtonPref name='actionRegion'/>
+        <ActionButton name='hideRegion'/>
+      </div>
+      {prefRegion && <div className='region-highlight' style={prefRegion}/>}
+      {prefs.actionRegion.value && actionRegionDivs}
+      <RegionSelection
+        region={region}
+        setRegion={setRegion}
+        isSquare={squareAspect}
       />
-      <ToggleButtonPref name='actionRegion'/>
-      <ActionButton name='hideRegion'/>
-    </div>
-    {prefRegion && <div className='region-highlight' style={prefRegion}/>}
-    {prefs.actionRegion.value && actionRegionDivs}
-    <RegionSelection
-      region={region}
-      setRegion={setRegion}
-      isSquare={squareAspect}
-    />
+    </>}
   </div>);
 }
 

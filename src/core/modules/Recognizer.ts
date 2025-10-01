@@ -1,20 +1,11 @@
 import { sleep } from '@nut-tree-fork/nut-js';
 import type { Color, Piece, PieceSymbol } from 'chess.js';
+import PixelGrid from './PixelGrid.ts';
 import { Screen } from './Screen.ts';
 
 interface MoveResidual {
   move: string | null;
   residual: number;
-}
-
-function getBufferSquare(bufferRows: Buffer[], region: Region): Buffer[] {
-  const bufferSquare: Buffer[] = [];
-  for (let i = region.top; i < region.top+region.height; i++) {
-    const start = region.left*4;
-    const end = (region.left+region.width)*4;
-    bufferSquare.push(bufferRows[i].subarray(start, end));
-  }
-  return bufferSquare;
 }
 
 function compareHashes(hash1: string, hash2: string): number {
@@ -25,15 +16,14 @@ function compareHashes(hash1: string, hash2: string): number {
   return residual;
 }
 
-function getHash(squareGrid: Buffer[]): string {
+function getHash(squareGrid: PixelGrid): string {
+  const [squareWidth, squareHeight] = squareGrid.getDimensions();
   const backPixels = [
-    squareGrid[0],
-    squareGrid[squareGrid.length-1],
-    squareGrid[0].subarray(squareGrid[0].length-4),
-    squareGrid[squareGrid.length-1].subarray(squareGrid[0].length-4)
+    squareGrid.getPixelBuffer(0, 0),
+    squareGrid.getPixelBuffer(0, squareWidth-1),
+    squareGrid.getPixelBuffer(squareHeight-1, 0),
+    squareGrid.getPixelBuffer(squareHeight-1, squareWidth-1)
   ];
-  const squareWidth = Math.floor(squareGrid[0].byteLength/4);
-  const squareHeight = squareGrid.length;
   let hash = '';
   let startRow = 0;
   for (let i = 0; i < 8; i++) {
@@ -44,11 +34,12 @@ function getHash(squareGrid: Buffer[]): string {
       const bgr = [0, 0, 0];
       for (let k = startRow; k < startRow+height; k++) {
         for (let l = startCol; l < startCol+width; l++) {
+          const pixel = squareGrid.getPixelBuffer(k, l);
           let backResiduals = Infinity;
           for (const backPixel of backPixels) {
             let backResidual = 0;
             for (let m = 0; m < 3; m++) {
-              backResidual += Math.abs(squareGrid[k][l*4+m]-backPixel[m]);
+              backResidual += Math.abs(pixel[m]-backPixel[m]);
             }
             backResiduals = Math.min(backResiduals, backResidual);
           }
@@ -56,7 +47,7 @@ function getHash(squareGrid: Buffer[]): string {
             continue;
           }
           for (let m = 0; m < 3; m++) {
-            bgr[m] += squareGrid[k][l*4+m];
+            bgr[m] += pixel[m];
           }
         }
       }
@@ -96,23 +87,23 @@ class Recognizer {
     this.screen = screen;
   }
 
-  private async grabBoard(): Promise<Buffer[][][]> {
-    const bufferRows = await this.screen.grabRegion();
-    const squareWidth = bufferRows[0].length/32;
-    const squareHeight = bufferRows.length/8;
+  private async grabBoard(): Promise<PixelGrid[][]> {
+    const grid = await this.screen.grabRegion();
+    const squareWidth = grid.getWidth()/8;
+    const squareHeight = grid.getHeight()/8;
     const width = Math.floor(squareWidth-10);
     const height = Math.floor(squareHeight-10);
-    const grid: Buffer[][][] = [];
+    const squareGrid: PixelGrid[][] = [];
     for (let i = 0; i < 8; i++) {
       const top = Math.floor(squareHeight*i+5);
-      const row: Buffer[][] = [];
+      const row: PixelGrid[] = [];
       for (let j = 0; j < 8; j++) {
         const left = Math.floor(squareWidth*j+5);
-        row.push(getBufferSquare(bufferRows, { left, top, width, height }));
+        row.push(grid.getSubgrid({ left, top, width, height }));
       }
-      grid.push(row);
+      squareGrid.push(row);
     }
-    return grid;
+    return squareGrid;
   }
 
   private async getBoardHashes(): Promise<string[][]> {

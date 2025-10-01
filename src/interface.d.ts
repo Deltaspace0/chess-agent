@@ -123,6 +123,7 @@ declare global {
     | 'loadConfig'
     | 'saveConfig'
     | 'resetConfig'
+    | 'adjustRegion'
     | 'promoteQueen'
     | 'promoteRook'
     | 'promoteBishop'

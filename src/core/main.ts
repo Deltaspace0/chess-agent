@@ -266,9 +266,12 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
     hideRegion: () => hideRegionWindow(),
     loadHashes: () => {
       const perspective = preferenceManager.getPreference('perspective');
-      recognizer.load(perspective).then(
-        () => updateStatus('Loaded piece hashes'),
-        () => updateStatus('Failed to load piece hashes'));
+      recognizer.load(perspective)
+        .then(() => updateStatus('Loaded piece hashes'))
+        .catch((e) => {
+          updateStatus('Failed to load piece hashes');
+          console.log(e);
+        });
     },
     scanMove: () => void agent.scanMove(),
     skipMove: () => agent.skipMove(),
@@ -312,6 +315,10 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
       }
     },
     resetConfig: () => preferenceManager.reset(),
+    adjustRegion: async () => {
+      const adjustedRegion = await screen.getAdjustedRegion();
+      preferenceManager.setPreference('region', adjustedRegion);
+    },
     promoteQueen: () => agent.promoteTo('q'),
     promoteRook: () => agent.promoteTo('r'),
     promoteBishop: () => agent.promoteTo('b'),

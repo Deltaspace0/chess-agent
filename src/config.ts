@@ -150,6 +150,7 @@ export const actionLabels: Record<Action, string> = {
   loadConfig: 'Load config',
   saveConfig: 'Save config',
   resetConfig: 'Reset config',
+  adjustRegion: 'Adjust region',
   promoteQueen: 'Queen',
   promoteRook: 'Rook',
   promoteBishop: 'Bishop',
