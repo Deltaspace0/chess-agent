@@ -34,7 +34,8 @@ function App() {
     return multiplyRegion(prefs.region.value, 1/dpr);
   }, [prefs.region.value, dpr]);
   const [region, setRegion] = useState<Region>(defaultRegion);
-  const [squareAspect, setSquareAspect] = useState(true);
+  const [squareAspect, setSquareAspect] = useState(false);
+  const [autoAdjust, setAutoAdjust] = useState(true);
   const [hideAll, setHideAll] = useState(false);
   useEffect(() => {
     if (prefRegion) {
@@ -43,12 +44,17 @@ function App() {
     setHideAll(false);
   }, [prefRegion]);
   const handleSetRegion = () => {
-    setHideAll(true);
-    setTimeout(() => {
-      prefs.region.send(multiplyRegion(region, dpr));
-      window.electronAPI.doAction('adjustRegion');
-    }, 10);
-  }
+    const newRegion = multiplyRegion(region, dpr);
+    if (autoAdjust) {
+      setHideAll(true);
+      setTimeout(() => {
+        prefs.region.send(newRegion);
+        window.electronAPI.doAction('adjustRegion');
+      }, 10);
+    } else {
+      prefs.region.send(newRegion);
+    }
+  };
   const actionRegionDivs: JSX.Element[] = [];
   for (const location of possibleLocations) {
     const selectedRegion = selectRegion(region, location);
@@ -74,6 +80,12 @@ function App() {
         label='Square'
         checked={squareAspect}
         onChange={setSquareAspect}
+      />
+      <ToggleButton
+        label='Adjust'
+        title='Automatically adjust selected region'
+        checked={autoAdjust}
+        onChange={setAutoAdjust}
       />
       <ToggleButtonPref name='actionRegion'/>
       <ActionButton name='hideRegion'/>
