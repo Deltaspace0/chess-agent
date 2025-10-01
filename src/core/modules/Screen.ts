@@ -1,13 +1,28 @@
-import { screen, Region as NutRegion } from '@nut-tree-fork/nut-js';
+import {
+  screen as nutScreen,
+  Region as NutRegion
+} from '@nut-tree-fork/nut-js';
 import PixelGrid from './PixelGrid.ts';
 
 export abstract class Screen {
   protected region: Region | null = null;
 
-  abstract grabRegion(): Promise<PixelGrid>;
+  abstract grabRegion(region?: Region): Promise<PixelGrid>;
 
   getRegion(): Region | null {
     return this.region && {...this.region};
+  }
+}
+
+export class ConcreteScreen extends Screen {
+  async grabRegion(region?: Region): Promise<PixelGrid> {
+    if (!this.region && !region) {
+      throw new Error('No region set');
+    }
+    const { left, top, width, height } = region ?? this.region!;
+    const nutRegion = new NutRegion(left, top, width, height);
+    const image = await nutScreen.grabRegion(nutRegion);
+    return new PixelGrid(image.data, image.byteWidth);
   }
 
   setRegion(region: Region | null) {
@@ -15,68 +30,46 @@ export abstract class Screen {
   }
 }
 
-export class ConcreteScreen extends Screen {
-  async grabRegion(): Promise<PixelGrid> {
-    if (this.region === null) {
-      throw new Error('No region set');
-    }
-    const { left, top, width, height } = this.region;
-    const nutRegion = new NutRegion(left, top, width, height);
-    const image = await screen.grabRegion(nutRegion);
-    return new PixelGrid(image.data, image.byteWidth);
-  }
-}
-
-function getBoundaryIndices(grid: PixelGrid): number[] {
-  const boundaryIndices: number[] = [];
-  const [width, height] = grid.getDimensions();
-  for (let i = 0; i < height-1; i++) {
-    let start = null;
-    let boundarySize = 0;
-    for (let j = 0; j < width; j++) {
-      if (Math.abs(grid.getGrayPixel(i, j)-grid.getGrayPixel(i+1, j)) > 20) {
-        if (start === null) {
-          start = j;
-        }
-        if (j < width-1) {
-          continue;
-        }
+function isBoundary(grid: PixelGrid, row: number): boolean {
+  let start = null;
+  let boundarySize = 0;
+  const width = grid.getWidth();
+  for (let j = 0; j < width; j++) {
+    const [b1, g1, r1] = grid.getPixelBuffer(row, j);
+    const [b2, g2, r2] = grid.getPixelBuffer(row+1, j);
+    if ((b1-b2)**2+(g1-g2)**2+(r1-r2)**2 > 20) {
+      if (start === null) {
+        start = j;
       }
-      if (start !== null) {
-        boundarySize = Math.max(boundarySize, j-1-start);
-        start = null;
+      if (j < width-1) {
+        continue;
       }
     }
-    if (boundarySize > width/2) {
-      boundaryIndices.push(i);
+    if (start !== null) {
+      boundarySize = Math.max(boundarySize, j-1-start);
+      start = null;
     }
   }
-  return boundaryIndices;
+  return boundarySize > (width-20)/2;
 }
 
-function getSquareDimension(array: number[]): number {
-  const distCounter: Record<number, number> = {};
-  const distances: number[] = [];
-  let mode = 0;
-  for (let i = 0; i < array.length-1; i++) {
-    const distance = array[i+1]-array[i];
-    if (distance < 5) {
-      continue;
-    }
-    distances.push(distance);
-    if (!(distance in distCounter)) {
-      distCounter[distance] = 0;
-    }
-    const count = ++distCounter[distance];
-    if (!mode || count > distCounter[mode]) {
-      mode = distance;
+function getFirstBoundary(grid: PixelGrid): number | null {
+  for (let i = 20; i >= 0; i--) {
+    if (isBoundary(grid, i)) {
+      return i;
     }
   }
-  const dimensions = distances.filter((x) => Math.abs(x-mode) < 3);
-  if (dimensions.length === 0) {
-    return 0;
+  return null;
+}
+
+function getLastBoundary(grid: PixelGrid): number | null {
+  const height = grid.getHeight();
+  for (let i = height-20; i < height-1; i++) {
+    if (isBoundary(grid, i)) {
+      return i;
+    }
   }
-  return dimensions.reduce((a, b) => a+b)/dimensions.length;
+  return null;
 }
 
 export async function getAdjustedRegion(screen: Screen): Promise<Region | null> {
@@ -84,27 +77,30 @@ export async function getAdjustedRegion(screen: Screen): Promise<Region | null> 
   if (!region) {
     return null;
   }
-  const grid = await screen.grabRegion();
-  grid.calculateGrayPixels();
-  const rowBoundaryIndices = getBoundaryIndices(grid);
-  const squareHeight = getSquareDimension(rowBoundaryIndices);
-  if (squareHeight === 0) {
-    return region;
-  }
+  const screenWidth = await nutScreen.width();
+  const screenHeight = await nutScreen.height();
+  const expandedRegion = {
+    left: Math.max(0, region.left-10),
+    top: Math.max(0, region.top-10),
+    width: Math.min(screenWidth-region.left, region.width+20),
+    height: Math.min(screenHeight-region.top, region.height+20)
+  };
+  const start = performance.now();
+  const grid = await screen.grabRegion(expandedRegion);
+  console.log('Grab time:', performance.now()-start);
+  const top = getFirstBoundary(grid);
+  const bottom = getLastBoundary(grid);
   grid.setTransposed(true);
-  const colBoundaryIndices = getBoundaryIndices(grid);
-  const squareWidth = getSquareDimension(colBoundaryIndices);
-  if (squareWidth === 0) {
+  const left = getFirstBoundary(grid);
+  const right = getLastBoundary(grid);
+  if (!top || !bottom || !left || !right) {
     return region;
   }
-  const firstRow = rowBoundaryIndices[0];
-  const firstCol = colBoundaryIndices[0];
-  const left = firstCol > squareWidth/2 ? firstCol-squareWidth : firstCol;
-  const top = firstRow > squareHeight/2 ? firstRow-squareHeight : firstRow;
+  console.log('All time:', performance.now()-start);
   return {
-    left: left+region.left,
-    top: top+region.top,
-    width: squareWidth*8,
-    height: squareHeight*8
+    left: left+expandedRegion.left,
+    top: top+expandedRegion.top,
+    width: right-left,
+    height: bottom-top
   };
 }
