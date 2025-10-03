@@ -204,8 +204,6 @@ p {
 }
 
 .region-div {
-  min-width: 48px;
-  min-height: 48px;
   position: absolute;
   resize: both;
   overflow: auto;
@@ -219,8 +217,8 @@ p {
   display: flex;
   padding: 4px;
   margin: 0 auto;
-  width: 600px;
-  height: 48px;
+  width: 360px;
+  height: 36px;
   z-index: 32;
 }
 

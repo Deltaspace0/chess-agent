@@ -8,13 +8,6 @@ import { usePreferences } from '../hooks.ts';
 import { actionDescriptions, possibleLocations } from '../../config.ts';
 import { selectRegion } from '../../util.ts';
 
-const defaultRegion = {
-  left: 50,
-  top: 50,
-  width: 240,
-  height: 240
-};
-
 function multiplyRegion(region: Region | null, factor: number): Region | null {
   if (!region) {
     return null;
@@ -30,73 +23,65 @@ function multiplyRegion(region: Region | null, factor: number): Region | null {
 function App() {
   const dpr = window.devicePixelRatio;
   const prefs = usePreferences();
-  const prefRegion = useMemo(() => {
+  const region = useMemo(() => {
     return multiplyRegion(prefs.region.value, 1/dpr);
   }, [prefs.region.value, dpr]);
-  const [region, setRegion] = useState<Region>(defaultRegion);
-  const [squareAspect, setSquareAspect] = useState(false);
   const [autoAdjust, setAutoAdjust] = useState(true);
   const [hideAll, setHideAll] = useState(false);
-  useEffect(() => {
-    if (prefRegion) {
-      setRegion(prefRegion);
-    }
-    setHideAll(false);
-  }, [prefRegion]);
-  const handleSetRegion = () => {
-    const newRegion = multiplyRegion(region, dpr);
+  useEffect(() => setHideAll(false), [region]);
+  const adjustRegion = () => {
+    setHideAll(true);
+    setTimeout(() => window.electronAPI.doAction('adjustRegion'), 10);
+  };
+  const handleRegionChange = (changedRegion: Region) => {
+    const newRegion = multiplyRegion(changedRegion, dpr);
+    prefs.region.send(newRegion);
     if (autoAdjust) {
-      setHideAll(true);
-      setTimeout(() => {
-        prefs.region.send(newRegion);
-        window.electronAPI.doAction('adjustRegion');
-      }, 10);
-    } else {
-      prefs.region.send(newRegion);
+      adjustRegion();
     }
   };
   const actionRegionDivs: JSX.Element[] = [];
-  for (const location of possibleLocations) {
-    const selectedRegion = selectRegion(region, location);
-    const action = prefs.actionLocations.value[location];
-    const backgroundColor = action
-      ? 'rgba(255, 0, 0, 0.8)'
-      : 'rgba(255, 255, 255, 0.8)';
-    actionRegionDivs.push(<div
-      onClick={() => window.electronAPI.editActionLocation(location)}
-      title={action && actionDescriptions[action]}
-      className='region-action'
-      style={{...selectedRegion, backgroundColor}}></div>);
+  if (region) {
+    for (const location of possibleLocations) {
+      const selectedRegion = selectRegion(region, location);
+      const action = prefs.actionLocations.value[location];
+      const backgroundColor = action
+        ? 'rgba(255, 0, 0, 0.8)'
+        : 'rgba(255, 255, 255, 0.8)';
+      actionRegionDivs.push(<div
+        onClick={() => window.electronAPI.editActionLocation(location)}
+        title={action && actionDescriptions[action]}
+        className='region-action'
+        style={{...selectedRegion, backgroundColor}}></div>);
+    }
   }
   return (<div className={hideAll ? 'Region hidden' : 'Region'}>
     <div className='region-panel'>
-      <button onClick={handleSetRegion}>Set region</button>
       <button
         onClick={() => prefs.region.send(null)}
-        disabled={!prefRegion}>
+        disabled={!region}>
           Remove
       </button>
-      <ToggleButton
-        label='Square'
-        checked={squareAspect}
-        onChange={setSquareAspect}
-      />
       <ToggleButton
         label='Adjust'
         title='Automatically adjust selected region'
         checked={autoAdjust}
-        onChange={setAutoAdjust}
+        onChange={(value) => {
+          if (value && region) {
+            adjustRegion();
+          }
+          setAutoAdjust(value);
+        }}
       />
       <ToggleButtonPref name='actionRegion'/>
       <ActionButton name='hideRegion'/>
     </div>
-    {prefRegion && <div className='region-highlight' style={prefRegion}/>}
-    {prefs.actionRegion.value && actionRegionDivs}
+    {region && <div className='region-highlight' style={region}/>}
     <RegionSelection
       region={region}
-      setRegion={setRegion}
-      isSquare={squareAspect}
+      onChange={handleRegionChange}
     />
+    {prefs.actionRegion.value && actionRegionDivs}
   </div>);
 }
 
