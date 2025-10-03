@@ -1,5 +1,5 @@
 import '../App.css';
-import { useEffect, useMemo, useState, type JSX } from 'react';
+import { useMemo, useState, type JSX } from 'react';
 import ActionButton from '../components/ActionButton.tsx';
 import ToggleButton from '../components/ToggleButton.tsx';
 import ToggleButtonPref from '../components/ToggleButtonPref.tsx';
@@ -28,10 +28,10 @@ function App() {
   }, [prefs.region.value, dpr]);
   const [autoAdjust, setAutoAdjust] = useState(true);
   const [hideAll, setHideAll] = useState(false);
-  useEffect(() => setHideAll(false), [region]);
   const adjustRegion = () => {
     setHideAll(true);
     setTimeout(() => window.electronAPI.doAction('adjustRegion'), 10);
+    setTimeout(() => setHideAll(false), 20);
   };
   const handleRegionChange = (changedRegion: Region) => {
     const newRegion = multiplyRegion(changedRegion, dpr);
