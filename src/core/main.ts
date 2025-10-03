@@ -303,6 +303,8 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
       });
       if (result.filePaths.length > 0) {
         preferenceManager.loadFromFile(result.filePaths[0]);
+        updateStatus('Loaded configuration file');
+        settingsWin.hide();
       }
     },
     saveConfig: async () => {
@@ -312,6 +314,8 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
       });
       if (result.filePath) {
         preferenceManager.saveToFile(result.filePath);
+        updateStatus('Saved configuration file');
+        settingsWin.hide();
       }
     },
     resetConfig: () => preferenceManager.reset(),
