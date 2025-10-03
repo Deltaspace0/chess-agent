@@ -91,14 +91,14 @@ class Recognizer {
     const grid = await this.screen.grabRegion();
     const squareWidth = grid.getWidth()/8;
     const squareHeight = grid.getHeight()/8;
-    const width = Math.floor(squareWidth-10);
-    const height = Math.floor(squareHeight-10);
+    const width = Math.floor(squareWidth-4);
+    const height = Math.floor(squareHeight-4);
     const squareGrid: PixelGrid[][] = [];
     for (let i = 0; i < 8; i++) {
-      const top = Math.floor(squareHeight*i+5);
+      const top = Math.floor(squareHeight*i+2);
       const row: PixelGrid[] = [];
       for (let j = 0; j < 8; j++) {
-        const left = Math.floor(squareWidth*j+5);
+        const left = Math.floor(squareWidth*j+2);
         row.push(grid.getSubgrid({ left, top, width, height }));
       }
       squareGrid.push(row);
