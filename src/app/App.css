@@ -205,8 +205,14 @@ p {
 
 .region-div {
   position: absolute;
-  background-color: rgba(24, 71, 255, 0.4);
+  background-color: rgba(252, 255, 63, 0.4);
   z-index: 2;
+}
+
+.region-highlight {
+  position: absolute;
+  background-color: rgba(88, 255, 138, 0.4);
+  z-index: 1;
 }
 
 .region-panel {
@@ -221,12 +227,6 @@ p {
 
 .region-panel > button {
   font-size: 14px;
-}
-
-.region-highlight {
-  background-color: rgba(68, 255, 0, 0.4);
-  position: absolute;
-  z-index: 1;
 }
 
 .region-action {
