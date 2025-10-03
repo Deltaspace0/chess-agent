@@ -77,10 +77,7 @@ function App() {
       <ActionButton name='hideRegion'/>
     </div>
     {region && <div className='region-highlight' style={region}/>}
-    <RegionSelection
-      region={region}
-      onChange={handleRegionChange}
-    />
+    <RegionSelection onChange={handleRegionChange}/>
     {prefs.actionRegion.value && actionRegionDivs}
   </div>);
 }
