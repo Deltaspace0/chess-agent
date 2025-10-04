@@ -27,7 +27,6 @@ export abstract class Mouse {
   }
 
   abstract getPosition(): Promise<Point>;
-  abstract setSpeed(speed: number): void;
   abstract move(point: Point): Promise<void>;
   abstract click(button: number): Promise<void>;
   abstract press(button: number): Promise<void>;
