@@ -7,11 +7,12 @@ interface ActionRegion {
 
 class ActionRegionManager {
   private mouse: Mouse;
-  private isActive: boolean = false;
+  private isActive: boolean;
   private actionRegions: ActionRegion[] = [];
 
-  constructor(mouse: Mouse) {
+  constructor(mouse: Mouse, isActive?: boolean) {
     this.mouse = mouse;
+    this.isActive = isActive || false;
     mouse.addListener('mouseup', () => this.performAction());
   }
 
