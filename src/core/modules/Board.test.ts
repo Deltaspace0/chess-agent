@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import Board from './Board.ts';
-import { MouseMock, type MouseAction } from './mock.ts';
+import { MouseMock, type MouseAction } from './device/Mouse.ts';
 
 function getBoard(mouse: MouseMock): Board {
   const board = new Board(mouse);

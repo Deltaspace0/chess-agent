@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import ActionRegionManager from './ActionRegionManager.ts';
-import { MouseMock } from './mock.ts';
+import { MouseMock } from './device/Mouse.ts';
 
 const mouse = new MouseMock();
 const getRegion = () => ({ left: 20, top: 20, width: 20, height: 20 });
