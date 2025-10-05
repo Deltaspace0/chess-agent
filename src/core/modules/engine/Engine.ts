@@ -56,9 +56,9 @@ class Engine {
   private processData(data: string) {
     if (data.startsWith('id')) {
       if (data.startsWith('id name')) {
-        this.engineInfo.name = data.slice('id name'.length);
+        this.engineInfo.name = data.slice('id name '.length);
       } else if (data.startsWith('id author')) {
-        this.engineInfo.author = data.slice('id author'.length);
+        this.engineInfo.author = data.slice('id author '.length);
       }
       this.sendEngineInfo();
       return;
