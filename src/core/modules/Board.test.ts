@@ -57,6 +57,49 @@ describe('Board', () => {
       await expect.poll(() => callback).toHaveBeenCalledWith('d2d4');
     });
 
+    it('should detect a move on click after illegal move', async () => {
+      const mouse = new MouseMock();
+      const board = getBoard(mouse);
+      const firstMove = new Promise<void>((resolve) => {
+        board.onMove(() => {
+          resolve();
+          return false;
+        });
+      });
+      await mouse.move({ x: 3.5, y: 6.5 });
+      await mouse.click();
+      await mouse.move({ x: 4.5, y: 6.5 });
+      await mouse.click();
+      await firstMove;
+      const callback = vi.fn(() => true);
+      board.onMove(callback);
+      await mouse.move({ x: 4.5, y: 4.5 });
+      await mouse.click();
+      await expect.poll(() => callback).toHaveBeenCalledWith('e2e4');
+    });
+
+    it('should not detect a move on click after legal move', async () => {
+      const mouse = new MouseMock();
+      const board = getBoard(mouse);
+      const firstMove = new Promise<void>((resolve) => {
+        board.onMove(() => {
+          resolve();
+          return true;
+        });
+      });
+      await mouse.move({ x: 3.5, y: 6.5 });
+      await mouse.click();
+      await mouse.move({ x: 3.5, y: 4.5 });
+      await mouse.click();
+      await firstMove;
+      const callback = vi.fn(() => false);
+      board.onMove(callback);
+      await mouse.move({ x: 1.5, y: 1.5 });
+      await mouse.click();
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      expect(callback).not.toHaveBeenCalled();
+    });
+
     it('should detect a move on the flipped board', async () => {
       const mouse = new MouseMock();
       const board = getBoard(mouse);
