@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import Board from './Board.ts';
 import { MouseMock, type MouseAction } from './mock.ts';
 
@@ -36,79 +36,48 @@ describe('Board', () => {
     it('should detect a dragging move', async () => {
       const mouse = new MouseMock();
       const board = getBoard(mouse);
-      const promise = new Promise<void>((resolve) => {
-        board.onMove((move) => {
-          try {
-            expect(move).toBe('d2d4');
-            return true;
-          } finally {
-            resolve();
-          }
-        });
-      });
+      const callback = vi.fn(() => true);
+      board.onMove(callback);
       await mouse.move({ x: 3.5, y: 6.5 });
       await mouse.press();
       await mouse.move({ x: 3.5, y: 4.5 });
       await mouse.release();
-      await promise;
+      await expect.poll(() => callback).toHaveBeenCalledWith('d2d4');
     });
 
     it('should detect a clicking move', async () => {
       const mouse = new MouseMock();
       const board = getBoard(mouse);
-      const promise = new Promise<void>((resolve) => {
-        board.onMove((move) => {
-          try {
-            expect(move).toBe('d2d4');
-            return true;
-          } finally {
-            resolve();
-          }
-        });
-      });
+      const callback = vi.fn(() => true);
+      board.onMove(callback);
       await mouse.move({ x: 3.5, y: 6.5 });
       await mouse.click();
       await mouse.move({ x: 3.5, y: 4.5 });
       await mouse.click();
-      await promise;
+      await expect.poll(() => callback).toHaveBeenCalledWith('d2d4');
     });
 
     it('should detect a move on the flipped board', async () => {
       const mouse = new MouseMock();
       const board = getBoard(mouse);
       board.setPerspective(false);
-      const promise = new Promise<void>((resolve) => {
-        board.onMove((move) => {
-          try {
-            expect(move).toBe('e7e5');
-            return true;
-          } finally {
-            resolve();
-          }
-        });
-      });
+      const callback = vi.fn(() => true);
+      board.onMove(callback);
       await mouse.move({ x: 3.5, y: 6.5 });
       await mouse.press();
       await mouse.move({ x: 3.5, y: 4.5 });
       await mouse.release();
-      await promise;
+      await expect.poll(() => callback).toHaveBeenCalledWith('e7e5');
     });
 
     it('should detect a pressed square', async () => {
       const mouse = new MouseMock();
       const board = getBoard(mouse);
-      const promise = new Promise<void>((resolve) => {
-        board.onMouseDownSquare((square) => {
-          try {
-            expect(square).toBe('b5');
-          } finally {
-            resolve();
-          }
-        });
-      });
+      const callback = vi.fn();
+      board.onMouseDownSquare(callback);
       await mouse.move({ x: 1.5, y: 3.5 });
       await mouse.press();
-      await promise;
+      await expect.poll(() => callback).toHaveBeenCalledWith('b5');
     });
   });
 
