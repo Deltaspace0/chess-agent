@@ -1,7 +1,29 @@
 import { Mouse, type Point } from './Mouse.ts';
 
+export interface MouseAction {
+  type: 'down' | 'up';
+  point: Point;
+}
+
 export class MouseMock extends Mouse {
   private position: Point = { x: 0, y: 0 };
+  private actions: MouseAction[] = [];
+
+  constructor() {
+    super();
+    this.addListener('mousedown', () => {
+      this.actions.push({
+        type: 'down',
+        point: {...this.position}
+      });
+    });
+    this.addListener('mouseup', () => {
+      this.actions.push({
+        type: 'up',
+        point: {...this.position}
+      });
+    });
+  }
 
   async getPosition(): Promise<Point> {
     return this.position;  
@@ -23,5 +45,13 @@ export class MouseMock extends Mouse {
 
   async release(): Promise<void> {
     this.notifyListeners('mouseup');
+  }
+
+  getActions(): MouseAction[] {
+    return this.actions;
+  }
+
+  clearActions() {
+    this.actions = [];
   }
 }
