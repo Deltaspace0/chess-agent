@@ -1,4 +1,4 @@
-import { mouse, straightTo } from '@nut-tree-fork/nut-js';
+import { mouse, sleep, straightTo } from '@nut-tree-fork/nut-js';
 import mouseEvents from 'global-mouse-events';
 
 type ListenerType = 'mousedown' | 'mouseup' | 'mousemove' | 'mousewheel';
@@ -31,6 +31,7 @@ export abstract class Mouse {
   abstract click(button: number): Promise<void>;
   abstract press(button: number): Promise<void>;
   abstract release(button: number): Promise<void>;
+  abstract sleep(duration: number): Promise<void>;
 
   setActive(value: boolean) {
     this.isActive = value;
@@ -76,5 +77,9 @@ export class ConcreteMouse extends Mouse {
 
   async release(button: number): Promise<void> {
     await mouse.releaseButton(button);
+  }
+
+  async sleep(duration: number): Promise<void> {
+    await sleep(duration);
   }
 }

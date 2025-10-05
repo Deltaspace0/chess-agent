@@ -47,6 +47,8 @@ export class MouseMock extends Mouse {
     this.notifyListeners('mouseup');
   }
 
+  async sleep(): Promise<void> {}
+
   getActions(): MouseAction[] {
     return this.actions;
   }

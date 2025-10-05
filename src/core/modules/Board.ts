@@ -1,4 +1,3 @@
-import { sleep } from '@nut-tree-fork/nut-js';
 import type { Mouse, Point } from './Mouse.ts';
 import { coordsToSquare, squareToCoords } from '../../util.ts';
 import { preferenceConfig } from '../../config.ts';
@@ -63,9 +62,9 @@ class Board {
 
   async playMove(move: string) {
     await this.mouse.move(this.getPoint(move.substring(0, 2)));
-    await sleep(50);
+    await this.mouse.sleep(50);
     await (this.draggingMode ? this.mouse.press(0) : this.mouse.click(0));
-    await sleep(50);
+    await this.mouse.sleep(50);
     await this.mouse.move(this.getPoint(move.substring(2, 4)));
     await (this.draggingMode ? this.mouse.release(0) : this.mouse.click(0));
   }
