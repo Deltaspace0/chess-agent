@@ -24,9 +24,12 @@ function Slider(props: SliderProps) {
         value={value}
         step={1}
         onInput={(e) => {
-          const targetValue = Number((e.target as HTMLInputElement).value);
-          setValue(targetValue);
-          props.setValue(props.list[targetValue]);
+          setValue(Number((e.target as HTMLInputElement).value));
+        }}
+        onMouseUp={() => {
+          if (props.value !== props.list[value]) {
+            props.setValue(props.list[value]);
+          }
         }}
         disabled={props.disabled}
       />
