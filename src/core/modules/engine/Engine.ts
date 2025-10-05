@@ -20,7 +20,6 @@ class Engine {
   private process: EngineProcess | null = null;
   private loadingProcess: EngineProcess | null = null;
   private processLock: Promise<void> = Promise.resolve();
-  private optionLocks: Partial<Record<keyof EngineOptions, Promise<void>>> = {};
   private moves: string[] = [];
   private whiteFirst: boolean = true;
   private fen: string | null = null;
@@ -139,24 +138,11 @@ class Engine {
     ]);
   }
 
-  private async sendOption(option: keyof EngineOptions) {
-    if (this.optionLocks[option]) {
-      await this.optionLocks[option];
-      return;
-    }
-    this.optionLocks[option] = new Promise((resolve) => {
-      setTimeout(async () => {
-        const name = optionNames[option];
-        const value = this.options[option];
-        await this.sendToProcess([
-          'stop',
-          `setoption name ${name} value ${value}`
-        ]);
-        delete this.optionLocks[option];
-        resolve();
-      }, 200);
-    });
-    return this.optionLocks[option];
+  private sendOption(option: keyof EngineOptions) {
+    return this.sendToProcess([
+      'stop',
+      `setoption name ${optionNames[option]} value ${this.options[option]}`
+    ]);
   }
 
   async setProcess(process: EngineProcess) {
