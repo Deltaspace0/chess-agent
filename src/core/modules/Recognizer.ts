@@ -1,5 +1,6 @@
 import { sleep } from '@nut-tree-fork/nut-js';
 import type { Color, Piece, PieceSymbol } from 'chess.js';
+import type { AgentRecognizer } from './Agent.ts';
 import PixelGrid from './PixelGrid.ts';
 import { Screen } from './device/Screen.ts';
 
@@ -78,7 +79,7 @@ function getChangedSquares(
   return changedSquares;
 }
 
-class Recognizer {
+class Recognizer implements AgentRecognizer {
   private screen: Screen;
   private scanning: boolean = false;
   private pieceHashes: Record<string, string> = {};

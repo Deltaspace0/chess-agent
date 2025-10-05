@@ -1,17 +1,52 @@
-import Engine from './engine/Engine.ts';
-import Game from './Game.ts';
-import Recognizer from './Recognizer.ts';
+import type { Color, Piece } from 'chess.js';
 
-interface AgentModules {
-  engine: Engine;
-  game: Game;
-  recognizer: Recognizer;
+export interface AgentEngine {
+  reset(fen?: string): void;
+  clear(): void;
+  undo(): string;
+  sendMove(move: string, skipAnalysis?: boolean): string;
+  getBestMove(): string | null;
+  getPonderMove(): string | null;
+  onBestMove(callback: (value: string) => void): void;
 }
 
-class Agent {
-  private engine: Engine;
-  private game: Game;
-  private recognizer: Recognizer;
+export interface AgentGame {
+  fen(): string;
+  get(square: string): Piece | undefined;
+  isGameOver(): boolean;
+  reset(): void;
+  clear(): void;
+  undo(): void;
+  move(move: string): boolean;
+  load(fen: string): void;
+  isLegalMove(move: string): boolean;
+  kingsExist(): boolean;
+  setPositionInfo(info: PositionInfo): boolean;
+  setMyTurn(): boolean;
+  printBoard(): void;
+  getNextBoardStates(): BoardState[];
+  putPieces(pieces: [Piece, number, number][]): void;
+  putPiece(droppedPiece: DroppedPiece): boolean;
+  skipMove(): Color | null;
+}
+
+export interface AgentRecognizer {
+  recognizeBoard(): Promise<[Piece, number, number][]>;
+  isScanning(): boolean;
+  stopScanning(): void;
+  scanMove(boardStates: BoardState[]): Promise<string>;
+}
+
+interface AgentModules {
+  engine: AgentEngine;
+  game: AgentGame;
+  recognizer: AgentRecognizer;
+}
+
+export class Agent {
+  private engine: AgentEngine;
+  private game: AgentGame;
+  private recognizer: AgentRecognizer;
   private promotionMove: string = '';
   private stopBestMove: (() => void) | null = null;
   private afterMoveCallback: (value: string) => void = () => {};
@@ -225,5 +260,3 @@ class Agent {
     this.statusCallback = callback;
   }
 }
-
-export default Agent;

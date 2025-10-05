@@ -1,9 +1,10 @@
 import { Chess } from 'chess.js';
 import type { Color, Piece, PieceSymbol, Square } from 'chess.js';
+import type { AgentGame } from './Agent.ts';
 import { coordsToSquare } from '../../util.ts';
 import { preferenceConfig } from '../../config.ts';
 
-class Game {
+class Game implements AgentGame {
   private chess: Chess;
   private perspective: boolean = preferenceConfig.perspective.defaultValue;
   private positionCallback = () => {};

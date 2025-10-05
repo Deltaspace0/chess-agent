@@ -1,7 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, screen } from 'electron';
 import path from 'path';
 import ActionRegionManager from './modules/ActionRegionManager.ts';
-import Agent from './modules/Agent.ts';
+import { Agent } from './modules/Agent.ts';
 import Board from './modules/Board.ts';
 import Engine from './modules/engine/Engine.ts';
 import EngineExternal from './modules/engine/EngineExternal.ts';

@@ -1,3 +1,4 @@
+import type { AgentEngine } from '../Agent.ts';
 import EngineProcess from './EngineProcess.ts';
 import { preferenceConfig } from '../../../config.ts';
 
@@ -16,7 +17,7 @@ function getNumberValue(words: string[], name: string): number {
   return Number(words[words.indexOf(name)+1]);
 }
 
-class Engine {
+class Engine implements AgentEngine {
   private process: EngineProcess | null = null;
   private loadingProcess: EngineProcess | null = null;
   private processLock: Promise<void> = Promise.resolve();
