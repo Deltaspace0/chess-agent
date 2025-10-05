@@ -9,8 +9,8 @@ import EngineInternal from './modules/engine/EngineInternal.ts';
 import Game from './modules/Game.ts';
 import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
-import { ConcreteMouse } from './modules/Mouse.ts';
-import { ConcreteScreen, getAdjustedRegion } from './modules/Screen.ts';
+import { ConcreteMouse } from './modules/device/Mouse.ts';
+import { ConcreteScreen, getAdjustedRegion } from './modules/device/Screen.ts';
 import { defaultVariables, possibleLocations } from '../config.ts';
 import { selectRegion } from '../util.ts';
 

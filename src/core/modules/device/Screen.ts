@@ -2,7 +2,7 @@ import {
   screen as nutScreen,
   Region as NutRegion
 } from '@nut-tree-fork/nut-js';
-import PixelGrid from './PixelGrid.ts';
+import PixelGrid from '../PixelGrid.ts';
 
 export abstract class Screen {
   protected region: Region | null = null;

@@ -1,4 +1,4 @@
-import type { Mouse } from './Mouse.ts';
+import type { Mouse } from './device/Mouse.ts';
 
 interface ActionRegion {
   callback: () => void;

@@ -1,4 +1,4 @@
-import { Mouse, type Point } from './Mouse.ts';
+import { Mouse, type Point } from './device/Mouse.ts';
 
 export interface MouseAction {
   type: 'down' | 'up';

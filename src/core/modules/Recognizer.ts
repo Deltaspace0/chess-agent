@@ -1,7 +1,7 @@
 import { sleep } from '@nut-tree-fork/nut-js';
 import type { Color, Piece, PieceSymbol } from 'chess.js';
 import PixelGrid from './PixelGrid.ts';
-import { Screen } from './Screen.ts';
+import { Screen } from './device/Screen.ts';
 
 interface MoveResidual {
   move: string | null;
