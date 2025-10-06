@@ -113,6 +113,21 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
   return win;
 }
 
+function debounce<T>(callback: (x: T) => void) {
+  let value: T;
+  let sending = false;
+  return (x: T) => {
+    value = x;
+    if (!sending) {
+      sending = true;
+      setTimeout(() => {
+        callback(value);
+        sending = false;
+      }, 50);
+    }
+  };
+}
+
 (async () => {
   Menu.setApplicationMenu(null);
   const mouse = new ConcreteMouse();
@@ -215,15 +230,15 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
     sendToApp('engine-data', 'internal', '!>> '+data);
   });
   const engine = new Engine();
-  engine.onPrincipalMoves((value) => {
+  engine.onPrincipalMoves(debounce((value) => {
     const moves = value.map((x) => x.split(' ').slice(0, 3));
     const variations = value.map((x) => game.formatEvalMoves(x));
     sendToApp('update-variable', 'highlightMoves', moves);
     sendToApp('update-variable', 'principalVariations', variations);
-  });
-  engine.onEngineInfo((value) => {
+  }));
+  engine.onEngineInfo(debounce((value) => {
     sendToApp('update-variable', 'engineInfo', value);
-  });
+  }));
   const game = new Game();
   game.onUpdatePosition((value) => {
     sendToApp('update-variable', 'positionInfo', game.getPositionInfo());

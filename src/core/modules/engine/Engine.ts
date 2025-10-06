@@ -33,7 +33,6 @@ class Engine implements AgentEngine {
     threads: preferenceConfig.engineThreads.defaultValue
   };
   private principalMoves: string[] = [];
-  private sendingEngineInfo: boolean = false;
   private processListener: (data: string) => void = this.processData.bind(this);
   private principalMovesCallback: (value: string[]) => void = () => {};
   private bestMoveCallback: (value: string) => void = () => {};
@@ -104,14 +103,8 @@ class Engine implements AgentEngine {
   }
 
   private sendEngineInfo() {
-    if (!this.sendingEngineInfo) {
-      this.sendingEngineInfo = true;
-      setTimeout(() => {
-        this.engineInfoCallback(this.engineInfo);
-        this.principalMovesCallback(this.principalMoves);
-        this.sendingEngineInfo = false;
-      }, 50);
-    }
+    this.principalMovesCallback(this.principalMoves);
+    this.engineInfoCallback(this.engineInfo);
   }
 
   private setPrincipalMove(pv: number, move: string) {
