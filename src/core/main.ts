@@ -13,6 +13,7 @@ import { ConcreteMouse } from './modules/device/Mouse.ts';
 import { ConcreteScreen, getAdjustedRegion } from './modules/device/Screen.ts';
 import { defaultVariables, possibleLocations } from '../config.ts';
 import { selectRegion } from '../util.ts';
+import { saveImage } from '@nut-tree-fork/nut-js';
 
 const preloadPath = path.join(import.meta.dirname, 'preload.js');
 const iconPath = 'images/chess-icon.png';
@@ -337,6 +338,17 @@ function debounce<T>(callback: (x: T) => void) {
     adjustRegion: async () => {
       const adjustedRegion = await getAdjustedRegion(screen);
       preferenceManager.setPreference('region', adjustedRegion);
+    },
+    savePicture: async () => {
+      const image = await screen.getImage();
+      const result = await dialog.showSaveDialog(win, {
+        properties: ['createDirectory'],
+        filters: [{ name: 'Picture', extensions: ['png'] }]
+      });
+      if (result.filePath) {
+        saveImage({ image, path: result.filePath });
+        updateStatus('Saved screenshot');
+      }
     },
     promoteQueen: () => agent.promoteTo('q'),
     promoteRook: () => agent.promoteTo('r'),

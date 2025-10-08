@@ -124,6 +124,7 @@ declare global {
     | 'saveConfig'
     | 'resetConfig'
     | 'adjustRegion'
+    | 'savePicture'
     | 'promoteQueen'
     | 'promoteRook'
     | 'promoteBishop'

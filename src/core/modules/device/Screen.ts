@@ -1,6 +1,7 @@
 import {
   screen as nutScreen,
-  Region as NutRegion
+  Region as NutRegion,
+  type Image
 } from '@nut-tree-fork/nut-js';
 import PixelGrid from '../PixelGrid.ts';
 
@@ -15,13 +16,17 @@ export abstract class Screen {
 }
 
 export class ConcreteScreen extends Screen {
-  async grabRegion(region?: Region): Promise<PixelGrid> {
+  async getImage(region? : Region): Promise<Image> {
     if (!this.region && !region) {
       throw new Error('No region set');
     }
     const { left, top, width, height } = region ?? this.region!;
     const nutRegion = new NutRegion(left, top, width, height);
-    const image = await nutScreen.grabRegion(nutRegion);
+    return nutScreen.grabRegion(nutRegion);
+  }
+
+  async grabRegion(region?: Region): Promise<PixelGrid> {
+    const image = await this.getImage(region);
     return new PixelGrid(image.data, image.byteWidth);
   }
 
