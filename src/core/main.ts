@@ -153,6 +153,7 @@ function debounce<T>(callback: (x: T) => void) {
     mouse.setActive(true);
   };
   regionWin.addListener('show', () => {
+    mouse.setActive(false);
     setTimeout(() => regionWin.setOpacity(1), 100);
   });
   regionWin.addListener('hide', () => regionWin.setOpacity(0));
@@ -166,8 +167,10 @@ function debounce<T>(callback: (x: T) => void) {
     e.preventDefault();
   });
   const settingsWin = await createSettingsWindow(win);
+  settingsWin.addListener('show', () => mouse.setActive(false));
   settingsWin.addListener('close', (e) => {
     settingsWin.hide();
+    mouse.setActive(true);
     e.preventDefault();
   });
   const sendToApp = (channel: string, ...args: unknown[]) => {
@@ -275,10 +278,7 @@ function debounce<T>(callback: (x: T) => void) {
     }
   });
   const actionCallbacks: Record<Action, () => void> = {
-    showRegion: () => {
-      regionWin.show();
-      mouse.setActive(false);
-    },
+    showRegion: () => regionWin.show(),
     hideRegion: () => hideRegionWindow(),
     loadHashes: () => {
       const perspective = preferenceManager.getPreference('perspective');
@@ -302,9 +302,11 @@ function debounce<T>(callback: (x: T) => void) {
     clearPosition: () => agent.clearPosition(),
     recognizeBoard: () => agent.recognizeBoard(),
     dialogEngine: async () => {
+      mouse.setActive(false);
       const result = await dialog.showOpenDialog(engineWin, {
         properties: ['openFile']
       });
+      mouse.setActive(true);
       if (result.filePaths.length > 0) {
         preferenceManager.setPreference('enginePath', result.filePaths[0]);
       }
@@ -313,10 +315,12 @@ function debounce<T>(callback: (x: T) => void) {
     showEngine: () => engineWin.show(),
     showSettings: () => settingsWin.show(),
     loadConfig: async () => {
+      mouse.setActive(false);
       const result = await dialog.showOpenDialog(settingsWin, {
         properties: ['openFile'],
         filters: [{ name: 'Configuration file', extensions: ['json'] }]
       });
+      mouse.setActive(true);
       if (result.filePaths.length > 0) {
         preferenceManager.loadFromFile(result.filePaths[0]);
         updateStatus('Loaded configuration file');
@@ -324,10 +328,12 @@ function debounce<T>(callback: (x: T) => void) {
       }
     },
     saveConfig: async () => {
+      mouse.setActive(false);
       const result = await dialog.showSaveDialog(settingsWin, {
         properties: ['createDirectory'],
         filters: [{ name: 'Configuration file', extensions: ['json'] }]
       });
+      mouse.setActive(true);
       if (result.filePath) {
         preferenceManager.saveToFile(result.filePath);
         updateStatus('Saved configuration file');
@@ -340,11 +346,13 @@ function debounce<T>(callback: (x: T) => void) {
       preferenceManager.setPreference('region', adjustedRegion);
     },
     savePicture: async () => {
+      mouse.setActive(false);
       const image = await screen.getImage();
       const result = await dialog.showSaveDialog(win, {
         properties: ['createDirectory'],
         filters: [{ name: 'Picture', extensions: ['png'] }]
       });
+      mouse.setActive(true);
       if (result.filePath) {
         saveImage({ image, path: result.filePath });
         updateStatus('Saved screenshot');
