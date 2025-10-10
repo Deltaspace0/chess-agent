@@ -16,52 +16,6 @@ function compareHashes(hash1: string, hash2: string): number {
   return residual;
 }
 
-function getHash(squareGrid: PixelGrid): string {
-  const [squareWidth, squareHeight] = squareGrid.getDimensions();
-  const backPixels = [
-    squareGrid.getPixelBuffer(0, 0),
-    squareGrid.getPixelBuffer(0, squareWidth-1),
-    squareGrid.getPixelBuffer(squareHeight-1, 0),
-    squareGrid.getPixelBuffer(squareHeight-1, squareWidth-1)
-  ];
-  let hash = '';
-  let startRow = 0;
-  for (let i = 0; i < 8; i++) {
-    const height = Math.floor((squareHeight-startRow)/(8-i));
-    let startCol = 0;
-    for (let j = 0; j < 8; j++) {
-      const width = Math.floor((squareWidth-startCol)/(8-j));
-      const bgr = [0, 0, 0];
-      for (let k = startRow; k < startRow+height; k++) {
-        for (let l = startCol; l < startCol+width; l++) {
-          const pixel = squareGrid.getPixelBuffer(k, l);
-          let backResiduals = Infinity;
-          for (const backPixel of backPixels) {
-            let backResidual = 0;
-            for (let m = 0; m < 3; m++) {
-              backResidual += Math.abs(pixel[m]-backPixel[m]);
-            }
-            backResiduals = Math.min(backResiduals, backResidual);
-          }
-          if (backResiduals < 20) {
-            continue;
-          }
-          for (let m = 0; m < 3; m++) {
-            bgr[m] += pixel[m];
-          }
-        }
-      }
-      for (let k = 0; k < 3; k++) {
-        bgr[k] /= width*height;
-        hash += Math.floor(bgr[k]*9/255);
-      }
-      startCol += width;
-    }
-    startRow += height;
-  }
-  return hash;
-}
-
 function getChangedSquares(
   oldHashes: string[][],
   newHashes: string[][]
@@ -78,13 +32,113 @@ function getChangedSquares(
   return changedSquares;
 }
 
+function pixelToString(pixel: Buffer): string {
+  return `${pixel[0]} ${pixel[1]} ${pixel[2]}`;
+}
+
+function checkColors(pixel: Buffer, colorSets: Set<string>[]): boolean {
+  for (const colors of colorSets) {
+    for (const color of colors) {
+      const bgr = color.split(' ').map(Number);
+      let distance = 0;
+      for (let i = 0; i < 3; i++) {
+        distance += (pixel[i]-bgr[i])**2;
+      }
+      if (distance < 900) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function getBackColors(grids: PixelGrid[]): Set<string> {
+  const colors: Set<string> = new Set();
+  for (const grid of grids) {
+    const [width, height] = grid.getDimensions();
+    for (let i = 0; i < height; i++) {
+      for (let j = 0; j < width; j++) {
+        const pixel = grid.getPixelBuffer(i, j);
+        if (checkColors(pixel, [colors])) {
+          continue;
+        }
+        colors.add(pixelToString(pixel));
+        if (colors.size >= 10) {
+          return colors;
+        }
+      }
+    }
+  }
+  return colors;
+}
+
+function getPieceColors(
+  grids: PixelGrid[],
+  backColors: Set<string>[]
+): Set<string> {
+  const counter: Record<string, number> = {};
+  const pieceColors: Set<string> = new Set();
+  for (const grid of grids) {
+    const [width, height] = grid.getDimensions();
+    for (let i = 0; i < height; i++) {
+      for (let j = 0; j < width; j++) {
+        const pixel = grid.getPixelBuffer(i, j);
+        if (checkColors(pixel, backColors)) {
+          continue;
+        }
+        const color = pixelToString(pixel);
+        if (!(color in counter)) {
+          counter[color] = 0;
+        }
+        counter[color]++;
+        pieceColors.add(color);
+      }
+    }
+  }
+  const colors = [...pieceColors].sort((a, b) => counter[b]-counter[a]);
+  return new Set(colors.slice(0, 128));
+}
+
 class Recognizer implements AgentRecognizer {
   private screen: Screen;
   private scanning: boolean = false;
+  private pieceColors: Set<string> = new Set();
   private pieceHashes: Record<string, string> = {};
 
   constructor(screen: Screen) {
     this.screen = screen;
+  }
+
+  private getHash(squareGrid: PixelGrid): string {
+    const [squareWidth, squareHeight] = squareGrid.getDimensions();
+    let hash = '';
+    let startRow = 0;
+    for (let i = 0; i < 8; i++) {
+      const height = Math.floor((squareHeight-startRow)/(8-i));
+      let startCol = 0;
+      for (let j = 0; j < 8; j++) {
+        const width = Math.floor((squareWidth-startCol)/(8-j));
+        const bgra = [0, 0, 0, 0];
+        for (let k = startRow; k < startRow+height; k++) {
+          for (let l = startCol; l < startCol+width; l++) {
+            const pixel = squareGrid.getPixelBuffer(k, l);
+            if (this.pieceColors.has(pixelToString(pixel))) {
+              for (let m = 0; m < 3; m++) {
+                bgra[m] += pixel[m];
+              }
+              bgra[3] += 255;
+            }
+          }
+        }
+        for (let k = 0; k < 4; k++) {
+          bgra[k] /= width*height;
+          hash += Math.floor(bgra[k]*9/255);
+        }
+        startCol += width;
+      }
+      startRow += height;
+    }
+    return hash;
   }
 
   private async grabBoard(): Promise<PixelGrid[][]> {
@@ -112,7 +166,7 @@ class Recognizer implements AgentRecognizer {
     for (let i = 0; i < 8; i++) {
       const rowHashes: string[] = [];
       for (let j = 0; j < 8; j++) {
-        rowHashes.push(getHash(grid[i][j]));
+        rowHashes.push(this.getHash(grid[i][j]));
       }
       boardHashes.push(rowHashes);
     }
@@ -166,9 +220,31 @@ class Recognizer implements AgentRecognizer {
       ? pieces1
       : pieces1.reverse().map((x) => x.reverse());
     const grid = await this.grabBoard();
+    const darkBackColors = getBackColors([
+      grid[2][1], grid[2][3], grid[2][5], grid[3][2], grid[3][4], grid[3][6],
+      grid[4][1], grid[4][3], grid[4][5], grid[5][2], grid[5][4], grid[5][6]
+    ]);
+    const lightBackColors = getBackColors([
+      grid[2][2], grid[2][4], grid[2][6], grid[3][1], grid[3][3], grid[3][5],
+      grid[4][2], grid[4][4], grid[4][6], grid[5][1], grid[5][3], grid[5][5]
+    ]);
+    const pieceGrids1: PixelGrid[] = [];
+    const pieceGrids2: PixelGrid[] = [];
+    for (let col = 0; col < 8; col++) {
+      for (const row of [0, 1]) {
+        pieceGrids1.push(grid[row][col]);
+      }
+      for (const row of [6, 7]) {
+        pieceGrids2.push(grid[row][col]);
+      }
+    }
+    const backColors = [darkBackColors, lightBackColors];
+    const pieceColors1 = getPieceColors(pieceGrids1, backColors);
+    const pieceColors2 = getPieceColors(pieceGrids2, backColors);
+    this.pieceColors = new Set([...pieceColors1, ...pieceColors2]);
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
-        this.pieceHashes[pieces[i][j]] = getHash(grid[i][j]);
+        this.pieceHashes[pieces[i][j]] = this.getHash(grid[i][j]);
       }
     }
   }
@@ -181,7 +257,7 @@ class Recognizer implements AgentRecognizer {
     const pieces: [Piece, number, number][] = [];
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
-        const currentHash = getHash(grid[i][j]);
+        const currentHash = this.getHash(grid[i][j]);
         let minResidual = Infinity;
         let likelyPieceString = 'e';
         for (const pieceString in this.pieceHashes) {
