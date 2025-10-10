@@ -1,5 +1,6 @@
 import {
   screen as nutScreen,
+  sleep,
   Region as NutRegion,
   type Image
 } from '@nut-tree-fork/nut-js';
@@ -9,6 +10,7 @@ export abstract class Screen {
   protected region: Region | null = null;
 
   abstract grabRegion(region?: Region): Promise<PixelGrid>;
+  abstract sleep(duration: number): Promise<void>;
 
   getRegion(): Region | null {
     return this.region && {...this.region};
@@ -28,6 +30,10 @@ export class ConcreteScreen extends Screen {
   async grabRegion(region?: Region): Promise<PixelGrid> {
     const image = await this.getImage(region);
     return new PixelGrid(image.data, image.byteWidth);
+  }
+
+  async sleep(duration: number): Promise<void> {
+    await sleep(duration);
   }
 
   setRegion(region: Region | null) {

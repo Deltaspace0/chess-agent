@@ -53,6 +53,8 @@ class ScreenStub extends Screen {
     return Promise.resolve(this.pixelGrid);
   }
 
+  async sleep(): Promise<void> {}
+
   setPixelGrid(pixelGrid: PixelGrid | null) {
     this.pixelGrid = pixelGrid;
   }

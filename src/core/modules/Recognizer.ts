@@ -1,4 +1,3 @@
-import { sleep } from '@nut-tree-fork/nut-js';
 import type { Color, Piece, PieceSymbol } from 'chess.js';
 import type { AgentRecognizer } from './Agent.ts';
 import PixelGrid from './PixelGrid.ts';
@@ -136,7 +135,10 @@ class Recognizer implements AgentRecognizer {
     return minResidual;
   }
 
-  private getMoveResiduals(hashes: string[][], states: BoardState[]): MoveResidual[] {
+  private getMoveResiduals(
+    hashes: string[][],
+    states: BoardState[]
+  ): MoveResidual[] {
     const moveResiduals: MoveResidual[] = [];
     for (const { move, grid } of states) {
       let residual = 0;
@@ -217,12 +219,12 @@ class Recognizer implements AgentRecognizer {
     if (this.scanning) {
       throw new Error('already scanning');
     }
-    await sleep(50);
+    await this.screen.sleep(50);
     this.scanning = true;
     let prevBoardHashes = await this.getBoardHashes();
     let waitingForMovement = false;
     while (this.scanning) {
-      await sleep(50);
+      await this.screen.sleep(50);
       const boardHashes = await this.getBoardHashes();
       const changedSquares = getChangedSquares(prevBoardHashes, boardHashes);
       if (changedSquares.length > 0) {
