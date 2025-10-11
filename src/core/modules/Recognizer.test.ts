@@ -7,11 +7,32 @@ import PixelGrid from './PixelGrid.ts';
 import Recognizer from './Recognizer.ts';
 import { Screen } from './device/Screen.ts';
 
+class ScreenStub extends Screen {
+  private pixelGrid: PixelGrid | null = null;
+
+  grabRegion(): Promise<PixelGrid> {
+    if (!this.pixelGrid) {
+      throw new Error('No pixel grid to return');
+    }
+    return Promise.resolve(this.pixelGrid);
+  }
+
+  async sleep(): Promise<void> {}
+
+  setPixelGrid(pixelGrid: PixelGrid | null) {
+    this.pixelGrid = pixelGrid;
+  }
+}
+
+const screen = new ScreenStub();
+const game = new Game();
+
 const startPosition = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
 const startImages: Record<string, PixelGrid> = {};
 const flippedImages: Record<string, PixelGrid> = {};
 const randomImages: Record<string, PixelGrid> = {};
 const highlightedImages: Record<string, PixelGrid> = {};
+const recognizers: Record<string, Recognizer> = {};
 
 async function loadImages(
   directory: string,
@@ -35,39 +56,26 @@ async function loadImages(
 }
 
 beforeAll(async () => {
-  await loadImages(path.join('test_images', 'start'), startImages);
-  await loadImages(path.join('test_images', 'flipped'), flippedImages);
-  await loadImages(path.join('test_images', 'random'), randomImages);
-  await loadImages(path.join('test_images', 'highlighted'), highlightedImages);
+  await Promise.all([
+    loadImages(path.join('test_images', 'start'), startImages),
+    loadImages(path.join('test_images', 'flipped'), flippedImages),
+    loadImages(path.join('test_images', 'random'), randomImages),
+    loadImages(path.join('test_images', 'highlighted'), highlightedImages)
+  ]);
+  for (const file in startImages) {
+    const recognizer = new Recognizer(screen);
+    screen.setPixelGrid(startImages[file]);
+    await recognizer.load(true);
+    recognizers[file] = recognizer;
+  }
 });
-
-class ScreenStub extends Screen {
-  private pixelGrid: PixelGrid | null = null;
-
-  grabRegion(): Promise<PixelGrid> {
-    if (!this.pixelGrid) {
-      throw new Error('No pixel grid to return');
-    }
-    return Promise.resolve(this.pixelGrid);
-  }
-
-  async sleep(): Promise<void> {}
-
-  setPixelGrid(pixelGrid: PixelGrid | null) {
-    this.pixelGrid = pixelGrid;
-  }
-}
-
-const screen = new ScreenStub();
-const game = new Game();
 
 describe('Recognizer', () => {
   describe('Position', () => {
     it('should recognize starting position', async () => {
-      const recognizer = new Recognizer(screen);
       for (const file in startImages) {
+        const recognizer = recognizers[file];
         screen.setPixelGrid(startImages[file]);
-        await recognizer.load(true);
         const pieces = await recognizer.recognizeBoard();
         game.setPerspective(true);
         game.putPieces(pieces);
@@ -88,11 +96,9 @@ describe('Recognizer', () => {
       }
     });
     it('should recognize random position', async () => {
-      const recognizer = new Recognizer(screen);
       for (const file in randomImages) {
         const [positionString, perspective, startFile] = file.split('_');
-        screen.setPixelGrid(startImages[startFile]);
-        await recognizer.load(true);
+        const recognizer = recognizers[startFile];
         screen.setPixelGrid(randomImages[file]);
         const pieces = await recognizer.recognizeBoard();
         game.setPerspective(perspective === 'w');
@@ -102,11 +108,9 @@ describe('Recognizer', () => {
       }
     });
     it('should recognize position with highlighted squares', async () => {
-      const recognizer = new Recognizer(screen);
       for (const file in highlightedImages) {
         const [positionString, perspective, startFile] = file.split('_');
-        screen.setPixelGrid(startImages[startFile]);
-        await recognizer.load(true);
+        const recognizer = recognizers[startFile];
         screen.setPixelGrid(highlightedImages[file]);
         const pieces = await recognizer.recognizeBoard();
         game.setPerspective(perspective === 'w');

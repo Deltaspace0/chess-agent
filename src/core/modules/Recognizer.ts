@@ -76,7 +76,6 @@ function getPieceColors(
   grids: PixelGrid[],
   backColors: Set<string>[]
 ): Set<string> {
-  const counter: Record<string, number> = {};
   const pieceColors: Set<string> = new Set();
   for (const grid of grids) {
     const [width, height] = grid.getDimensions();
@@ -86,17 +85,23 @@ function getPieceColors(
         if (checkColors(pixel, backColors)) {
           continue;
         }
-        const color = pixelToString(pixel);
-        if (!(color in counter)) {
-          counter[color] = 0;
+        const b1 = Math.max(0, pixel[0]-1);
+        const b2 = Math.min(255, pixel[0]+1);
+        const g1 = Math.max(0, pixel[1]-1);
+        const g2 = Math.min(255, pixel[1]+1);
+        const r1 = Math.max(0, pixel[2]-1);
+        const r2 = Math.min(255, pixel[2]+1);
+        for (let b = b1; b <= b2; b++) {
+          for (let g = g1; g <= g2; g++) {
+            for (let r = r1; r <= r2; r++) {
+              pieceColors.add(`${b} ${g} ${r}`);
+            }
+          }
         }
-        counter[color]++;
-        pieceColors.add(color);
       }
     }
   }
-  const colors = [...pieceColors].sort((a, b) => counter[b]-counter[a]);
-  return new Set(colors.slice(0, 128));
+  return pieceColors;
 }
 
 class Recognizer implements AgentRecognizer {
