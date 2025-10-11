@@ -1,46 +1,35 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { Chess, type Piece } from 'chess.js';
-import { readdir } from 'fs';
+import { readdir } from 'fs/promises';
 import { loadImage } from '@nut-tree-fork/nut-js';
 import path from 'path';
+import Game from './Game.ts';
 import PixelGrid from './PixelGrid.ts';
 import Recognizer from './Recognizer.ts';
 import { Screen } from './device/Screen.ts';
 
-const startPosition: [Piece, number, number][] = [];
-const testImages: Record<string, PixelGrid> = {};
+const startPosition = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+const startImages: Record<string, PixelGrid> = {};
+
+async function loadImages(
+  directory: string,
+  images: Record<string, PixelGrid>
+) {
+  try {
+    const files = await readdir(directory);
+    const promises: Promise<void>[] = [];
+    for (const file of files) {
+      promises.push(loadImage(path.join(directory, file)).then((image) => {
+        images[file] = new PixelGrid(image.data, image.byteWidth);
+      }));
+    }
+    return Promise.all(promises);
+  } catch (e) {
+    console.error(e);
+  }
+}
 
 beforeAll(async () => {
-  const chess = new Chess();
-  const board = chess.board();
-  for (let i = 0; i < 8; i++) {
-    for (let j = 0; j < 8; j++) {
-      const squarePiece = board[i][j];
-      if (squarePiece) {
-        const { square, ...piece } = squarePiece;
-        startPosition.push([piece, i, j]);
-      }
-    }
-  }
-  let paths: string[] = [];
-  await new Promise<void>((resolve) => {
-    readdir('test_images', (err, files) => {
-      if (err) {
-        console.error(err);
-        resolve();
-        return;
-      }
-      paths = files.map((x) => path.join('test_images', x));
-      resolve();
-    });
-  });
-  const promises: Promise<void>[] = [];
-  for (const path of paths) {
-    promises.push(loadImage(path).then((image) => {
-      testImages[path] = new PixelGrid(image.data, image.byteWidth);
-    }));
-  }
-  return Promise.all(promises);
+  await loadImages(path.join('test_images', 'start'), startImages);
 });
 
 class ScreenStub extends Screen {
@@ -61,16 +50,19 @@ class ScreenStub extends Screen {
 }
 
 const screen = new ScreenStub();
+const game = new Game();
 
 describe('Recognizer', () => {
   describe('Position', () => {
     it('should recognize starting position', async () => {
       const recognizer = new Recognizer(screen);
-      for (const path in testImages) {
-        screen.setPixelGrid(testImages[path]);
+      for (const file in startImages) {
+        screen.setPixelGrid(startImages[file]);
         await recognizer.load(true);
-        const result = await recognizer.recognizeBoard();
-        expect(result, path).toEqual(startPosition);
+        const pieces = await recognizer.recognizeBoard();
+        game.putPieces(pieces);
+        const position = game.fen().split(' ')[0];
+        expect(position, file).toBe(startPosition);
       }
     });
     it.todo('should recognize flipped position');
