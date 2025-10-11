@@ -1,4 +1,5 @@
 import '../App.css';
+import { useEffect } from 'react';
 import Radio from '../components/Radio.tsx';
 import { usePreference, useVariable } from '../hooks.ts';
 import { actionDescriptions } from '../../config.ts';
@@ -29,6 +30,15 @@ function App() {
       }}
     />);
   }
+  useEffect(() => {
+    const escapeCallback = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        window.electronAPI.doAction('hideAction');
+      }
+    }
+    window.addEventListener('keydown', escapeCallback);
+    return () => window.removeEventListener('keydown', escapeCallback);
+  }, []);
   return (<div className='App'>
     <fieldset className='action-field'>
       <legend>Select action for this region</legend>

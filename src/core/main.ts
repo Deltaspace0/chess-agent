@@ -147,21 +147,18 @@ function debounce<T>(callback: (x: T) => void) {
     e.preventDefault();
   });
   const regionWin = await createRegionWindow(win);
-  const hideRegionWindow = () => {
-    if (!appRunning) {
-      return;
-    }
-    regionWin.hide();
-    win.show();
-    mouse.setActive(true);
-  };
   regionWin.addListener('show', () => {
     mouse.setActive(false);
     setTimeout(() => regionWin.setOpacity(1), 100);
   });
-  regionWin.addListener('hide', () => regionWin.setOpacity(0));
   regionWin.addListener('close', (e) => {
-    hideRegionWindow();
+    if (!appRunning) {
+      return;
+    }
+    regionWin.hide();
+    regionWin.setOpacity(0);
+    win.show();
+    mouse.setActive(true);
     e.preventDefault();
   });
   const actionWin = await createActionWindow(regionWin);
@@ -290,7 +287,8 @@ function debounce<T>(callback: (x: T) => void) {
   });
   const actionCallbacks: Record<Action, () => void> = {
     showRegion: () => regionWin.show(),
-    hideRegion: () => hideRegionWindow(),
+    hideRegion: () => regionWin.close(),
+    hideAction: () => actionWin.close(),
     loadHashes: () => {
       const perspective = preferenceManager.getPreference('perspective');
       recognizer.load(perspective)
@@ -325,6 +323,7 @@ function debounce<T>(callback: (x: T) => void) {
     reloadEngine: () => reloadExternalEngine(),
     showEngine: () => engineWin.show(),
     showSettings: () => settingsWin.show(),
+    hideSettings: () => settingsWin.close(),
     loadConfig: async () => {
       mouse.setActive(false);
       const result = await dialog.showOpenDialog(settingsWin, {

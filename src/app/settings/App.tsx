@@ -1,9 +1,19 @@
 import '../App.css';
+import { useEffect } from 'react';
 import ActionButton from '../components/ActionButton.tsx';
 import CheckboxPref from '../components/CheckboxPref.tsx';
 import SliderPref from '../components/SliderPref.tsx';
 
 function App() {
+  useEffect(() => {
+    const escapeCallback = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        window.electronAPI.doAction('hideSettings');
+      }
+    }
+    window.addEventListener('keydown', escapeCallback);
+    return () => window.removeEventListener('keydown', escapeCallback);
+  }, []);
   return (<div className='App'>
     <div className='flex-column'>
       <div className='flex-row'>

@@ -108,6 +108,7 @@ declare global {
     = ToggleablePreference
     | 'showRegion'
     | 'hideRegion'
+    | 'hideAction'
     | 'loadHashes'
     | 'scanMove'
     | 'skipMove'
@@ -120,6 +121,7 @@ declare global {
     | 'reloadEngine'
     | 'showEngine'
     | 'showSettings'
+    | 'hideSettings'
     | 'loadConfig'
     | 'saveConfig'
     | 'resetConfig'
