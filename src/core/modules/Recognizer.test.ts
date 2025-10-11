@@ -9,6 +9,7 @@ import { Screen } from './device/Screen.ts';
 
 const startPosition = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
 const startImages: Record<string, PixelGrid> = {};
+const flippedImages: Record<string, PixelGrid> = {};
 
 async function loadImages(
   directory: string,
@@ -30,6 +31,7 @@ async function loadImages(
 
 beforeAll(async () => {
   await loadImages(path.join('test_images', 'start'), startImages);
+  await loadImages(path.join('test_images', 'flipped'), flippedImages);
 });
 
 class ScreenStub extends Screen {
@@ -60,12 +62,24 @@ describe('Recognizer', () => {
         screen.setPixelGrid(startImages[file]);
         await recognizer.load(true);
         const pieces = await recognizer.recognizeBoard();
+        game.setPerspective(true);
         game.putPieces(pieces);
         const position = game.fen().split(' ')[0];
         expect(position, file).toBe(startPosition);
       }
     });
-    it.todo('should recognize flipped position');
+    it('should recognize flipped position', async () => {
+      const recognizer = new Recognizer(screen);
+      for (const file in flippedImages) {
+        screen.setPixelGrid(flippedImages[file]);
+        await recognizer.load(false);
+        const pieces = await recognizer.recognizeBoard();
+        game.setPerspective(false);
+        game.putPieces(pieces);
+        const position = game.fen().split(' ')[0];
+        expect(position, file).toBe(startPosition);
+      }
+    });
     it.todo('should recognize random position');
     it.todo('should recognize position with highlighted squares');
   });
