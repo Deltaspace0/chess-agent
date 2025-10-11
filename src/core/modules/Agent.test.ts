@@ -59,7 +59,7 @@ describe('Agent', () => {
       engine.getBestMove = vi.fn(() => null);
       const movePromise = agent.findBestMove();
       agent.findBestMove();
-      expect(movePromise).resolves.toBe(null);
+      await expect(movePromise).resolves.toBe(null);
     })
   });
 
@@ -83,7 +83,7 @@ describe('Agent', () => {
       agent.onMove(callback);
       const movePromise = agent.scanMove();
       agent.scanMove();
-      expect(movePromise).resolves.toBe(null);
+      await expect(movePromise).resolves.toBe(null);
       expect(recognizer.isScanning).toHaveBeenCalled();
       expect(recognizer.stopScanning).toHaveBeenCalled();
       expect(callback).not.toHaveBeenCalled();
