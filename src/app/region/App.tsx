@@ -1,5 +1,5 @@
 import '../App.css';
-import { useMemo, useState, type JSX } from 'react';
+import { useEffect, useMemo, useState, type JSX } from 'react';
 import ActionButton from '../components/ActionButton.tsx';
 import ToggleButton from '../components/ToggleButton.tsx';
 import ToggleButtonPref from '../components/ToggleButtonPref.tsx';
@@ -55,6 +55,15 @@ function App() {
         style={{...selectedRegion, backgroundColor}}></div>);
     }
   }
+  useEffect(() => {
+    const escapeCallback = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        window.electronAPI.doAction('hideRegion');
+      }
+    }
+    window.addEventListener('keydown', escapeCallback);
+    return () => window.removeEventListener('keydown', escapeCallback);
+  }, []);
   return (<div className={hideAll ? 'Region hidden' : 'Region'}>
     <div className='region-panel'>
       <button

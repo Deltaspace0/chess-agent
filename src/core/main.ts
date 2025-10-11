@@ -148,6 +148,9 @@ function debounce<T>(callback: (x: T) => void) {
   });
   const regionWin = await createRegionWindow(win);
   const hideRegionWindow = () => {
+    if (!appRunning) {
+      return;
+    }
     regionWin.hide();
     win.show();
     mouse.setActive(true);
@@ -163,13 +166,21 @@ function debounce<T>(callback: (x: T) => void) {
   });
   const actionWin = await createActionWindow(regionWin);
   actionWin.addListener('close', (e) => {
+    if (!appRunning) {
+      return;
+    }
     actionWin.hide();
+    regionWin.show();
     e.preventDefault();
   });
   const settingsWin = await createSettingsWindow(win);
   settingsWin.addListener('show', () => mouse.setActive(false));
   settingsWin.addListener('close', (e) => {
+    if (!appRunning) {
+      return;
+    }
     settingsWin.hide();
+    win.show();
     mouse.setActive(true);
     e.preventDefault();
   });
