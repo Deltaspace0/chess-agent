@@ -11,6 +11,7 @@ const startPosition = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
 const startImages: Record<string, PixelGrid> = {};
 const flippedImages: Record<string, PixelGrid> = {};
 const randomImages: Record<string, PixelGrid> = {};
+const highlightedImages: Record<string, PixelGrid> = {};
 
 async function loadImages(
   directory: string,
@@ -20,6 +21,9 @@ async function loadImages(
     const files = await readdir(directory);
     const promises: Promise<void>[] = [];
     for (const file of files) {
+      if (file.slice(-4) !== '.png') {
+        continue;
+      }
       promises.push(loadImage(path.join(directory, file)).then((image) => {
         images[file] = new PixelGrid(image.data, image.byteWidth);
       }));
@@ -34,6 +38,7 @@ beforeAll(async () => {
   await loadImages(path.join('test_images', 'start'), startImages);
   await loadImages(path.join('test_images', 'flipped'), flippedImages);
   await loadImages(path.join('test_images', 'random'), randomImages);
+  await loadImages(path.join('test_images', 'highlighted'), highlightedImages);
 });
 
 class ScreenStub extends Screen {
@@ -93,10 +98,23 @@ describe('Recognizer', () => {
         game.setPerspective(perspective === 'w');
         game.putPieces(pieces);
         const position = game.fen().split(' ')[0];
-        expect(position, file).toBe(positionString.replaceAll('-', '/'));
+        expect(position, startFile).toBe(positionString.replaceAll('-', '/'));
       }
     });
-    it.todo('should recognize position with highlighted squares');
+    it('should recognize position with highlighted squares', async () => {
+      const recognizer = new Recognizer(screen);
+      for (const file in highlightedImages) {
+        const [positionString, perspective, startFile] = file.split('_');
+        screen.setPixelGrid(startImages[startFile]);
+        await recognizer.load(true);
+        screen.setPixelGrid(highlightedImages[file]);
+        const pieces = await recognizer.recognizeBoard();
+        game.setPerspective(perspective === 'w');
+        game.putPieces(pieces);
+        const position = game.fen().split(' ')[0];
+        expect(position, startFile).toBe(positionString.replaceAll('-', '/'));
+      }
+    });
   });
 
   describe('Move scanning', () => {
