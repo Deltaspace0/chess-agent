@@ -25,3 +25,5 @@ test_images
 *.njsproj
 *.sln
 *.sw?
+
+out/
