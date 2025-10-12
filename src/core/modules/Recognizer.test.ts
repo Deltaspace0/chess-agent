@@ -179,7 +179,7 @@ describe('Recognizer', () => {
     });
   });
 
-  describe.only('Move scanning', () => {
+  describe('Move scanning', () => {
     it('should detect a move on the board', async () => {
       for (const name in moveImageSequences) {
         const [fen, expectedMove, perspective, startFile] = name.split('_');
