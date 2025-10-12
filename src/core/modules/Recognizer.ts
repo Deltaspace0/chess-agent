@@ -3,6 +3,11 @@ import type { AgentRecognizer } from './Agent.ts';
 import PixelGrid from './PixelGrid.ts';
 import { Screen } from './device/Screen.ts';
 
+export interface RecognizerModel {
+  colors: number[];
+  hashes: Record<string, string>;
+}
+
 interface MoveResidual {
   move: string | null;
   residual: number;
@@ -210,7 +215,17 @@ class Recognizer implements AgentRecognizer {
     return moveResiduals;
   }
 
-  async load(isWhitePerspective: boolean) {
+  setModel(model: RecognizerModel | null) {
+    if (!model) {
+      this.pieceColors = new Set();
+      this.pieceHashes = {};
+    } else if (model.hashes !== this.pieceHashes) {
+      this.pieceColors = new Set(model.colors);
+      this.pieceHashes = model.hashes;
+    }
+  }
+
+  async load(isWhitePerspective: boolean): Promise<RecognizerModel> {
     const pieces1 = [['rb1', 'nb1', 'bb1', 'qb1', 'kb1', 'bb2', 'nb2', 'rb2'],
                     ['pb1', 'pb2', 'pb3', 'pb4', 'pb5', 'pb6', 'pb7', 'pb8'],
                     ['e11', 'e12', 'e13', 'e14', 'e15', 'e16', 'e17', 'e18'],
@@ -245,11 +260,13 @@ class Recognizer implements AgentRecognizer {
     const pieceColors1 = getPieceColors(pieceGrids1, backColors);
     const pieceColors2 = getPieceColors(pieceGrids2, backColors);
     this.pieceColors = new Set([...pieceColors1, ...pieceColors2]);
+    this.pieceHashes = {};
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
         this.pieceHashes[pieces[i][j]] = this.getHash(grid[i][j]);
       }
     }
+    return { colors: [...this.pieceColors], hashes: this.pieceHashes };
   }
 
   async recognizeBoard(): Promise<[Piece, number, number][]> {

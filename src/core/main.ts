@@ -292,7 +292,10 @@ function debounce<T>(callback: (x: T) => void) {
     loadHashes: () => {
       const perspective = preferenceManager.getPreference('perspective');
       recognizer.load(perspective)
-        .then(() => updateStatus('Loaded piece hashes'))
+        .then((model) => {
+          preferenceManager.setPreference('recognizerModel', model);
+          updateStatus('Loaded piece hashes');
+        })
         .catch((e) => {
           updateStatus('Failed to load piece hashes');
           console.log(e);
@@ -481,7 +484,8 @@ function debounce<T>(callback: (x: T) => void) {
         spawnExternalEngine(value);
         engineInternal.kill();
       }
-    }
+    },
+    recognizerModel: (value) => recognizer.setModel(value)
   };
   for (const [name, listener] of Object.entries(preferenceListeners)) {
     preferenceManager.onUpdatePreference(name as Preference, listener);

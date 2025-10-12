@@ -118,6 +118,11 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     label: 'screenshotLength',
     description: 'screenshotLength',
     defaultValue: 1
+  },
+  recognizerModel: {
+    label: 'Recognizer model',
+    description: 'Pixel colors and hashes of piece images for Recognizer',
+    defaultValue: null
   }
 };
 

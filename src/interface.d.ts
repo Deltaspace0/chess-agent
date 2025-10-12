@@ -1,5 +1,6 @@
 import type { Piece } from 'chess.js';
-import { possibleLocations } from './config';
+import type { RecognizerModel } from './core/modules/Recognizer.ts';
+import { possibleLocations } from './config.ts';
 
 declare global {
   interface Region {
@@ -45,6 +46,7 @@ declare global {
     region: Region | null;
     enginePath: string | null;
     screenshotLength: number;
+    recognizerModel: RecognizerModel | null;
   }
 
   interface PreferenceConfig<T extends Preference> {
