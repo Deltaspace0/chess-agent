@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { readdir } from 'fs/promises';
-import { loadImage } from '@nut-tree-fork/nut-js';
+import { loadImage, sleep } from '@nut-tree-fork/nut-js';
 import path from 'path';
 import Game from './Game.ts';
 import PixelGrid from './PixelGrid.ts';
@@ -9,6 +9,7 @@ import { Screen } from './device/Screen.ts';
 
 class ScreenStub extends Screen {
   private pixelGrid: PixelGrid | null = null;
+  private gridSequence: PixelGrid[] = [];
 
   grabRegion(): Promise<PixelGrid> {
     if (!this.pixelGrid) {
@@ -17,10 +18,22 @@ class ScreenStub extends Screen {
     return Promise.resolve(this.pixelGrid);
   }
 
-  async sleep(): Promise<void> {}
+  async sleep(): Promise<void> {
+    if (this.gridSequence.length === 1) {
+      this.pixelGrid = this.gridSequence[0];
+    } else {
+      this.pixelGrid = this.gridSequence.shift() || null;
+    }
+    await sleep(5);
+  }
 
   setPixelGrid(pixelGrid: PixelGrid | null) {
     this.pixelGrid = pixelGrid;
+  }
+
+  setGridSequence(gridSequence: PixelGrid[]) {
+    this.gridSequence = gridSequence;
+    this.pixelGrid = gridSequence[0] || null;
   }
 }
 
@@ -32,6 +45,8 @@ const startImages: Record<string, PixelGrid> = {};
 const flippedImages: Record<string, PixelGrid> = {};
 const randomImages: Record<string, PixelGrid> = {};
 const highlightedImages: Record<string, PixelGrid> = {};
+const moveImageSequences: Record<string, PixelGrid[]> = {};
+const coveredImageSequences: Record<string, PixelGrid[]> = {};
 const recognizers: Record<string, Recognizer> = {};
 
 async function loadImages(
@@ -55,12 +70,52 @@ async function loadImages(
   }
 }
 
+async function loadImageSequences(
+  directory: string,
+  imageSequences: Record<string, PixelGrid[]>
+) {
+  try {
+    const subdirectories = await readdir(directory);
+    const promises: Promise<void>[] = [];
+    for (const subdirectory of subdirectories) {
+      if (subdirectory.slice(-4) !== '.png') {
+        continue;
+      }
+      promises.push((async () => {
+        const images: Record<string, PixelGrid> = {};
+        await loadImages(path.join(directory, subdirectory), images);
+        const imageSequence: PixelGrid[] = [];
+        const f = (x: string) => Number(x.split('_')[1].slice(0, -4));
+        const files = Object.keys(images).sort((a, b) => f(a)-f(b));
+        for (const file of files) {
+          const amount = Number(file.split('_')[0]);
+          for (let i = 0; i < amount; i++) {
+            imageSequence.push(images[file]);
+          }
+        }
+        imageSequences[subdirectory] = imageSequence;
+      })());
+    }
+    return Promise.all(promises);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 beforeAll(async () => {
   await Promise.all([
     loadImages(path.join('test_images', 'start'), startImages),
     loadImages(path.join('test_images', 'flipped'), flippedImages),
     loadImages(path.join('test_images', 'random'), randomImages),
-    loadImages(path.join('test_images', 'highlighted'), highlightedImages)
+    loadImages(path.join('test_images', 'highlighted'), highlightedImages),
+    loadImageSequences(
+      path.join('test_images', 'scan', 'move'),
+      moveImageSequences
+    ),
+    loadImageSequences(
+      path.join('test_images', 'scan', 'covered'),
+      coveredImageSequences
+    )
   ]);
   for (const file in startImages) {
     const recognizer = new Recognizer(screen);
@@ -83,6 +138,7 @@ describe('Recognizer', () => {
         expect(position, file).toBe(startPosition);
       }
     });
+
     it('should recognize flipped position', async () => {
       const recognizer = new Recognizer(screen);
       for (const file in flippedImages) {
@@ -95,6 +151,7 @@ describe('Recognizer', () => {
         expect(position, file).toBe(startPosition);
       }
     });
+
     it('should recognize random position', async () => {
       for (const file in randomImages) {
         const [positionString, perspective, startFile] = file.split('_');
@@ -107,6 +164,7 @@ describe('Recognizer', () => {
         expect(position, startFile).toBe(positionString.replaceAll('-', '/'));
       }
     });
+
     it('should recognize position with highlighted squares', async () => {
       for (const file in highlightedImages) {
         const [positionString, perspective, startFile] = file.split('_');
@@ -121,14 +179,65 @@ describe('Recognizer', () => {
     });
   });
 
-  describe('Move scanning', () => {
-    it.todo('should detect a move on the board');
-    it.todo('should not detect a move if the board does not change');
-    it.todo('should detect a castling move');
-    it.todo('should detect en passant');
-    it.todo('should detect an animated move');
-    it.todo('should detect a move that is already made');
-    it.todo('should detect a move with highlighted squares');
-    it.todo('should not detect a move if the board gets covered');
+  describe.only('Move scanning', () => {
+    it('should detect a move on the board', async () => {
+      for (const name in moveImageSequences) {
+        const [fen, expectedMove, perspective, startFile] = name.split('_');
+        const recognizer = recognizers[startFile];
+        screen.setGridSequence(moveImageSequences[name]);
+        game.setPerspective(perspective === 'w');
+        game.load(fen.replaceAll('=', '/').replaceAll('+', ' '));
+        const timeout = setTimeout(() => recognizer.stopScanning(), 1000);
+        const boardStates = game.getNextBoardStates();
+        const move = await recognizer.scanMove(boardStates);
+        clearTimeout(timeout);
+        expect(move).toBe(expectedMove);
+      }
+    });
+
+    it('should not detect a move if the board does not change', async () => {
+      for (const file in startImages) {
+        const recognizer = recognizers[file];
+        screen.setGridSequence([startImages[file]]);
+        game.setPerspective(true);
+        game.reset();
+        const timeout = setTimeout(() => recognizer.stopScanning(), 200);
+        const boardStates = game.getNextBoardStates();
+        const move = recognizer.scanMove(boardStates);
+        await expect(move).rejects.toThrow();
+        clearTimeout(timeout);
+        break;
+      }
+    });
+
+    it('should not detect a move if the board gets covered', async () => {
+      for (const name in coveredImageSequences) {
+        const [fen, perspective, startFile] = name.split('_');
+        const recognizer = recognizers[startFile];
+        screen.setGridSequence(coveredImageSequences[name]);
+        game.setPerspective(perspective === 'w');
+        game.load(fen.replaceAll('=', '/').replaceAll('+', ' '));
+        const timeout = setTimeout(() => recognizer.stopScanning(), 200);
+        const boardStates = game.getNextBoardStates();
+        const move = recognizer.scanMove(boardStates);
+        await expect(move).rejects.toThrow();
+        clearTimeout(timeout);
+      }
+    });
+
+    it('should detect a move that is already made', async () => {
+      for (const name in moveImageSequences) {
+        const [fen, expectedMove, perspective, startFile] = name.split('_');
+        const recognizer = recognizers[startFile];
+        screen.setGridSequence(moveImageSequences[name].slice(-1));
+        game.setPerspective(perspective === 'w');
+        game.load(fen.replaceAll('=', '/').replaceAll('+', ' '));
+        const timeout = setTimeout(() => recognizer.stopScanning(), 1000);
+        const boardStates = game.getNextBoardStates();
+        const move = await recognizer.scanMove(boardStates);
+        clearTimeout(timeout);
+        expect(move).toBe(expectedMove);
+      }
+    });
   });
 });
