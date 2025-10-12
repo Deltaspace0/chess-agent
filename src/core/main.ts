@@ -18,7 +18,7 @@ import { selectRegion } from '../util.ts';
 const preloadPath = path.join(import.meta.dirname, 'preload.js');
 const iconPath = 'images/chess-icon.png';
 
-async function createWindow(): Promise<BrowserWindow> {
+async function createMainWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({
     maximizable: false,
     minWidth: 300,
@@ -135,9 +135,9 @@ function debounce<T>(callback: (x: T) => void) {
   const screen = new ConcreteScreen();
   const preferenceManager = new PreferenceManager();
   await app.whenReady();
-  const win = await createWindow();
+  const mainWin = await createMainWindow();
   let appRunning = true;
-  win.addListener('close', () => {
+  mainWin.addListener('close', () => {
     appRunning = false;
     app.quit();
   });
@@ -146,7 +146,7 @@ function debounce<T>(callback: (x: T) => void) {
     engineWin.hide();
     e.preventDefault();
   });
-  const regionWin = await createRegionWindow(win);
+  const regionWin = await createRegionWindow(mainWin);
   regionWin.addListener('show', () => {
     mouse.setActive(false);
     setTimeout(() => regionWin.setOpacity(1), 100);
@@ -157,7 +157,7 @@ function debounce<T>(callback: (x: T) => void) {
     }
     regionWin.hide();
     regionWin.setOpacity(0);
-    win.show();
+    mainWin.show();
     mouse.setActive(true);
     e.preventDefault();
   });
@@ -170,20 +170,20 @@ function debounce<T>(callback: (x: T) => void) {
     regionWin.show();
     e.preventDefault();
   });
-  const settingsWin = await createSettingsWindow(win);
+  const settingsWin = await createSettingsWindow(mainWin);
   settingsWin.addListener('show', () => mouse.setActive(false));
   settingsWin.addListener('close', (e) => {
     if (!appRunning) {
       return;
     }
     settingsWin.hide();
-    win.show();
+    mainWin.show();
     mouse.setActive(true);
     e.preventDefault();
   });
   const sendToApp = (channel: string, ...args: unknown[]) => {
     if (appRunning) {
-      win.webContents.send(channel, ...args);
+      mainWin.webContents.send(channel, ...args);
       engineWin.webContents.send(channel, ...args);
       regionWin.webContents.send(channel, ...args);
       actionWin.webContents.send(channel, ...args);
@@ -368,7 +368,7 @@ function debounce<T>(callback: (x: T) => void) {
           const image = await screen.getImage();
           images.push(image);
         }
-        const result = await dialog.showOpenDialog(win, {
+        const result = await dialog.showOpenDialog(mainWin, {
           properties: ['createDirectory', 'openDirectory']
         });
         if (result.filePaths.length > 0) {
@@ -382,7 +382,7 @@ function debounce<T>(callback: (x: T) => void) {
         }
       } else {
         const image = await screen.getImage();
-        const result = await dialog.showSaveDialog(win, {
+        const result = await dialog.showSaveDialog(mainWin, {
           properties: ['createDirectory'],
           filters: [{ name: 'Picture', extensions: ['png'] }]
         });
@@ -458,7 +458,7 @@ function debounce<T>(callback: (x: T) => void) {
   });
   const preferenceListeners: Partial<PreferenceListeners> = {
     alwaysOnTop: (value) => {
-      win.setAlwaysOnTop(value, 'normal');
+      mainWin.setAlwaysOnTop(value, 'normal');
       engineWin.setAlwaysOnTop(value, 'normal');
     },
     perspective: (value) => {
