@@ -17,6 +17,7 @@ import { selectRegion } from '../util.ts';
 
 const preloadPath = path.join(import.meta.dirname, 'preload.js');
 const iconPath = 'images/chess-icon.png';
+const appPath = app.isPackaged ? 'dist/src/app' : 'http://localhost:5173/src/app';
 
 async function createMainWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({
@@ -33,7 +34,12 @@ async function createMainWindow(): Promise<BrowserWindow> {
       preload: preloadPath
     }
   });
-  await win.loadURL('http://localhost:5173/src/app/main/');
+  const pagePath = `${appPath}/main/index.html`;
+  if (app.isPackaged) {
+    await win.loadFile(pagePath);
+  } else {
+    await win.loadURL(pagePath);
+  }
   return win;
 }
 
@@ -48,7 +54,12 @@ async function createEngineWindow(): Promise<BrowserWindow> {
       preload: preloadPath
     }
   });
-  await win.loadURL('http://localhost:5173/src/app/engine/');
+  const pagePath = `${appPath}/engine/index.html`;
+  if (app.isPackaged) {
+    await win.loadFile(pagePath);
+  } else {
+    await win.loadURL(pagePath);
+  }
   return win;
 }
 
@@ -69,7 +80,12 @@ async function createRegionWindow(parent: BrowserWindow): Promise<BrowserWindow>
       preload: preloadPath
     }
   });
-  await win.loadURL('http://localhost:5173/src/app/region/');
+  const pagePath = `${appPath}/region/index.html`;
+  if (app.isPackaged) {
+    await win.loadFile(pagePath);
+  } else {
+    await win.loadURL(pagePath);
+  }
   return win;
 }
 
@@ -91,7 +107,12 @@ async function createActionWindow(parent: BrowserWindow): Promise<BrowserWindow>
       preload: preloadPath
     }
   });
-  await win.loadURL('http://localhost:5173/src/app/action/');
+  const pagePath = `${appPath}/action/index.html`;
+  if (app.isPackaged) {
+    await win.loadFile(pagePath);
+  } else {
+    await win.loadURL(pagePath);
+  }
   return win;
 }
 
@@ -110,7 +131,12 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
       preload: preloadPath
     }
   });
-  await win.loadURL('http://localhost:5173/src/app/settings/');
+  const pagePath = `${appPath}/settings/index.html`;
+  if (app.isPackaged) {
+    await win.loadFile(pagePath);
+  } else {
+    await win.loadURL(pagePath);
+  }
   return win;
 }
 
