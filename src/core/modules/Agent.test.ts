@@ -33,6 +33,38 @@ function getAgent(engine: AgentEngine, recognizer: AgentRecognizer): Agent {
 }
 
 describe('Agent', () => {
+  describe('Move processing', () => {
+    it('should process a legal move', () => {
+      const agent = getAgent(getEngineMock(), getRecognizerMock());
+      const callback = vi.fn();
+      agent.onMove(callback);
+      const result = agent.processMove('e2e4');
+      expect(result).toBe(true);
+      expect(callback).toHaveBeenCalledWith('e2e4');
+    });
+
+    it('should process an illegal move', () => {
+      const agent = getAgent(getEngineMock(), getRecognizerMock());
+      const callback = vi.fn();
+      agent.onMove(callback);
+      const result = agent.processMove('e2e5');
+      expect(result).toBe(false);
+      expect(callback).not.toHaveBeenCalled();
+    });
+
+    it('should not call onMove after checkmate', () => {
+      const agent = getAgent(getEngineMock(), getRecognizerMock());
+      const callback = vi.fn();
+      agent.processMove('f2f3');
+      agent.processMove('e7e5');
+      agent.processMove('g2g4');
+      agent.onMove(callback);
+      const result = agent.processMove('d8h4');
+      expect(result).toBe(true);
+      expect(callback).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Best move', () => {
     it('should return the best move immediately', async () => {
       const engine = getEngineMock();
