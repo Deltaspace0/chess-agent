@@ -63,6 +63,17 @@ describe('Agent', () => {
       expect(result).toBe(true);
       expect(callback).not.toHaveBeenCalled();
     });
+
+    it('should undo a move when undo keyword is sent', () => {
+      const engine = getEngineMock();
+      const agent = getAgent(engine, getRecognizerMock());
+      agent.processMove('f2f3');
+      const result = agent.processMove('undo');
+      expect(result).toBe(true);
+      expect(engine.undo).toHaveBeenCalled();
+      expect(agent.processMove('d7d5')).toBe(false);
+      expect(agent.processMove('f2f4')).toBe(true);
+    });
   });
 
   describe('Best move', () => {

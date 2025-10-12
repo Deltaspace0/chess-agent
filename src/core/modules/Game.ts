@@ -151,6 +151,13 @@ class Game implements AgentGame {
 
   getNextBoardStates(): BoardState[] {
     const boardStates = [];
+    const history = this.chess.history({ verbose: true });
+    if (history.length > 0) {
+      const move = history[history.length-1].lan;
+      this.chess.undo();
+      boardStates.push({ move: 'undo', grid: this.board() });
+      this.chess.move(move);
+    }
     const moves = this.chess.moves({ verbose: true }).map((x) => x.lan);
     for (const move of moves) {
       this.chess.move(move);

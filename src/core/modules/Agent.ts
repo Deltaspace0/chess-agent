@@ -68,6 +68,11 @@ export class Agent {
   }
 
   processMove(move: string): boolean {
+    if (move === 'undo') {
+      this.undoMove();
+      this.afterMoveCallback(move);
+      return true;
+    }
     const piece = this.game.get(move.substring(0, 2));
     const isPromotion = '18'.includes(move[3]) && piece?.type === 'p';
     if (isPromotion && move.length < 5) {
