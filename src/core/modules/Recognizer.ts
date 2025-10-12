@@ -32,18 +32,16 @@ function getChangedSquares(
   return changedSquares;
 }
 
-function pixelToString(pixel: Buffer): string {
-  return `${pixel[0]} ${pixel[1]} ${pixel[2]}`;
+function pixelToNumber(pixel: Buffer): number {
+  return pixel[0]*256*256+pixel[1]*256+pixel[2];
 }
 
-function checkColors(pixel: Buffer, colorSets: Set<string>[]): boolean {
+function checkColors(pixel: Buffer, colorSets: Set<number>[]): boolean {
   for (const colors of colorSets) {
     for (const color of colors) {
-      const bgr = color.split(' ').map(Number);
-      let distance = 0;
-      for (let i = 0; i < 3; i++) {
-        distance += (pixel[i]-bgr[i])**2;
-      }
+      const distance = (pixel[0]-Math.floor(color/256/256))**2+
+        (pixel[1]-Math.floor((color%(256*256))/256))**2+
+        (pixel[2]-(color%256))**2;
       if (distance < 900) {
         return true;
       }
@@ -52,8 +50,8 @@ function checkColors(pixel: Buffer, colorSets: Set<string>[]): boolean {
   return false;
 }
 
-function getBackColors(grids: PixelGrid[]): Set<string> {
-  const colors: Set<string> = new Set();
+function getBackColors(grids: PixelGrid[]): Set<number> {
+  const colors: Set<number> = new Set();
   for (const grid of grids) {
     const [width, height] = grid.getDimensions();
     for (let i = 0; i < height; i++) {
@@ -62,7 +60,7 @@ function getBackColors(grids: PixelGrid[]): Set<string> {
         if (checkColors(pixel, [colors])) {
           continue;
         }
-        colors.add(pixelToString(pixel));
+        colors.add(pixelToNumber(pixel));
         if (colors.size >= 10) {
           return colors;
         }
@@ -74,9 +72,9 @@ function getBackColors(grids: PixelGrid[]): Set<string> {
 
 function getPieceColors(
   grids: PixelGrid[],
-  backColors: Set<string>[]
-): Set<string> {
-  const pieceColors: Set<string> = new Set();
+  backColors: Set<number>[]
+): Set<number> {
+  const pieceColors: Set<number> = new Set();
   for (const grid of grids) {
     const [width, height] = grid.getDimensions();
     for (let i = 0; i < height; i++) {
@@ -94,7 +92,7 @@ function getPieceColors(
         for (let b = b1; b <= b2; b++) {
           for (let g = g1; g <= g2; g++) {
             for (let r = r1; r <= r2; r++) {
-              pieceColors.add(`${b} ${g} ${r}`);
+              pieceColors.add(b*256*256+g*256+r);
             }
           }
         }
@@ -107,7 +105,7 @@ function getPieceColors(
 class Recognizer implements AgentRecognizer {
   private screen: Screen;
   private scanning: boolean = false;
-  private pieceColors: Set<string> = new Set();
+  private pieceColors: Set<number> = new Set();
   private pieceHashes: Record<string, string> = {};
 
   constructor(screen: Screen) {
@@ -127,7 +125,7 @@ class Recognizer implements AgentRecognizer {
         for (let k = startRow; k < startRow+height; k++) {
           for (let l = startCol; l < startCol+width; l++) {
             const pixel = squareGrid.getPixelBuffer(k, l);
-            if (this.pieceColors.has(pixelToString(pixel))) {
+            if (this.pieceColors.has(pixelToNumber(pixel))) {
               for (let m = 0; m < 3; m++) {
                 bgra[m] += pixel[m];
               }
