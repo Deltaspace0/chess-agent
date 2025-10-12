@@ -33,15 +33,15 @@ function getChangedSquares(
 }
 
 function pixelToNumber(pixel: Buffer): number {
-  return pixel[0]*256*256+pixel[1]*256+pixel[2];
+  return (pixel[0] << 16)+(pixel[1] << 8)+pixel[2];
 }
 
 function checkColors(pixel: Buffer, colorSets: Set<number>[]): boolean {
   for (const colors of colorSets) {
     for (const color of colors) {
-      const distance = (pixel[0]-Math.floor(color/256/256))**2+
-        (pixel[1]-Math.floor((color%(256*256))/256))**2+
-        (pixel[2]-(color%256))**2;
+      const distance = (pixel[0]-(color >> 16))**2+
+        (pixel[1]-((color >> 8) & 255))**2+
+        (pixel[2]-(color & 255))**2;
       if (distance < 900) {
         return true;
       }
