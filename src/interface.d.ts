@@ -44,6 +44,7 @@ declare global {
     mouseSpeed: number;
     region: Region | null;
     enginePath: string | null;
+    screenshotLength: number;
   }
 
   interface PreferenceConfig<T extends Preference> {

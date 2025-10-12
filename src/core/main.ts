@@ -1,4 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, screen } from 'electron';
+import { saveImage, type Image } from '@nut-tree-fork/nut-js';
 import path from 'path';
 import ActionRegionManager from './modules/ActionRegionManager.ts';
 import { Agent } from './modules/Agent.ts';
@@ -13,7 +14,6 @@ import { ConcreteMouse } from './modules/device/Mouse.ts';
 import { ConcreteScreen, getAdjustedRegion } from './modules/device/Screen.ts';
 import { defaultVariables, possibleLocations } from '../config.ts';
 import { selectRegion } from '../util.ts';
-import { saveImage } from '@nut-tree-fork/nut-js';
 
 const preloadPath = path.join(import.meta.dirname, 'preload.js');
 const iconPath = 'images/chess-icon.png';
@@ -357,16 +357,38 @@ function debounce<T>(callback: (x: T) => void) {
     },
     savePicture: async () => {
       mouse.setActive(false);
-      const image = await screen.getImage();
-      const result = await dialog.showSaveDialog(win, {
-        properties: ['createDirectory'],
-        filters: [{ name: 'Picture', extensions: ['png'] }]
-      });
-      mouse.setActive(true);
-      if (result.filePath) {
-        saveImage({ image, path: result.filePath });
-        updateStatus('Saved screenshot');
+      const amount = preferenceManager.getPreference('screenshotLength');
+      if (amount > 1) {
+        const images: Image[] = [];
+        for (let i = 0; i < amount; i++) {
+          await screen.sleep(50);
+          const image = await screen.getImage();
+          images.push(image);
+        }
+        const result = await dialog.showOpenDialog(win, {
+          properties: ['createDirectory', 'openDirectory']
+        });
+        if (result.filePaths.length > 0) {
+          const directory = result.filePaths[0];
+          for (let i = 0; i < images.length; i++) {
+            const image = images[i];
+            const imagePath = path.join(directory, `${i}.png`);
+            await saveImage({ image, path: imagePath});
+          }
+          updateStatus('Saved screenshots');
+        }
+      } else {
+        const image = await screen.getImage();
+        const result = await dialog.showSaveDialog(win, {
+          properties: ['createDirectory'],
+          filters: [{ name: 'Picture', extensions: ['png'] }]
+        });
+        if (result.filePath) {
+          await saveImage({ image, path: result.filePath });
+          updateStatus('Saved screenshot');
+        }
       }
+      mouse.setActive(true);
     },
     promoteQueen: () => agent.promoteTo('q'),
     promoteRook: () => agent.promoteTo('r'),

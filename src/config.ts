@@ -113,6 +113,11 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     label: 'Engine path',
     description: 'Path to the external engine',
     defaultValue: null
+  },
+  screenshotLength: {
+    label: 'screenshotLength',
+    description: 'screenshotLength',
+    defaultValue: 1
   }
 };
 
@@ -135,6 +140,7 @@ export const defaultVariables: Variables = {
 export const actionLabels: Record<Action, string> = {
   showRegion: 'Region',
   hideRegion: 'Return',
+  hideAction: 'Close',
   loadHashes: 'Load hashes',
   scanMove: 'Scan move',
   skipMove: 'Skip move',
@@ -147,6 +153,7 @@ export const actionLabels: Record<Action, string> = {
   reloadEngine: 'Reload',
   showEngine: 'Engine',
   showSettings: 'Settings',
+  hideSettings: 'Close',
   loadConfig: 'Load config',
   saveConfig: 'Save config',
   resetConfig: 'Reset config',
