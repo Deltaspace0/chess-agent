@@ -43,6 +43,7 @@ const game = new Game();
 const startPosition = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
 const startImages: Record<string, PixelGrid> = {};
 const flippedImages: Record<string, PixelGrid> = {};
+const emptyImages: Record<string, PixelGrid> = {};
 const randomImages: Record<string, PixelGrid> = {};
 const highlightedImages: Record<string, PixelGrid> = {};
 const moveImageSequences: Record<string, PixelGrid[]> = {};
@@ -106,6 +107,7 @@ beforeAll(async () => {
   await Promise.all([
     loadImages(path.join('test_images', 'start'), startImages),
     loadImages(path.join('test_images', 'flipped'), flippedImages),
+    loadImages(path.join('test_images', 'empty'), emptyImages),
     loadImages(path.join('test_images', 'random'), randomImages),
     loadImages(path.join('test_images', 'highlighted'), highlightedImages),
     loadImageSequences(
@@ -149,6 +151,17 @@ describe('Recognizer', () => {
         game.putPieces(pieces);
         const position = game.fen().split(' ')[0];
         expect(position, file).toBe(startPosition);
+      }
+    });
+
+    it('should recognize empty position', async () => {
+      const recognizer = new Recognizer(screen);
+      for (const file in emptyImages) {
+        screen.setPixelGrid(startImages[file]);
+        await recognizer.load(true);
+        screen.setPixelGrid(emptyImages[file]);
+        const pieces = await recognizer.recognizeBoard({ putKings: false });
+        expect(pieces, file).toEqual([]);
       }
     });
 
