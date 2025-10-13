@@ -37,16 +37,12 @@ function getChangedSquares(
   return changedSquares;
 }
 
-function pixelToNumber(pixel: Buffer): number {
-  return (pixel[0] << 16)+(pixel[1] << 8)+pixel[2];
-}
-
-function checkColors(pixel: Buffer, colorSets: Set<number>[]): boolean {
+function checkColors(pixel: number, colorSets: Set<number>[]): boolean {
   for (const colors of colorSets) {
     for (const color of colors) {
-      const distance = (pixel[0]-(color >> 16))**2+
-        (pixel[1]-((color >> 8) & 255))**2+
-        (pixel[2]-(color & 255))**2;
+      const distance = ((pixel >> 16)-(color >> 16))**2+
+        (((pixel >> 8) & 255)-((color >> 8) & 255))**2+
+        ((pixel & 255)-(color & 255))**2;
       if (distance < 900) {
         return true;
       }
@@ -61,11 +57,11 @@ function getBackColors(grids: PixelGrid[]): Set<number> {
     const [width, height] = grid.getDimensions();
     for (let i = 0; i < height; i++) {
       for (let j = 0; j < width; j++) {
-        const pixel = grid.getPixelBuffer(i, j);
+        const pixel = grid.getPixelNumber(i, j);
         if (checkColors(pixel, [colors])) {
           continue;
         }
-        colors.add(pixelToNumber(pixel));
+        colors.add(pixel);
         if (colors.size >= 10) {
           return colors;
         }
@@ -84,20 +80,17 @@ function getPieceColors(
     const [width, height] = grid.getDimensions();
     for (let i = 0; i < height; i++) {
       for (let j = 0; j < width; j++) {
-        const pixel = grid.getPixelBuffer(i, j);
+        const pixel = grid.getPixelNumber(i, j);
         if (checkColors(pixel, backColors)) {
           continue;
         }
-        const b1 = Math.max(0, pixel[0]-1);
-        const b2 = Math.min(255, pixel[0]+1);
-        const g1 = Math.max(0, pixel[1]-1);
-        const g2 = Math.min(255, pixel[1]+1);
-        const r1 = Math.max(0, pixel[2]-1);
-        const r2 = Math.min(255, pixel[2]+1);
-        for (let b = b1; b <= b2; b++) {
-          for (let g = g1; g <= g2; g++) {
-            for (let r = r1; r <= r2; r++) {
-              pieceColors.add(b*256*256+g*256+r);
+        const pb = pixel >> 16;
+        const pg = (pixel >> 8) & 255;
+        const pr = pixel & 255;
+        for (let b = Math.max(0, pb-1); b <= Math.min(255, pb+1); b++) {
+          for (let g = Math.max(0, pg-1); g <= Math.min(255, pg+1); g++) {
+            for (let r = Math.max(0, pr-1); r <= Math.min(255, pr+1); r++) {
+              pieceColors.add((b << 16)+(g << 8)+r);
             }
           }
         }
@@ -129,11 +122,11 @@ class Recognizer implements AgentRecognizer {
         const bgra = [0, 0, 0, 0];
         for (let k = startRow; k < startRow+height; k++) {
           for (let l = startCol; l < startCol+width; l++) {
-            const pixel = squareGrid.getPixelBuffer(k, l);
-            if (this.pieceColors.has(pixelToNumber(pixel))) {
-              for (let m = 0; m < 3; m++) {
-                bgra[m] += pixel[m];
-              }
+            const pixel = squareGrid.getPixelNumber(k, l);
+            if (this.pieceColors.has(pixel)) {
+              bgra[0] += pixel >> 16;
+              bgra[1] += (pixel >> 8) & 255;
+              bgra[2] += pixel & 255;
               bgra[3] += 255;
             }
           }

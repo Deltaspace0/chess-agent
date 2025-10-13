@@ -61,6 +61,13 @@ class PixelGrid {
     return this.buffer.subarray(start, start+4);
   }
 
+  getPixelNumber(row: number, col: number): number {
+    const [i, j] = this.convertCoordinates(row, col);
+    const start = i*this.byteWidth+j*4;
+    return (this.buffer[start] << 16)+
+      (this.buffer[start+1] << 8)+this.buffer[start+2];
+  }
+
   getWidth(): number {
     return this.transposed ? this.region.height : this.region.width;
   }
