@@ -8,6 +8,10 @@ export interface RecognizerModel {
   hashes: Record<string, string>;
 }
 
+export interface RecognizerParameters {
+  putKings?: boolean;
+}
+
 interface MoveResidual {
   move: string | null;
   residual: number;
@@ -262,12 +266,19 @@ class Recognizer implements AgentRecognizer {
     return { colors: [...this.pieceColors], hashes: this.pieceHashes };
   }
 
-  async recognizeBoard(): Promise<[Piece, number, number][]> {
+  async recognizeBoard(
+    parameters?: RecognizerParameters
+  ): Promise<[Piece, number, number][]> {
     if (!this.pieceHashes['rb1']) {
       throw new Error('no hashes');
     }
     const grid = await this.grabBoard();
     const pieces: [Piece, number, number][] = [];
+    let whiteKingPut = false;
+    let blackKingPut = false;
+    let uncertainRow = 0;
+    let uncertainCol = 0;
+    let maxMinResidual = -1;
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
         const currentHash = this.getHash(grid[i][j]);
@@ -281,13 +292,30 @@ class Recognizer implements AgentRecognizer {
             likelyPieceString = pieceString;
           }
         }
+        if (minResidual > maxMinResidual) {
+          maxMinResidual = minResidual;
+          uncertainRow = i;
+          uncertainCol = j;
+        }
         if (likelyPieceString[0] !== 'e') {
+          if (likelyPieceString === 'kw1') {
+            whiteKingPut = true;
+          } else if (likelyPieceString === 'kb1') {
+            blackKingPut = true;
+          }
           const piece = {
             type: likelyPieceString[0] as PieceSymbol,
             color: likelyPieceString[1] as Color
           };
           pieces.push([piece, i, j]);
         }
+      }
+    }
+    if (parameters?.putKings !== false) {
+      if (!whiteKingPut) {
+        pieces.push([{ type: 'k', color: 'w' }, uncertainRow, uncertainCol]);
+      } else if (!blackKingPut) {
+        pieces.push([{ type: 'k', color: 'b' }, uncertainRow, uncertainCol]);
       }
     }
     return pieces;
