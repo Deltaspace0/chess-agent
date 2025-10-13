@@ -16,7 +16,8 @@ import { defaultVariables, possibleLocations } from '../config.ts';
 import { selectRegion } from '../util.ts';
 
 const preloadPath = path.join(import.meta.dirname, 'preload.js');
-const iconPath = 'images/chess-icon.png';
+const iconPath = path.join(import.meta.dirname,
+  '..', '..', 'images', 'chess-icon.png');
 const appPath = app.isPackaged ? 'dist/src/app' : 'http://localhost:5173/src/app';
 
 async function createMainWindow(): Promise<BrowserWindow> {
