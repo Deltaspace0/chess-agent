@@ -5,7 +5,7 @@ import { Screen } from './device/Screen.ts';
 
 export interface RecognizerModel {
   colors: number[];
-  hashes: Record<string, string>;
+  hashes: Record<string, Uint8Array>;
 }
 
 export interface RecognizerParameters {
@@ -17,17 +17,17 @@ interface MoveResidual {
   residual: number;
 }
 
-function compareHashes(hash1: string, hash2: string): number {
+function compareHashes(hash1: Uint8Array, hash2: Uint8Array): number {
   let residual = 0;
   for (let i = 0; i < hash1.length; i++) {
-    residual += Math.abs(Number(hash1[i])-Number(hash2[i]));
+    residual += Math.abs(hash1[i]-hash2[i]);
   }
   return residual;
 }
 
 function getChangedSquares(
-  oldHashes: string[][],
-  newHashes: string[][]
+  oldHashes: Uint8Array[][],
+  newHashes: Uint8Array[][]
 ): [number, number][] {
   const changedSquares: [number, number][] = [];
   for (let i = 0; i < 8; i++) {
@@ -108,7 +108,7 @@ class Recognizer implements AgentRecognizer {
   private screen: Screen;
   private scanning: boolean = false;
   private pieceColors: Set<number> = new Set();
-  private pieceHashes: Record<string, string> = {};
+  private pieceHashes: Record<string, Uint8Array> = {};
   private parameters: RecognizerParameters;
 
   constructor(screen: Screen, parameters?: RecognizerParameters) {
@@ -116,9 +116,10 @@ class Recognizer implements AgentRecognizer {
     this.parameters = parameters || {};
   }
 
-  private getHash(squareGrid: PixelGrid): string {
+  private getHash(squareGrid: PixelGrid): Uint8Array {
     const [squareWidth, squareHeight] = squareGrid.getDimensions();
-    let hash = '';
+    const hash = new Uint8Array(256);
+    let hashIndex = 0;
     let startRow = 0;
     for (let i = 0; i < 8; i++) {
       const height = Math.floor((squareHeight-startRow)/(8-i));
@@ -138,8 +139,7 @@ class Recognizer implements AgentRecognizer {
           }
         }
         for (let k = 0; k < 4; k++) {
-          bgra[k] /= width*height;
-          hash += Math.floor(bgra[k]*9/255);
+          hash[hashIndex++] = Math.floor(bgra[k]/width/height);
         }
         startCol += width;
       }
@@ -167,11 +167,11 @@ class Recognizer implements AgentRecognizer {
     return squareGrid;
   }
 
-  private async getBoardHashes(): Promise<string[][]> {
+  private async getBoardHashes(): Promise<Uint8Array[][]> {
     const grid = await this.grabBoard();
-    const boardHashes: string[][] = [];
+    const boardHashes: Uint8Array[][] = [];
     for (let i = 0; i < 8; i++) {
-      const rowHashes: string[] = [];
+      const rowHashes: Uint8Array[] = [];
       for (let j = 0; j < 8; j++) {
         rowHashes.push(this.getHash(grid[i][j]));
       }
@@ -180,7 +180,10 @@ class Recognizer implements AgentRecognizer {
     return boardHashes;
   }
 
-  private getPieceHashResidual(piece: Piece | null, hash: string): number {
+  private getPieceHashResidual(
+    piece: Piece | null,
+    hash: Uint8Array
+  ): number {
     if (piece === null) {
       const residual1 = compareHashes(hash, this.pieceHashes['e12']);
       const residual2 = compareHashes(hash, this.pieceHashes['e13']);
@@ -197,7 +200,7 @@ class Recognizer implements AgentRecognizer {
   }
 
   private getMoveResiduals(
-    hashes: string[][],
+    hashes: Uint8Array[][],
     states: BoardState[]
   ): MoveResidual[] {
     const moveResiduals: MoveResidual[] = [];
