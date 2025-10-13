@@ -50,7 +50,7 @@ class PreferenceManager {
   }
 
   saveToFile(path: string) {
-    fs.writeFileSync(path, JSON.stringify(this.preferences));
+    fs.writeFileSync(path, JSON.stringify(this.preferences, null, 2));
   }
 
   loadFromFile(path: string) {
