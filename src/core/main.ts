@@ -170,6 +170,9 @@ function debounce<T>(callback: (x: T) => void) {
   });
   const engineWin = await createEngineWindow();
   engineWin.addListener('close', (e) => {
+    if (!appRunning) {
+      return;
+    }
     engineWin.hide();
     e.preventDefault();
   });
