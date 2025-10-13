@@ -47,6 +47,7 @@ declare global {
     enginePath: string | null;
     screenshotLength: number;
     recognizerModel: RecognizerModel | null;
+    recognizerPutKings: boolean;
   }
 
   interface PreferenceConfig<T extends Preference> {

@@ -124,7 +124,7 @@ async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindo
     minimizable: false,
     resizable: false,
     width: 280,
-    height: 240,
+    height: 280,
     show: false,
     icon: iconPath,
     useContentSize: true,
@@ -515,7 +515,8 @@ function debounce<T>(callback: (x: T) => void) {
         engineInternal.kill();
       }
     },
-    recognizerModel: (value) => recognizer.setModel(value)
+    recognizerModel: (value) => recognizer.setModel(value),
+    recognizerPutKings: (value) => recognizer.setPutKings(value)
   };
   for (const [name, listener] of Object.entries(preferenceListeners)) {
     preferenceManager.onUpdatePreference(name as Preference, listener);

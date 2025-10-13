@@ -155,12 +155,12 @@ describe('Recognizer', () => {
     });
 
     it('should recognize empty position', async () => {
-      const recognizer = new Recognizer(screen);
+      const recognizer = new Recognizer(screen, { putKings: false });
       for (const file in emptyImages) {
         screen.setPixelGrid(startImages[file]);
         await recognizer.load(true);
         screen.setPixelGrid(emptyImages[file]);
-        const pieces = await recognizer.recognizeBoard({ putKings: false });
+        const pieces = await recognizer.recognizeBoard();
         expect(pieces, file).toEqual([]);
       }
     });

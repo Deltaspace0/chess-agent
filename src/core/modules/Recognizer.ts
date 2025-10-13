@@ -109,9 +109,11 @@ class Recognizer implements AgentRecognizer {
   private scanning: boolean = false;
   private pieceColors: Set<number> = new Set();
   private pieceHashes: Record<string, string> = {};
+  private parameters: RecognizerParameters;
 
-  constructor(screen: Screen) {
+  constructor(screen: Screen, parameters?: RecognizerParameters) {
     this.screen = screen;
+    this.parameters = parameters || {};
   }
 
   private getHash(squareGrid: PixelGrid): string {
@@ -266,9 +268,7 @@ class Recognizer implements AgentRecognizer {
     return { colors: [...this.pieceColors], hashes: this.pieceHashes };
   }
 
-  async recognizeBoard(
-    parameters?: RecognizerParameters
-  ): Promise<[Piece, number, number][]> {
+  async recognizeBoard(): Promise<[Piece, number, number][]> {
     if (!this.pieceHashes['rb1']) {
       throw new Error('no hashes');
     }
@@ -311,7 +311,7 @@ class Recognizer implements AgentRecognizer {
         }
       }
     }
-    if (parameters?.putKings !== false) {
+    if (this.parameters.putKings !== false) {
       if (!whiteKingPut) {
         pieces.push([{ type: 'k', color: 'w' }, uncertainRow, uncertainCol]);
       } else if (!blackKingPut) {
@@ -360,6 +360,10 @@ class Recognizer implements AgentRecognizer {
       prevBoardHashes = boardHashes;
     }
     throw new Error('stop');
+  }
+
+  setPutKings(value: boolean) {
+    this.parameters.putKings = value;
   }
 }
 

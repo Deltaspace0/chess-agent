@@ -123,6 +123,11 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     label: 'Recognizer model',
     description: 'Pixel colors and hashes of piece images for Recognizer',
     defaultValue: null
+  },
+  recognizerPutKings: {
+    label: 'Put kings',
+    description: 'Automatically add missing kings during position recognition',
+    defaultValue: true
   }
 };
 
