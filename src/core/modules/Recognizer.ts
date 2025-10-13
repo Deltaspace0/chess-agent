@@ -264,7 +264,13 @@ class Recognizer implements AgentRecognizer {
     this.pieceColors = new Set([...pieceColors1, ...pieceColors2]);
     this.pieceHashes = {};
     for (let i = 0; i < 8; i++) {
+      if (i > 2 && i < 6) {
+        continue;
+      }
       for (let j = 0; j < 8; j++) {
+        if (i === 2 && (j < 1 || j > 2)) {
+          continue;
+        }
         this.pieceHashes[pieces[i][j]] = this.getHash(grid[i][j]);
       }
     }
