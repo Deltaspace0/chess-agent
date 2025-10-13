@@ -7,6 +7,19 @@ import PixelGrid from './PixelGrid.ts';
 import Recognizer from './Recognizer.ts';
 import { Screen } from './device/Screen.ts';
 
+async function testImages(images: Record<string, PixelGrid>) {
+  for (const file in images) {
+    const [positionString, perspective, startFile] = file.split('_');
+    const recognizer = recognizers[startFile];
+    screen.setPixelGrid(images[file]);
+    const pieces = await recognizer.recognizeBoard();
+    game.setPerspective(perspective === 'w');
+    game.putPieces(pieces);
+    const position = game.fen().split(' ')[0];
+    expect(position, startFile).toBe(positionString.replaceAll('-', '/'));
+  }
+}
+
 class ScreenStub extends Screen {
   private pixelGrid: PixelGrid | null = null;
   private gridSequence: PixelGrid[] = [];
@@ -46,6 +59,7 @@ const flippedImages: Record<string, PixelGrid> = {};
 const emptyImages: Record<string, PixelGrid> = {};
 const randomImages: Record<string, PixelGrid> = {};
 const highlightedImages: Record<string, PixelGrid> = {};
+const backgroundImages: Record<string, PixelGrid> = {};
 const moveImageSequences: Record<string, PixelGrid[]> = {};
 const coveredImageSequences: Record<string, PixelGrid[]> = {};
 const recognizers: Record<string, Recognizer> = {};
@@ -110,6 +124,7 @@ beforeAll(async () => {
     loadImages(path.join('test_images', 'empty'), emptyImages),
     loadImages(path.join('test_images', 'random'), randomImages),
     loadImages(path.join('test_images', 'highlighted'), highlightedImages),
+    loadImages(path.join('test_images', 'background'), backgroundImages),
     loadImageSequences(
       path.join('test_images', 'scan', 'move'),
       moveImageSequences
@@ -166,29 +181,15 @@ describe('Recognizer', () => {
     });
 
     it('should recognize random position', async () => {
-      for (const file in randomImages) {
-        const [positionString, perspective, startFile] = file.split('_');
-        const recognizer = recognizers[startFile];
-        screen.setPixelGrid(randomImages[file]);
-        const pieces = await recognizer.recognizeBoard();
-        game.setPerspective(perspective === 'w');
-        game.putPieces(pieces);
-        const position = game.fen().split(' ')[0];
-        expect(position, startFile).toBe(positionString.replaceAll('-', '/'));
-      }
+      await testImages(randomImages);
     });
 
     it('should recognize position with highlighted squares', async () => {
-      for (const file in highlightedImages) {
-        const [positionString, perspective, startFile] = file.split('_');
-        const recognizer = recognizers[startFile];
-        screen.setPixelGrid(highlightedImages[file]);
-        const pieces = await recognizer.recognizeBoard();
-        game.setPerspective(perspective === 'w');
-        game.putPieces(pieces);
-        const position = game.fen().split(' ')[0];
-        expect(position, startFile).toBe(positionString.replaceAll('-', '/'));
-      }
+      await testImages(highlightedImages);
+    });
+
+    it.skip('should recognize position with a different background', async () => {
+      await testImages(backgroundImages);
     });
   });
 
