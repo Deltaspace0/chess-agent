@@ -220,6 +220,20 @@ function debounce<T>(callback: (x: T) => void) {
       settingsWin.webContents.send(channel, ...args);
     }
   };
+  mouse.addListener('mousemove', async () => {
+    const region = preferenceManager.getPreference('region');
+    if (!region) {
+      return;
+    }
+    if (!preferenceManager.getPreference('showCursor')) {
+      return;
+    }
+    const coordinates = await mouse.getPosition();
+    sendToApp('update-variable', 'mousePosition', {
+      x: (coordinates.x-region.left)/region.width,
+      y: (coordinates.y-region.top)/region.height
+    });
+  });
   const updateStatus = (status: string) => {
     console.log(status);
     sendToApp('update-variable', 'status', status);

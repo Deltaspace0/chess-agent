@@ -80,6 +80,11 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     description: 'Show coordinates (1-8 and a-h) on the board',
     defaultValue: true
   },
+  showCursor: {
+    label: 'Show cursor',
+    description: 'Show in the app where the cursor is inside the region',
+    defaultValue: true
+  },
   analysisDuration: {
     label: 'Analysis duration (ms)',
     description: 'Time allotted for the engine to find the best move',
@@ -144,7 +149,8 @@ export const defaultVariables: Variables = {
   engineInfo: {},
   highlightMoves: [],
   principalVariations: [],
-  editedActionLocation: 'N1'
+  editedActionLocation: 'N1',
+  mousePosition: { x: -1, y: -1 }
 };
 
 export const actionLabels: Record<Action, string> = {

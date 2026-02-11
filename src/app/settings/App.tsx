@@ -38,6 +38,7 @@ function App() {
           <CheckboxPref name='showEvalBar'/>
           <CheckboxPref name='showArrows'/>
           <CheckboxPref name='showNotation'/>
+          <CheckboxPref name='showCursor'/>
         </div>
       </div>
     </div>

@@ -17,6 +17,11 @@ function App() {
   const isNoRegion = !prefs.region.value;
   const engineInfo = useVariable('engineInfo');
   const principalVariations = useVariable('principalVariations');
+  const mousePosition = useVariable('mousePosition');
+  const constrainedMousePosition = {
+    x: mousePosition.x > 1 ? -1 : mousePosition.x,
+    y: mousePosition.y > 1 ? -1 : mousePosition.y
+  };
   const [positionFEN, setPositionFEN] = useState('');
   const [arrows1, setArrows1] = useState<Arrow[]>([]);
   const [arrows2, setArrows2] = useState<Arrow[]>([]);
@@ -175,6 +180,10 @@ function App() {
       </div>
       {prefs.perspective.value ? whiteSparePieces : blackSparePieces}
     </>) : <Chessboard/>}
+    {prefs.showCursor.value && <div className='virtual-cursor' style={{
+      left: `${constrainedMousePosition.x*100}%`,
+      top: `${constrainedMousePosition.y*100}%`,
+    }}/>}
   </div>;
   return (<ChessboardProvider options={chessboardOptions}>
     <div className='App'>

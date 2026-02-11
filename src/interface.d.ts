@@ -44,6 +44,7 @@ declare global {
     showEvalBar: boolean;
     showArrows: boolean;
     showNotation: boolean;
+    showCursor: boolean;
     analysisDuration: number;
     multiPV: number;
     engineThreads: number;
@@ -94,6 +95,7 @@ declare global {
     highlightMoves: string[][];
     principalVariations: string[];
     editedActionLocation: Location;
+    mousePosition: Point;
   }
 
   interface DroppedPiece {
