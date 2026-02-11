@@ -10,6 +10,11 @@ declare global {
     height: number;
   }
 
+  interface Point {
+    x: number;
+    y: number;
+  }
+
   type Preference = keyof Preferences;
 
   type BooleanPreference = {

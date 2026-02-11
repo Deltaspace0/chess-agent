@@ -1,4 +1,4 @@
-import type { Mouse, Point } from './device/Mouse.ts';
+import type { Mouse } from './device/Mouse.ts';
 import { coordsToSquare, squareToCoords } from '../../util.ts';
 import { preferenceConfig } from '../../config.ts';
 

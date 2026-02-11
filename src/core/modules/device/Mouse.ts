@@ -4,11 +4,6 @@ import mouseEvents from 'global-mouse-events';
 type ListenerType = 'mousedown' | 'mouseup' | 'mousemove' | 'mousewheel';
 type Listener = () => void;
 
-export interface Point {
-  x: number;
-  y: number;
-}
-
 export abstract class Mouse {
   private listeners: Record<ListenerType, Set<Listener>> = {
     mousedown: new Set(),
