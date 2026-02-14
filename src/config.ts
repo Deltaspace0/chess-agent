@@ -201,6 +201,7 @@ export const actionDescriptions: Partial<Record<Action, string>> = {
   showEngine: 'Open engine UCI terminal',
   loadConfig: 'Load configuration file',
   saveConfig: 'Save configuration file',
+  resetConfig: 'Reset configuration to default values',
   savePicture: 'Save a screenshot of the board',
   promoteQueen: 'Promote the pawn to Queen',
   promoteRook: 'Promote the pawn to Rook',
