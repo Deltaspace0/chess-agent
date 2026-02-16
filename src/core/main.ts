@@ -96,9 +96,9 @@ async function createActionWindow(parent: BrowserWindow): Promise<BrowserWindow>
     modal: true,
     minimizable: false,
     maximizable: false,
-    minWidth: 320,
-    width: 320,
-    maxWidth: 320,
+    minWidth: 360,
+    width: 360,
+    maxWidth: 360,
     minHeight: 100,
     height: 320,
     show: false,
@@ -357,6 +357,7 @@ function debounce<T>(callback: (x: T) => void) {
     },
     clearPosition: () => agent.clearPosition(),
     recognizeBoard: () => agent.recognizeBoard(),
+    recognizeBoardSkipMove: () => agent.recognizeBoard(true),
     dialogEngine: async () => {
       mouse.setActive(false);
       const result = await dialog.showOpenDialog(engineWin, {

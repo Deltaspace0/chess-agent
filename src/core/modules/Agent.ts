@@ -23,6 +23,7 @@ export interface AgentGame {
   kingsExist(): boolean;
   setPositionInfo(info: PositionInfo): boolean;
   setMyTurn(): boolean;
+  setOppTurn(): boolean;
   printBoard(): void;
   getNextBoardStates(): BoardState[];
   putPieces(pieces: [Piece, number, number][]): void;
@@ -163,7 +164,7 @@ export class Agent {
     return move;
   }
 
-  async recognizeBoard() {
+  async recognizeBoard(opponentToMove?: boolean) {
     this.statusCallback('Recognizing board...');
     let pieces;
     try {
@@ -178,7 +179,9 @@ export class Agent {
       return;
     }
     this.game.putPieces(pieces);
-    const result = this.game.setMyTurn();
+    const result = opponentToMove
+      ? this.game.setOppTurn()
+      : this.game.setMyTurn();
     if (result) {
       this.statusCallback('Ready');
     } else {

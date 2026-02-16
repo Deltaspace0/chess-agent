@@ -128,6 +128,7 @@ declare global {
     | 'resetPosition'
     | 'clearPosition'
     | 'recognizeBoard'
+    | 'recognizeBoardSkipMove'
     | 'dialogEngine'
     | 'reloadEngine'
     | 'showEngine'

@@ -17,6 +17,10 @@ class Game implements AgentGame {
     return 'bw'[Number(this.perspective)] as Color;
   }
 
+  private getOppPerspectiveColor(): Color {
+    return 'wb'[Number(this.perspective)] as Color;
+  }
+
   private setTurn(color: Color): boolean {
     try {
       this.chess.setTurn(color);
@@ -118,6 +122,10 @@ class Game implements AgentGame {
 
   setMyTurn(): boolean {
     return this.setTurn(this.getPerspectiveColor());
+  }
+
+  setOppTurn(): boolean {
+    return this.setTurn(this.getOppPerspectiveColor());
   }
 
   formatEvalMoves(input: string): string {
