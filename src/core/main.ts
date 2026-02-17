@@ -480,8 +480,18 @@ function debounce<T>(callback: (x: T) => void) {
     }
   };
   const actionRegionManager = new ActionRegionManager(mouse);
+  actionRegionManager.onHover((name?: string) => {
+    if (!name) {
+      sendToApp('update-variable', 'hoveredAction');
+      return;
+    }
+    const locations = preferenceManager.getPreference('actionLocations');
+    const action = locations[name as keyof ActionLocations];
+    sendToApp('update-variable', 'hoveredAction', action);
+  });
   for (const location of possibleLocations) {
     actionRegionManager.addActionRegion({
+      name: location,
       callback: () => {
         const locations = preferenceManager.getPreference('actionLocations');
         const action = locations[location];

@@ -96,6 +96,7 @@ declare global {
     principalVariations: string[];
     editedActionLocation: Location;
     mousePosition: Point;
+    hoveredAction?: string;
   }
 
   interface DroppedPiece {

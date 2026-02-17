@@ -260,8 +260,8 @@ p {
 }
 
 .status {
-  text-align: center;
-  margin: 4px auto;
+  text-align: left;
+  margin: 4px 0;
   min-width: 200px;
 }
 

@@ -5,7 +5,7 @@ import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import ActionButton from '../components/ActionButton.tsx';
 import Gauge from '../components/Gauge.tsx';
 import EditPanel from './EditPanel.tsx';
-import { preferenceConfig } from '../../config.ts';
+import { actionDescriptions, preferenceConfig } from '../../config.ts';
 import { usePreferences, useVariable } from '../hooks.ts';
 
 type Panel = 'main' | 'promotion' | 'edit';
@@ -14,6 +14,10 @@ function App() {
   const electron = window.electronAPI;
   const prefs = usePreferences();
   const statusText = useVariable('status');
+  const hoveredAction = useVariable('hoveredAction');
+  const hoveredActionDescription = hoveredAction
+    && actionDescriptions[hoveredAction as keyof typeof actionDescriptions]
+    || 'None';
   const isNoRegion = !prefs.region.value;
   const engineInfo = useVariable('engineInfo');
   const principalVariations = useVariable('principalVariations');
@@ -195,7 +199,8 @@ function App() {
             evaluation={engineInfo.evaluation}
           />
         </div>) : chessboardComponent}
-        <p className='status'>{statusText}</p>
+        <p className='status'>Status: {statusText}</p>
+        <p className='status'>Hovered action: {hoveredActionDescription}</p>
         <div className='flex-row'>
           <ActionButton name='showRegion'/>
           <ActionButton name='showEngine'/>
