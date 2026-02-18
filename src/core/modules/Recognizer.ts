@@ -260,10 +260,11 @@ class Recognizer implements AgentRecognizer {
       }
     }
     const backColors = [darkBackColors, lightBackColors];
-    const pieceColors1 = getPieceColors(pieceGrids1, backColors);
-    const pieceColors2 = getPieceColors(pieceGrids2, backColors);
-    this.pieceColors = new Set([...pieceColors1, ...pieceColors2]);
-    this.pieceHashes = {};
+    this.pieceColors = new Set([
+      ...this.pieceColors,
+      ...getPieceColors(pieceGrids1, backColors),
+      ...getPieceColors(pieceGrids2, backColors)
+    ]);
     for (let i = 0; i < 8; i++) {
       if (i > 2 && i < 6) {
         continue;
@@ -272,7 +273,13 @@ class Recognizer implements AgentRecognizer {
         if (i === 2 && (j < 1 || j > 2)) {
           continue;
         }
-        this.pieceHashes[pieces[i][j]] = this.getHash(grid[i][j]);
+        let pieceKey = pieces[i][j];
+        let suffix = 0;
+        while (this.pieceHashes[pieceKey]) {
+          suffix++;
+          pieceKey = pieces[i][j]+suffix;
+        }
+        this.pieceHashes[pieceKey] = this.getHash(grid[i][j]);
       }
     }
     return { colors: [...this.pieceColors], hashes: this.pieceHashes };
