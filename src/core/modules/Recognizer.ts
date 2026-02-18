@@ -184,17 +184,18 @@ class Recognizer implements AgentRecognizer {
     piece: Piece | null,
     hash: Uint8Array
   ): number {
-    if (piece === null) {
-      const residual1 = compareHashes(hash, this.pieceHashes['e12']);
-      const residual2 = compareHashes(hash, this.pieceHashes['e13']);
-      return Math.min(residual1, residual2);
-    }
+    let foundPieceHash = false;
     let minResidual = Infinity;
+    const pieceType = piece ? piece.type : 'e';
     for (const key in this.pieceHashes) {
-      if (piece.type === key[0] && piece.color === key[1]) {
+      if (pieceType === key[0] && (!piece || piece.color === key[1])) {
+        foundPieceHash = true;
         const residual = compareHashes(hash, this.pieceHashes[key]);
         minResidual = Math.min(residual, minResidual);
       }
+    }
+    if (!foundPieceHash) {
+      throw new Error('no hash for piece type: '+pieceType);
     }
     return minResidual;
   }
