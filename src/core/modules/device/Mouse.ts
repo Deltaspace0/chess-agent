@@ -1,5 +1,6 @@
+import { utilityProcess } from 'electron';
 import { mouse, sleep, straightTo } from '@nut-tree-fork/nut-js';
-import { uIOhook } from 'uiohook-napi';
+import path from 'path';
 
 type ListenerType = 'mousedown' | 'mouseup' | 'mousemove' | 'mousewheel';
 type Listener = () => void;
@@ -44,11 +45,12 @@ export abstract class Mouse {
 export class ConcreteMouse extends Mouse {
   constructor() {
     super();
-    uIOhook.on('mousedown', () => this.notifyListeners('mousedown'));
-    uIOhook.on('mouseup', () => this.notifyListeners('mouseup'));
-    uIOhook.on('mousemove', () => this.notifyListeners('mousemove'));
-    uIOhook.on('wheel', () => this.notifyListeners('mousewheel'));
-    uIOhook.start();
+  }
+
+  start() {
+    const childPath = path.join(import.meta.dirname, 'mouse-events.js');
+    const child = utilityProcess.fork(childPath);
+    child.on('message', (e) => this.notifyListeners(e));
   }
 
   getPosition(): Promise<Point> {

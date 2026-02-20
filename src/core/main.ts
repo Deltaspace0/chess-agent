@@ -162,6 +162,7 @@ function debounce<T>(callback: (x: T) => void) {
   const screen = new ConcreteScreen();
   const preferenceManager = new PreferenceManager();
   await app.whenReady();
+  mouse.start();
   const mainWin = await createMainWindow();
   let appRunning = true;
   mainWin.addListener('close', () => {
