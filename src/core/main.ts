@@ -234,6 +234,7 @@ function debounce<T>(callback: (x: T) => void) {
   mouse.addListener('mousemove', async () => {
     const region = preferenceManager.getPreference('region');
     if (!region) {
+      updateVariable('mousePosition', defaultVariables.mousePosition);
       return;
     }
     if (!preferenceManager.getPreference('showCursor')) {
