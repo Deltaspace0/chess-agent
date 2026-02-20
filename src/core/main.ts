@@ -220,6 +220,16 @@ function debounce<T>(callback: (x: T) => void) {
       settingsWin.webContents.send(channel, ...args);
     }
   };
+  const updateVariable = <T extends Variable>(name: T, value?: Variables[T]) => {
+    sendToApp('update-variable', name, value);
+  };
+  const updateStatus = (status: string) => {
+    console.log(status);
+    updateVariable('status', status);
+  };
+  const sendEngineData = (dataType: string, data: string) => {
+    sendToApp('engine-data', dataType, data);
+  }
   mouse.addListener('mousemove', async () => {
     const region = preferenceManager.getPreference('region');
     if (!region) {
@@ -229,43 +239,44 @@ function debounce<T>(callback: (x: T) => void) {
       return;
     }
     const coordinates = await mouse.getPosition();
-    sendToApp('update-variable', 'mousePosition', {
+    updateVariable('mousePosition', {
       x: (coordinates.x-region.left)/region.width,
       y: (coordinates.y-region.top)/region.height
     });
   });
-  const updateStatus = (status: string) => {
-    console.log(status);
-    sendToApp('update-variable', 'status', status);
-  };
   const board = new Board(mouse);
   board.onMove((move) => agent.processMove(move));
   board.onMouseDownSquare(() => recognizer.stopScanning());
   const engineExternal = new EngineExternal();
   engineExternal.addListener('stdin', (data) => {
-    sendToApp('engine-data', 'external', '<<< '+data);
+    sendEngineData('external', '<<< '+data);
   });
   engineExternal.addListener('stdout', (data) => {
-    sendToApp('engine-data', 'external', '>>> '+data);
+    sendEngineData('external', '>>> '+data);
   });
   engineExternal.addListener('stderr', (data) => {
-    sendToApp('engine-data', 'external', '!>> '+data);
+    sendEngineData('external', '!>> '+data);
   });
   engineExternal.addListener('exit', (code) => {
     updateStatus('Engine has been closed');
-    sendToApp('engine-data', 'external-event', 'exit');
-    sendToApp('engine-data', 'external', `Exit code: ${code}`);
-    for (const name of ['highlightMoves', 'principalVariations', 'engineInfo']) {
-      sendToApp('update-variable', name, defaultVariables[name as Variable]);
+    sendEngineData('external-event', 'exit');
+    sendEngineData('external', `Exit code: ${code}`);
+    const variableNames: Variable[] = [
+      'highlightMoves',
+      'principalVariations',
+      'engineInfo'
+    ]
+    for (const name of variableNames) {
+      updateVariable(name, defaultVariables[name]);
     }
   });
   const spawnExternalEngine = (path: string) => {
     if (engineExternal.spawn(path)) {
       engine.setProcess(engineExternal);
-      sendToApp('engine-data', 'external-event', 'start');
+      sendEngineData('external-event', 'start');
       updateStatus('Ready');
     } else {
-      sendToApp('engine-data', 'external-event', 'exit');
+      sendEngineData('external-event', 'exit');
       updateStatus('Failed to load external engine');
     }
   };
@@ -277,28 +288,28 @@ function debounce<T>(callback: (x: T) => void) {
   };
   const engineInternal = new EngineInternal();
   engineInternal.addListener('stdin', (data) => {
-    sendToApp('engine-data', 'internal', '<<< '+data);
+    sendEngineData('internal', '<<< '+data);
   });
   engineInternal.addListener('stdout', (data) => {
-    sendToApp('engine-data', 'internal', '>>> '+data);
+    sendEngineData('internal', '>>> '+data);
   });
   engineInternal.addListener('stderr', (data) => {
-    sendToApp('engine-data', 'internal', '!>> '+data);
+    sendEngineData('internal', '!>> '+data);
   });
   const engine = new Engine();
   engine.onPrincipalMoves(debounce((value) => {
     const moves = value.map((x) => x.split(' ').slice(0, 3));
     const variations = value.map((x) => game.formatEvalMoves(x));
-    sendToApp('update-variable', 'highlightMoves', moves);
-    sendToApp('update-variable', 'principalVariations', variations);
+    updateVariable('highlightMoves', moves);
+    updateVariable('principalVariations', variations);
   }));
   engine.onEngineInfo(debounce((value) => {
-    sendToApp('update-variable', 'engineInfo', value);
+    updateVariable('engineInfo', value);
   }));
   const game = new Game();
   game.onUpdatePosition((value) => {
-    sendToApp('update-variable', 'positionInfo', game.getPositionInfo());
-    sendToApp('update-variable', 'positionFEN', value);
+    updateVariable('positionInfo', game.getPositionInfo());
+    updateVariable('positionFEN', value);
   });
   game.reset();
   const recognizer = new Recognizer(screen);
@@ -482,12 +493,12 @@ function debounce<T>(callback: (x: T) => void) {
   const actionRegionManager = new ActionRegionManager(mouse);
   actionRegionManager.onHover((name?: string) => {
     if (!name) {
-      sendToApp('update-variable', 'hoveredAction');
+      updateVariable('hoveredAction');
       return;
     }
     const locations = preferenceManager.getPreference('actionLocations');
     const action = locations[name as keyof ActionLocations];
-    sendToApp('update-variable', 'hoveredAction', action);
+    updateVariable('hoveredAction', action);
   });
   for (const location of possibleLocations) {
     actionRegionManager.addActionRegion({
@@ -565,7 +576,7 @@ function debounce<T>(callback: (x: T) => void) {
   ipcMain.on('set-position', (_, value) => agent.loadPosition(value));
   ipcMain.on('set-position-info', (_, value) => agent.loadPositionInfo(value));
   ipcMain.on('edit-action-location', (_, value) => {
-    sendToApp('update-variable', 'editedActionLocation', value);
+    updateVariable('editedActionLocation', value);
     actionWin.show();
   });
   ipcMain.on('action', (_, value) => actionCallbacks[value as Action]());
