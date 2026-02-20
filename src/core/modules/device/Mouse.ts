@@ -1,5 +1,5 @@
 import { mouse, sleep, straightTo } from '@nut-tree-fork/nut-js';
-import mouseEvents from 'global-mouse-events';
+import { uIOhook } from 'uiohook-napi';
 
 type ListenerType = 'mousedown' | 'mouseup' | 'mousemove' | 'mousewheel';
 type Listener = () => void;
@@ -44,10 +44,11 @@ export abstract class Mouse {
 export class ConcreteMouse extends Mouse {
   constructor() {
     super();
-    mouseEvents.on('mousedown', () => this.notifyListeners('mousedown'));
-    mouseEvents.on('mouseup', () => this.notifyListeners('mouseup'));
-    mouseEvents.on('mousemove', () => this.notifyListeners('mousemove'));
-    mouseEvents.on('mousewheel', () => this.notifyListeners('mousewheel'));
+    uIOhook.on('mousedown', () => this.notifyListeners('mousedown'));
+    uIOhook.on('mouseup', () => this.notifyListeners('mouseup'));
+    uIOhook.on('mousemove', () => this.notifyListeners('mousemove'));
+    uIOhook.on('wheel', () => this.notifyListeners('mousewheel'));
+    uIOhook.start();
   }
 
   getPosition(): Promise<Point> {
