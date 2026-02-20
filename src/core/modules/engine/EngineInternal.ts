@@ -1,16 +1,17 @@
-import Worker from 'web-worker';
+import { utilityProcess, type UtilityProcess } from 'electron';
+import path from 'path';
 import EngineProcess from './EngineProcess.ts';
 
 class EngineInternal extends EngineProcess {
-  private worker: Worker | null = null;
+  private worker: UtilityProcess | null = null;
   private options: Record<string, string> = {};
 
   private useNextWorker() {
-    const url = new URL('./stockfish.js', import.meta.url);
-    this.worker = new Worker(url, { type: 'module' });
-    this.worker.addEventListener('message', (e) => {
-      const stream = e.data.type === 'error' ? 'stderr' : 'stdout';
-      this.sendToListeners(stream, e.data.message);
+    const workerPath = path.join(import.meta.dirname, 'stockfish.js');
+    this.worker = utilityProcess.fork(workerPath);
+    this.worker.on('message', (e) => {
+      const stream = e.type === 'error' ? 'stderr' : 'stdout';
+      this.sendToListeners(stream, e.message);
     });
     for (const name in this.options) {
       const value = this.options[name];
@@ -19,7 +20,7 @@ class EngineInternal extends EngineProcess {
   }
 
   kill() {
-    this.worker?.terminate();
+    this.worker?.kill();
     this.worker = null;
   }
 
@@ -29,7 +30,7 @@ class EngineInternal extends EngineProcess {
     }
     this.sendToListeners('stdin', message);
     if (message === 'stop') {
-      this.worker?.terminate();
+      this.worker?.kill();
       this.useNextWorker();
       return;
     }
