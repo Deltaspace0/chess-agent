@@ -545,12 +545,12 @@ function debounce<T>(callback: (x: T) => void) {
     },
     enginePath: (value) => {
       if (!value) {
+        engineInternal.refresh();
         engine.setProcess(engineInternal);
         engineExternal.kill();
         updateStatus('Ready');
       } else {
         spawnExternalEngine(value);
-        engineInternal.kill();
       }
     },
     recognizerModel: (value) => recognizer.setModel(value),
