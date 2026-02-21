@@ -22,6 +22,7 @@ const appPath = app.isPackaged ? 'dist/src/app' : 'http://localhost:5173/src/app
 
 async function createMainWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({
+    alwaysOnTop: true,
     maximizable: false,
     minWidth: 300,
     minHeight: 240,
