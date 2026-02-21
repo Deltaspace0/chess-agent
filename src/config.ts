@@ -146,11 +146,13 @@ export const defaultVariables: Variables = {
     blackCastlingRights: { 'k': true, 'q': true },
     isWhiteTurn: true
   },
+  engineData: { name: '', data: '' },
   engineInfo: {},
   highlightMoves: [],
   principalVariations: [],
   editedActionLocation: 'N1',
-  mousePosition: { x: -1, y: -1 }
+  mousePosition: { x: -1, y: -1 },
+  promotion: undefined
 };
 
 export const actionLabels: Record<Action, string> = {

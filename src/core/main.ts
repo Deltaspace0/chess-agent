@@ -229,8 +229,8 @@ function debounce<T>(callback: (x: T) => void) {
     console.log(status);
     updateVariable('status', status);
   };
-  const sendEngineData = (dataType: string, data: string) => {
-    sendToApp('engine-data', dataType, data);
+  const sendEngineData = (name: string, data: string) => {
+    updateVariable('engineData', { name, data });
   }
   mouse.addListener('mousemove', async () => {
     const region = preferenceManager.getPreference('region');
@@ -340,7 +340,7 @@ function debounce<T>(callback: (x: T) => void) {
     if (preferenceManager.getPreference('autoQueen')) {
       agent.promoteTo('q');
     } else {
-      sendToApp('promotion');
+      updateVariable('promotion');
     }
   });
   const actionCallbacks: Record<Action, () => void> = {

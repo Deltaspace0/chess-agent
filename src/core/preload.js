@@ -1,19 +1,6 @@
 const { contextBridge } = require('electron');
 const { ipcRenderer } = require('electron/renderer');
 
-function addListener(channel) {
-  const ipcListeners = new Set();
-  ipcRenderer.addListener(channel, (_, ...value) => {
-    for (const listener of ipcListeners) {
-      listener(...value);
-    }
-  });
-  return (listener) => {
-    ipcListeners.add(listener);
-    return () => ipcListeners.delete(listener);
-  };
-}
-
 function sendValue(channel) {
   return (...value) => ipcRenderer.send(channel, ...value);
 }
@@ -49,8 +36,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     variableListeners[name].add(listener);
     return () => variableListeners[name].delete(listener);
   },
-  onPromotion: addListener('promotion'),
-  onEngineData: addListener('engine-data'),
   preferenceValue: sendValue('preference-value'),
   pieceDropped: sendValue('piece-dropped'),
   pieceDroppedEdit: sendValue('piece-dropped-edit'),

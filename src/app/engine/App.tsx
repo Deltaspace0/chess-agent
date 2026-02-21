@@ -15,7 +15,7 @@ function App() {
   const [externalActive, setExternalActive] = useState(false);
   const autoScrollDivRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    return electron.onEngineData((name, data) => {
+    return electron.onVariable('engineData', ({ name, data }) => {
       if (name === 'external-event') {
         setExternalActive(data !== 'exit');
         return;

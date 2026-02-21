@@ -70,7 +70,9 @@ function App() {
       setArrows1(newArrows1);
       setArrows2(newArrows2);
     });
-    const offPromotion = electron.onPromotion(() => setPanelType('promotion'));
+    const offPromotion = electron.onVariable('promotion', () => {
+      setPanelType('promotion');
+    });
     return () => {
       offPosition();
       offHighlight();

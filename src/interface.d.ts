@@ -91,12 +91,14 @@ declare global {
     status: string;
     positionFEN: string;
     positionInfo: PositionInfo;
+    engineData: { name: string, data: string };
     engineInfo: EngineInfo;
     highlightMoves: string[][];
     principalVariations: string[];
     editedActionLocation: Location;
     mousePosition: Point;
     hoveredAction?: string;
+    promotion: void;
   }
 
   interface DroppedPiece {
@@ -154,8 +156,6 @@ declare global {
       name: T,
       listener: VariableListeners[T]
     ): () => void;
-    onPromotion(listener: () => void): () => void;
-    onEngineData(listener: (name: string, data: string) => void): () => void;
     preferenceValue<T extends Preference>(name: T, value: Preferences[T]);
     pieceDropped(value: DroppedPiece);
     pieceDroppedEdit(value: DroppedPiece);
