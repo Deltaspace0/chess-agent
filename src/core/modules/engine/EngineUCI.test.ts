@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import Engine from './Engine.ts';
+import EngineUCI from './EngineUCI.ts';
 import EngineProcess from './EngineProcess.ts';
 
 class ProcessMock extends EngineProcess {
@@ -43,13 +43,13 @@ async function waitMessageMatch(process: ProcessMock, regexp: RegExp) {
   }
 }
 
-function getEngine(process: ProcessMock): Engine {
-  const engine = new Engine();
+function getEngine(process: ProcessMock): EngineUCI {
+  const engine = new EngineUCI();
   engine.setProcess(process);
   return engine;
 }
 
-async function getInitializedEngine(process: ProcessMock): Promise<Engine> {
+async function getInitializedEngine(process: ProcessMock): Promise<EngineUCI> {
   const engine = getEngine(process);
   await process.nextMessage();
   process.output('uciok');
@@ -59,7 +59,7 @@ async function getInitializedEngine(process: ProcessMock): Promise<Engine> {
   return engine;
 }
 
-describe('Engine', () => {
+describe('EngineUCI', () => {
   describe('Initialization', () => {
     it('should send uci and nothing after not receiving uciok', async () => {
       const process = new ProcessMock();

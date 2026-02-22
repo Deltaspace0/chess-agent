@@ -4,7 +4,7 @@ import path from 'path';
 import ActionRegionManager from './modules/ActionRegionManager.ts';
 import { Agent } from './modules/Agent.ts';
 import Board from './modules/Board.ts';
-import Engine from './modules/engine/Engine.ts';
+import EngineUCI from './modules/engine/EngineUCI.ts';
 import EngineExternal from './modules/engine/EngineExternal.ts';
 import EngineInternal from './modules/engine/EngineInternal.ts';
 import Game from './modules/Game.ts';
@@ -275,7 +275,7 @@ function debounce<T>(callback: (x: T) => void) {
   });
   const spawnExternalEngine = (path: string) => {
     if (engineExternal.spawn(path)) {
-      engine.setProcess(engineExternal);
+      engineUCI.setProcess(engineExternal);
       sendEngineData('external-event', 'start');
       updateStatus('Ready');
     } else {
@@ -299,14 +299,14 @@ function debounce<T>(callback: (x: T) => void) {
   engineInternal.addListener('stderr', (data) => {
     sendEngineData('internal', '!>> '+data);
   });
-  const engine = new Engine();
-  engine.onPrincipalMoves(debounce((value) => {
+  const engineUCI = new EngineUCI();
+  engineUCI.onPrincipalMoves(debounce((value) => {
     const moves = value.map((x) => x.split(' ').slice(0, 3));
     const variations = value.map((x) => game.formatEvalMoves(x));
     sendSignal('highlightMoves', moves);
     sendSignal('principalVariations', variations);
   }));
-  engine.onEngineInfo(debounce((value) => {
+  engineUCI.onEngineInfo(debounce((value) => {
     sendSignal('engineInfo', value);
   }));
   const game = new Game();
@@ -316,7 +316,7 @@ function debounce<T>(callback: (x: T) => void) {
   });
   game.reset();
   const recognizer = new Recognizer(screen);
-  const agent = new Agent({ engine, game, recognizer });
+  const agent = new Agent({ engine: engineUCI, game, recognizer });
   const playBestMove = async () => {
     if (preferenceManager.getPreference('region')) {
       const move = await agent.findBestMove();
@@ -536,9 +536,9 @@ function debounce<T>(callback: (x: T) => void) {
     },
     draggingMode: (value) => board.setDraggingMode(value),
     actionRegion: (value) => actionRegionManager.setActive(value),
-    analysisDuration: (value) => engine.setOption('duration', value),
-    multiPV: (value) => engine.setOption('multiPV', value),
-    engineThreads: (value) => engine.setOption('threads', value),
+    analysisDuration: (value) => engineUCI.setOption('duration', value),
+    multiPV: (value) => engineUCI.setOption('multiPV', value),
+    engineThreads: (value) => engineUCI.setOption('threads', value),
     mouseSpeed: (value) => mouse.setSpeed(value),
     region: (value) => {
       board.setRegion(value);
@@ -547,7 +547,7 @@ function debounce<T>(callback: (x: T) => void) {
     enginePath: (value) => {
       if (!value) {
         engineInternal.refresh();
-        engine.setProcess(engineInternal);
+        engineUCI.setProcess(engineInternal);
         engineExternal.kill();
         updateStatus('Ready');
       } else {

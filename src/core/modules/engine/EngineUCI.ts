@@ -17,7 +17,7 @@ function getNumberValue(words: string[], name: string): number {
   return Number(words[words.indexOf(name)+1]);
 }
 
-class Engine implements AgentEngine {
+class EngineUCI implements AgentEngine {
   private process: EngineProcess | null = null;
   private loadingProcess: EngineProcess | null = null;
   private processLock: Promise<void> = Promise.resolve();
@@ -232,4 +232,4 @@ class Engine implements AgentEngine {
   }
 }
 
-export default Engine;
+export default EngineUCI;
