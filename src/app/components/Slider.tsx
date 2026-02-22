@@ -15,10 +15,9 @@ function Slider(props: SliderProps) {
     setValue(props.list.indexOf(props.value));
   }, [props.list, props.value]);
   return (
-    <div className='flex-center'>
+    <div className='flex-center' title={props.title}>
       <input
         type='range'
-        title={props.title}
         min={0}
         max={props.list.length-1}
         value={value}
