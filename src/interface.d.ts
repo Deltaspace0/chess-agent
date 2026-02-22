@@ -84,27 +84,30 @@ declare global {
     isWhiteTurn: boolean;
   }
 
-  type Variable = keyof Variables;
-  type VariableListeners = { [T in Variable]: (value: Variables[T]) => void };
-
-  interface Variables {
-    status: string;
-    positionFEN: string;
-    positionInfo: PositionInfo;
-    engineData: { name: string, data: string };
-    engineInfo: EngineInfo;
-    highlightMoves: string[][];
-    principalVariations: string[];
-    editedActionLocation: Location;
-    mousePosition: Point;
-    hoveredAction?: string;
-    promotion: void;
-  }
-
   interface DroppedPiece {
     sourceSquare: string | null;
     targetSquare: string | null;
     piece: string;
+  }
+
+  type Signal = keyof Signals;
+  type SignalListeners = { [T in Signal]: (value: Signals[T]) => void };
+
+  interface Signals {
+    status: string;
+    positionFEN: string;
+    positionInfo: PositionInfo;
+    engineData: { name: string, data: string };
+    engineInfo?: EngineInfo;
+    highlightMoves?: string[][];
+    principalVariations?: string[];
+    editActionLocation: Location;
+    mousePosition?: Point;
+    hoveredAction?: string;
+    promotion: void;
+    pieceDropped: DroppedPiece;
+    pieceDroppedEdit: DroppedPiece;
+    action: Action;
   }
 
   type ToggleablePreference = keyof Pick<Preferences
@@ -152,18 +155,12 @@ declare global {
       name: T,
       listener: PreferenceListeners[T]
     ): () => void;
-    onVariable<T extends Variable>(
+    onSignal<T extends Signal>(
       name: T,
-      listener: VariableListeners[T]
+      listener: SignalListeners[T]
     ): () => void;
     preferenceValue<T extends Preference>(name: T, value: Preferences[T]);
-    pieceDropped(value: DroppedPiece);
-    pieceDroppedEdit(value: DroppedPiece);
-    sendToEngine(name: string, data: string);
-    setPosition(value: string);
-    setPositionInfo(value: PositionInfo);
-    editActionLocation(value: Location);
-    doAction(name: Action);
+    sendSignal<T extends Signal>(name: T, value: Signals[T]);
   }
 
   interface Window {

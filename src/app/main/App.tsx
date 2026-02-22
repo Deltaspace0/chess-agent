@@ -6,22 +6,22 @@ import ActionButton from '../components/ActionButton.tsx';
 import Gauge from '../components/Gauge.tsx';
 import EditPanel from './EditPanel.tsx';
 import { actionDescriptions, preferenceConfig } from '../../config.ts';
-import { usePreferences, useVariable } from '../hooks.ts';
+import { usePreferences, useSignal } from '../hooks.ts';
 
 type Panel = 'main' | 'promotion' | 'edit';
 
 function App() {
   const electron = window.electronAPI;
   const prefs = usePreferences();
-  const statusText = useVariable('status');
-  const hoveredAction = useVariable('hoveredAction');
+  const statusText = useSignal('status');
+  const hoveredAction = useSignal('hoveredAction');
   const hoveredActionDescription = hoveredAction
     && actionDescriptions[hoveredAction as keyof typeof actionDescriptions]
     || 'None';
   const isNoRegion = !prefs.region.value;
-  const engineInfo = useVariable('engineInfo');
-  const principalVariations = useVariable('principalVariations');
-  const mousePosition = useVariable('mousePosition');
+  const engineInfo = useSignal('engineInfo') || {};
+  const principalVariations = useSignal('principalVariations') || [];
+  const mousePosition = useSignal('mousePosition') || { x: -1, y: -1 };
   const constrainedMousePosition = {
     x: mousePosition.x > 1 ? -1 : mousePosition.x,
     y: mousePosition.y > 1 ? -1 : mousePosition.y
@@ -32,11 +32,16 @@ function App() {
   const [panelType, setPanelType] = useState<Panel>('main');
   const [showActions, setShowActions] = useState(true);
   useEffect(() => {
-    const offPosition = electron.onVariable('positionFEN', (value) => {
+    const offPosition = electron.onSignal('positionFEN', (value) => {
       setPositionFEN(value);
       setPanelType((x) => x === 'promotion' ? 'main' : x);
     });
-    const offHighlight = electron.onVariable('highlightMoves', (evalMoves) => {
+    const offHighlight = electron.onSignal('highlightMoves', (evalMoves) => {
+      if (!evalMoves) {
+        setArrows1([]);
+        setArrows2([]);
+        return;
+      }
       const newArrows1: Arrow[] = [];
       const newArrows2: Arrow[] = [];
       for (let i = evalMoves.length-1; i >= 0; i--) {
@@ -70,7 +75,7 @@ function App() {
       setArrows1(newArrows1);
       setArrows2(newArrows2);
     });
-    const offPromotion = electron.onVariable('promotion', () => {
+    const offPromotion = electron.onSignal('promotion', () => {
       setPanelType('promotion');
     });
     return () => {
@@ -109,9 +114,9 @@ function App() {
         piece: piece.pieceType
       };
       if (panelType === 'edit') {
-        electron.pieceDroppedEdit(data);
+        electron.sendSignal('pieceDroppedEdit', data);
       } else if (targetSquare) {
-        electron.pieceDropped(data);
+        electron.sendSignal('pieceDropped', data);
       }
       return true;
     }

@@ -12,7 +12,7 @@ import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
 import { ConcreteMouse } from './modules/device/Mouse.ts';
 import { ConcreteScreen, getAdjustedRegion } from './modules/device/Screen.ts';
-import { defaultVariables, possibleLocations } from '../config.ts';
+import { possibleLocations } from '../config.ts';
 import { selectRegion } from '../util.ts';
 
 const preloadPath = path.join(import.meta.dirname, 'preload.js');
@@ -222,27 +222,27 @@ function debounce<T>(callback: (x: T) => void) {
       settingsWin.webContents.send(channel, ...args);
     }
   };
-  const updateVariable = <T extends Variable>(name: T, value?: Variables[T]) => {
-    sendToApp('update-variable', name, value);
+  const sendSignal = <T extends Signal>(name: T, value?: Signals[T]) => {
+    sendToApp('signal', name, value);
   };
   const updateStatus = (status: string) => {
     console.log(status);
-    updateVariable('status', status);
+    sendSignal('status', status);
   };
   const sendEngineData = (name: string, data: string) => {
-    updateVariable('engineData', { name, data });
+    sendSignal('engineData', { name, data });
   }
   mouse.addListener('mousemove', async () => {
     const region = preferenceManager.getPreference('region');
     if (!region) {
-      updateVariable('mousePosition', defaultVariables.mousePosition);
+      sendSignal('mousePosition');
       return;
     }
     if (!preferenceManager.getPreference('showCursor')) {
       return;
     }
     const coordinates = await mouse.getPosition();
-    updateVariable('mousePosition', {
+    sendSignal('mousePosition', {
       x: (coordinates.x-region.left)/region.width,
       y: (coordinates.y-region.top)/region.height
     });
@@ -264,13 +264,13 @@ function debounce<T>(callback: (x: T) => void) {
     updateStatus('Engine has been closed');
     sendEngineData('external-event', 'exit');
     sendEngineData('external', `Exit code: ${code}`);
-    const variableNames: Variable[] = [
+    const variableNames: Signal[] = [
       'highlightMoves',
       'principalVariations',
       'engineInfo'
     ]
     for (const name of variableNames) {
-      updateVariable(name, defaultVariables[name]);
+      sendSignal(name);
     }
   });
   const spawnExternalEngine = (path: string) => {
@@ -303,16 +303,16 @@ function debounce<T>(callback: (x: T) => void) {
   engine.onPrincipalMoves(debounce((value) => {
     const moves = value.map((x) => x.split(' ').slice(0, 3));
     const variations = value.map((x) => game.formatEvalMoves(x));
-    updateVariable('highlightMoves', moves);
-    updateVariable('principalVariations', variations);
+    sendSignal('highlightMoves', moves);
+    sendSignal('principalVariations', variations);
   }));
   engine.onEngineInfo(debounce((value) => {
-    updateVariable('engineInfo', value);
+    sendSignal('engineInfo', value);
   }));
   const game = new Game();
   game.onUpdatePosition((value) => {
-    updateVariable('positionInfo', game.getPositionInfo());
-    updateVariable('positionFEN', value);
+    sendSignal('positionInfo', game.getPositionInfo());
+    sendSignal('positionFEN', value);
   });
   game.reset();
   const recognizer = new Recognizer(screen);
@@ -340,7 +340,7 @@ function debounce<T>(callback: (x: T) => void) {
     if (preferenceManager.getPreference('autoQueen')) {
       agent.promoteTo('q');
     } else {
-      updateVariable('promotion');
+      sendSignal('promotion');
     }
   });
   const actionCallbacks: Record<Action, () => void> = {
@@ -496,12 +496,12 @@ function debounce<T>(callback: (x: T) => void) {
   const actionRegionManager = new ActionRegionManager(mouse);
   actionRegionManager.onHover((name?: string) => {
     if (!name) {
-      updateVariable('hoveredAction');
+      sendSignal('hoveredAction');
       return;
     }
     const locations = preferenceManager.getPreference('actionLocations');
     const action = locations[name as keyof ActionLocations];
-    updateVariable('hoveredAction', action);
+    sendSignal('hoveredAction', action);
   });
   for (const location of possibleLocations) {
     actionRegionManager.addActionRegion({
@@ -563,25 +563,34 @@ function debounce<T>(callback: (x: T) => void) {
   ipcMain.on('preference-value', (_, name, value) => {
     preferenceManager.setPreference(name, value);
   });
-  ipcMain.on('piece-dropped', (_, value) => {
-    const { sourceSquare, targetSquare } = value;
-    agent.processMove(sourceSquare+targetSquare);
+  const signalListeners: Partial<SignalListeners> = {};
+  ipcMain.on('signal', <T extends Signal>(_: unknown, name: T, value: Signals[T]) => {
+    if (signalListeners[name]) {
+      signalListeners[name](value);
+    } else {
+      throw new Error('No signal listener for '+name);
+    }
   });
-  ipcMain.on('piece-dropped-edit', (_, value) => agent.putPiece(value));
-  ipcMain.on('promote-to', (_, value) => agent.promoteTo(value));
-  ipcMain.on('send-to-engine', (_, name, data) => {
+  const onSignal = <T extends Signal>(name: T, listener: SignalListeners[T]) => {
+    signalListeners[name] = listener;
+  };
+  onSignal('pieceDropped', ({ sourceSquare, targetSquare }) => {
+    agent.processMove(`${sourceSquare}${targetSquare}`);
+  });
+  onSignal('pieceDroppedEdit', (value) => agent.putPiece(value));
+  onSignal('engineData', ({ name, data }) => {
     if (name === 'internal') {
       engineInternal.send(data);
     } else if (name === 'external') {
       engineExternal.send(data);
     }
   });
-  ipcMain.on('set-position', (_, value) => agent.loadPosition(value));
-  ipcMain.on('set-position-info', (_, value) => agent.loadPositionInfo(value));
-  ipcMain.on('edit-action-location', (_, value) => {
-    updateVariable('editedActionLocation', value);
+  onSignal('positionFEN', (value) => agent.loadPosition(value));
+  onSignal('positionInfo', (value) => agent.loadPositionInfo(value));
+  onSignal('editActionLocation', (value) => {
+    sendSignal('editActionLocation', value);
     actionWin.show();
   });
-  ipcMain.on('action', (_, value) => actionCallbacks[value as Action]());
+  onSignal('action', (value) => actionCallbacks[value]());
   updateStatus('Ready');
 })();

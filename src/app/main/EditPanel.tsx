@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import ActionButton from '../components/ActionButton.tsx';
 import Checkbox from '../components/Checkbox.tsx';
 import Radio from '../components/Radio.tsx';
-import { useVariable } from '../hooks.ts';
+import { useSignal } from '../hooks.ts';
 
 interface EditProps {
   positionFEN: string;
@@ -10,7 +10,11 @@ interface EditProps {
 
 function EditPanel({ positionFEN }: EditProps) {
   const electron = window.electronAPI;
-  const positionInfo = useVariable('positionInfo');
+  const positionInfo = useSignal('positionInfo') || {
+    whiteCastlingRights: { 'k': true, 'q': true },
+    blackCastlingRights: { 'k': true, 'q': true },
+    isWhiteTurn: true
+  };
   const [inputFEN, setInputFEN] = useState('');
   const [separateCastlingRow, setSeparateCastlingRow] = useState(false);
   const editFieldRef = useRef<HTMLFieldSetElement>(null);
@@ -36,7 +40,7 @@ function EditPanel({ positionFEN }: EditProps) {
         onChange={(value) => {
           const newPositionInfo = structuredClone(positionInfo);
           newPositionInfo.whiteCastlingRights.k = value;
-          electron.setPositionInfo(newPositionInfo);
+          electron.sendSignal('positionInfo', newPositionInfo);
         }}
       />
       <Checkbox
@@ -46,7 +50,7 @@ function EditPanel({ positionFEN }: EditProps) {
         onChange={(value) => {
           const newPositionInfo = structuredClone(positionInfo);
           newPositionInfo.whiteCastlingRights.q = value;
-          electron.setPositionInfo(newPositionInfo);
+          electron.sendSignal('positionInfo', newPositionInfo);
         }}
       />
     </div>
@@ -59,7 +63,7 @@ function EditPanel({ positionFEN }: EditProps) {
         onChange={(value) => {
           const newPositionInfo = structuredClone(positionInfo);
           newPositionInfo.blackCastlingRights.k = value;
-          electron.setPositionInfo(newPositionInfo);
+          electron.sendSignal('positionInfo', newPositionInfo);
         }}
       />
       <Checkbox
@@ -69,7 +73,7 @@ function EditPanel({ positionFEN }: EditProps) {
         onChange={(value) => {
           const newPositionInfo = structuredClone(positionInfo);
           newPositionInfo.blackCastlingRights.q = value;
-          electron.setPositionInfo(newPositionInfo);
+          electron.sendSignal('positionInfo', newPositionInfo);
         }}
       />
     </div>
@@ -85,12 +89,12 @@ function EditPanel({ positionFEN }: EditProps) {
           onChange={(e) => setInputFEN(e.target.value)}
           onKeyDown={(e: React.KeyboardEvent) => {
             if (e.key === 'Enter') {
-              electron.setPosition(inputFEN);
+              electron.sendSignal('positionFEN', inputFEN);
               e.preventDefault();
             }
           }}
         />
-        <button onClick={() => electron.setPosition(inputFEN)}>
+        <button onClick={() => electron.sendSignal('positionFEN', inputFEN)}>
           Set FEN
         </button>
       </div>
@@ -109,7 +113,7 @@ function EditPanel({ positionFEN }: EditProps) {
             onChange={() => {
               const newPositionInfo = structuredClone(positionInfo);
               newPositionInfo.isWhiteTurn = true;
-              electron.setPositionInfo(newPositionInfo);
+              electron.sendSignal('positionInfo', newPositionInfo);
             }}/>
           <Radio
             label='Black'
@@ -119,7 +123,7 @@ function EditPanel({ positionFEN }: EditProps) {
             onChange={() => {
               const newPositionInfo = structuredClone(positionInfo);
               newPositionInfo.isWhiteTurn = false;
-              electron.setPositionInfo(newPositionInfo);
+              electron.sendSignal('positionInfo', newPositionInfo);
             }}/>
         </div>
         {!separateCastlingRow && castlingCheckboxes}

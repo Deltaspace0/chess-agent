@@ -6,7 +6,7 @@ function sendValue(channel) {
 }
 
 const preferenceListeners = {};
-const variableListeners = {};
+const signalListeners = {};
 ipcRenderer.on('update-preference', (_, name, value) => {
   if (name in preferenceListeners) {
     for (const listener of preferenceListeners[name]) {
@@ -14,9 +14,9 @@ ipcRenderer.on('update-preference', (_, name, value) => {
     }
   }
 });
-ipcRenderer.on('update-variable', (_, name, value) => {
-  if (name in variableListeners) {
-    for (const listener of variableListeners[name]) {
+ipcRenderer.on('signal', (_, name, value) => {
+  if (name in signalListeners) {
+    for (const listener of signalListeners[name]) {
       listener(value);
     }
   }
@@ -29,19 +29,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
     preferenceListeners[name].add(listener);
     return () => preferenceListeners[name].delete(listener);
   },
-  onVariable: (name, listener) => {
-    if (!(name in variableListeners)) {
-      variableListeners[name] = new Set();
+  onSignal: (name, listener) => {
+    if (!(name in signalListeners)) {
+      signalListeners[name] = new Set();
     }
-    variableListeners[name].add(listener);
-    return () => variableListeners[name].delete(listener);
+    signalListeners[name].add(listener);
+    return () => signalListeners[name].delete(listener);
   },
   preferenceValue: sendValue('preference-value'),
-  pieceDropped: sendValue('piece-dropped'),
-  pieceDroppedEdit: sendValue('piece-dropped-edit'),
-  sendToEngine: sendValue('send-to-engine'),
-  setPosition: sendValue('set-position'),
-  setPositionInfo: sendValue('set-position-info'),
-  editActionLocation: sendValue('edit-action-location'),
-  doAction: sendValue('action')
+  sendSignal: sendValue('signal')
 });

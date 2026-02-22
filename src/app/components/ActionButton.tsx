@@ -12,7 +12,7 @@ function ActionButton(props: ActionButtonProps) {
   return (
     <button
       title={actionDescriptions[props.name]}
-      onClick={() => window.electronAPI.doAction(props.name)}
+      onClick={() => window.electronAPI.sendSignal('action', props.name)}
       disabled={props.disabled}
       style={props.style}>
         {props.label ?? actionLabels[props.name]}

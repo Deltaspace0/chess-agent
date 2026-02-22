@@ -30,7 +30,7 @@ function App() {
   const [hideAll, setHideAll] = useState(false);
   const adjustRegion = () => {
     setHideAll(true);
-    setTimeout(() => window.electronAPI.doAction('adjustRegion'), 10);
+    setTimeout(() => window.electronAPI.sendSignal('action', 'adjustRegion'), 10);
     setTimeout(() => setHideAll(false), 20);
   };
   const handleRegionChange = (changedRegion: Region) => {
@@ -49,7 +49,7 @@ function App() {
         ? 'rgba(255, 0, 0, 0.8)'
         : 'rgba(255, 255, 255, 0.8)';
       actionRegionDivs.push(<div
-        onClick={() => window.electronAPI.editActionLocation(location)}
+        onClick={() => window.electronAPI.sendSignal('editActionLocation', location)}
         title={action && actionDescriptions[action]}
         className='region-action'
         style={{...selectedRegion, backgroundColor}}></div>);
@@ -58,7 +58,7 @@ function App() {
   useEffect(() => {
     const escapeCallback = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        window.electronAPI.doAction('hideRegion');
+        window.electronAPI.sendSignal('action', 'hideRegion');
       }
     }
     window.addEventListener('keydown', escapeCallback);

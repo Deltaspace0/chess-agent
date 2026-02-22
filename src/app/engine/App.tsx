@@ -1,12 +1,12 @@
 import '../App.css';
 import { type JSX, useEffect, useRef, useState } from 'react';
 import ActionButton from '../components/ActionButton.tsx';
-import { usePreference, useVariable } from '../hooks.ts';
+import { usePreference, useSignal } from '../hooks.ts';
 
 function App() {
   const electron = window.electronAPI;
   const [enginePath, sendEnginePath] = usePreference('enginePath');
-  const engineInfo = useVariable('engineInfo');
+  const engineInfo = useSignal('engineInfo') || {};
   const engineType = enginePath ? 'external' : 'internal';
   const isInternalEngine = enginePath === null;
   const [engineInput, setEngineInput] = useState('');
@@ -15,7 +15,7 @@ function App() {
   const [externalActive, setExternalActive] = useState(false);
   const autoScrollDivRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    return electron.onVariable('engineData', ({ name, data }) => {
+    return electron.onSignal('engineData', ({ name, data }) => {
       if (name === 'external-event') {
         setExternalActive(data !== 'exit');
         return;
@@ -39,7 +39,7 @@ function App() {
     setTimeout(() => {
       autoScrollDivRef.current?.scrollIntoView(false);
     }, 50);
-    electron.sendToEngine(engineType, engineInput);
+    electron.sendSignal('engineData', { name: engineType, data: engineInput });
     setEngineInput('');
   };
   return (<div className='App'>

@@ -8,7 +8,7 @@ function App() {
   useEffect(() => {
     const escapeCallback = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        window.electronAPI.doAction('hideSettings');
+        window.electronAPI.sendSignal('action', 'hideSettings');
       }
     }
     window.addEventListener('keydown', escapeCallback);

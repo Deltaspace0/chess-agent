@@ -1,12 +1,12 @@
 import '../App.css';
 import { useEffect } from 'react';
 import Radio from '../components/Radio.tsx';
-import { usePreference, useVariable } from '../hooks.ts';
+import { usePreference, useSignal } from '../hooks.ts';
 import { actionDescriptions } from '../../config.ts';
 
 function App() {
   const [actionLocations, sendLocations] = usePreference('actionLocations');
-  const location = useVariable('editedActionLocation');
+  const location = useSignal('editActionLocation') || 'N1';
   const choiceComponents = [<Radio
     label='None'
     name='action'
@@ -33,7 +33,7 @@ function App() {
   useEffect(() => {
     const escapeCallback = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        window.electronAPI.doAction('hideAction');
+        window.electronAPI.sendSignal('action', 'hideAction');
       }
     }
     window.addEventListener('keydown', escapeCallback);

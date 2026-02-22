@@ -138,23 +138,6 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
 
 export const preferenceNames = Object.keys(preferenceConfig) as Preference[];
 
-export const defaultVariables: Variables = {
-  status: '',
-  positionFEN: '',
-  positionInfo: {
-    whiteCastlingRights: { 'k': true, 'q': true },
-    blackCastlingRights: { 'k': true, 'q': true },
-    isWhiteTurn: true
-  },
-  engineData: { name: '', data: '' },
-  engineInfo: {},
-  highlightMoves: [],
-  principalVariations: [],
-  editedActionLocation: 'N1',
-  mousePosition: { x: -1, y: -1 },
-  promotion: undefined
-};
-
 export const actionLabels: Record<Action, string> = {
   showRegion: 'Region',
   hideRegion: 'Return',
