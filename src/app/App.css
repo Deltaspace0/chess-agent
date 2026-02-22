@@ -199,7 +199,7 @@ p {
   height: calc(100vh - 148px);
   overflow: auto;
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   white-space: pre;
 }
 

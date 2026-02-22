@@ -13,7 +13,7 @@ function App() {
   const [internalLines, setInternalLines] = useState<JSX.Element[]>([]);
   const [externalLines, setExternalLines] = useState<JSX.Element[]>([]);
   const [externalActive, setExternalActive] = useState(false);
-  const autoScrollDivRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     return electron.onSignal('engineData', ({ name, data }) => {
       if (name === 'external-event') {
@@ -28,17 +28,27 @@ function App() {
       }
       const line = <span style={{color}}>{data}</span>;
       (name === 'internal' ? setInternalLines : setExternalLines)((x) => {
-        return [line, ...x].slice(0, 1000);
+        return [...x, line].slice(-1000);
       });
     });
   }, [electron]);
   useEffect(() => {
     document.title = engineInfo.name || 'Engine';
   }, [engineInfo.name]);
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+    const observer = new MutationObserver(() => {
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight;
+      });
+    });
+    observer.observe(container, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
   const handleEngineSend = () => {
-    setTimeout(() => {
-      autoScrollDivRef.current?.scrollIntoView(false);
-    }, 50);
     electron.sendSignal('engineData', { name: engineType, data: engineInput });
     setEngineInput('');
   };
@@ -60,8 +70,7 @@ function App() {
       />
       <p className='text'>Name: {engineInfo.name}</p>
       <p className='text'>Author: {engineInfo.author}</p>
-      <div className='engine-uci-div'>
-        <div ref={autoScrollDivRef} style={{minHeight: '8px'}}></div>
+      <div ref={containerRef} className='engine-uci-div'>
         {isInternalEngine ? internalLines : externalLines}
       </div>
       {(isInternalEngine || externalActive) ? (<div className='uci-input-div'>
