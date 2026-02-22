@@ -159,7 +159,7 @@ declare global {
       name: T,
       listener: SignalListeners[T]
     ): () => void;
-    preferenceValue<T extends Preference>(name: T, value: Preferences[T]);
+    setPreference<T extends Preference>(name: T, value: Preferences[T]);
     sendSignal<T extends Signal>(name: T, value: Signals[T]);
   }
 

@@ -27,7 +27,7 @@ export function usePreference<T extends Preference>(name: T) {
     return window.electronAPI.onPreference(name, listener);
   }, [name]);
   const sendValue = (x: Preferences[T]) => {
-    window.electronAPI.preferenceValue(name, x);
+    window.electronAPI.setPreference(name, x);
   }
   return [value, sendValue] as const;
 }

@@ -1,13 +1,9 @@
 const { contextBridge } = require('electron');
 const { ipcRenderer } = require('electron/renderer');
 
-function sendValue(channel) {
-  return (...value) => ipcRenderer.send(channel, ...value);
-}
-
 const preferenceListeners = {};
 const signalListeners = {};
-ipcRenderer.on('update-preference', (_, name, value) => {
+ipcRenderer.on('preference', (_, name, value) => {
   if (name in preferenceListeners) {
     for (const listener of preferenceListeners[name]) {
       listener(value);
@@ -36,6 +32,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     signalListeners[name].add(listener);
     return () => signalListeners[name].delete(listener);
   },
-  preferenceValue: sendValue('preference-value'),
-  sendSignal: sendValue('signal')
+  setPreference: (...value) => ipcRenderer.send('preference', ...value),
+  sendSignal: (...value) => ipcRenderer.send('signal', ...value)
 });

@@ -523,7 +523,7 @@ function debounce<T>(callback: (x: T) => void) {
     });
   }
   preferenceManager.onUpdate((name, value) => {
-    sendToApp('update-preference', name, value);
+    sendToApp('preference', name, value);
   });
   const preferenceListeners: Partial<PreferenceListeners> = {
     alwaysOnTop: (value) => {
@@ -560,7 +560,7 @@ function debounce<T>(callback: (x: T) => void) {
   for (const [name, listener] of Object.entries(preferenceListeners)) {
     preferenceManager.onUpdatePreference(name as Preference, listener);
   }
-  ipcMain.on('preference-value', (_, name, value) => {
+  ipcMain.on('preference', (_, name, value) => {
     preferenceManager.setPreference(name, value);
   });
   const signalListeners: Partial<SignalListeners> = {};
