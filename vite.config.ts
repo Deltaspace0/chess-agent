@@ -10,7 +10,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(import.meta.dirname, 'src/app/main/index.html'),
-        action: resolve(import.meta.dirname, 'src/app/action/index.html'),
         engine: resolve(import.meta.dirname, 'src/app/engine/index.html'),
         region: resolve(import.meta.dirname, 'src/app/region/index.html'),
         settings: resolve(import.meta.dirname, 'src/app/settings/index.html')

@@ -101,7 +101,6 @@ declare global {
     engineInfo?: EngineInfo;
     highlightMoves?: string[][];
     principalVariations?: string[];
-    editActionLocation: Location;
     mousePosition?: Point;
     hoveredAction?: string;
     promotion: void;
@@ -125,7 +124,6 @@ declare global {
     = ToggleablePreference
     | 'showRegion'
     | 'hideRegion'
-    | 'hideAction'
     | 'loadHashes'
     | 'scanMove'
     | 'skipMove'

@@ -227,6 +227,12 @@ p {
   font-size: 14px;
 }
 
+.select-action {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .region-action {
   border: solid;
   border-width: 1px;

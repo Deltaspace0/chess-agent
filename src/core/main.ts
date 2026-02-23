@@ -91,33 +91,6 @@ async function createRegionWindow(parent: BrowserWindow): Promise<BrowserWindow>
   return win;
 }
 
-async function createActionWindow(parent: BrowserWindow): Promise<BrowserWindow> {
-  const win = new BrowserWindow({
-    parent,
-    modal: true,
-    minimizable: false,
-    maximizable: false,
-    minWidth: 360,
-    width: 360,
-    maxWidth: 360,
-    minHeight: 100,
-    height: 320,
-    show: false,
-    icon: iconPath,
-    useContentSize: true,
-    webPreferences: {
-      preload: preloadPath
-    }
-  });
-  const pagePath = `${appPath}/action/index.html`;
-  if (app.isPackaged) {
-    await win.loadFile(pagePath);
-  } else {
-    await win.loadURL(pagePath);
-  }
-  return win;
-}
-
 async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindow> {
   const win = new BrowserWindow({
     parent,
@@ -193,15 +166,6 @@ function debounce<T>(callback: (x: T) => void) {
     mouse.setActive(true);
     e.preventDefault();
   });
-  const actionWin = await createActionWindow(regionWin);
-  actionWin.addListener('close', (e) => {
-    if (!appRunning) {
-      return;
-    }
-    actionWin.hide();
-    regionWin.show();
-    e.preventDefault();
-  });
   const settingsWin = await createSettingsWindow(mainWin);
   settingsWin.addListener('show', () => mouse.setActive(false));
   settingsWin.addListener('close', (e) => {
@@ -218,7 +182,6 @@ function debounce<T>(callback: (x: T) => void) {
       mainWin.webContents.send(channel, ...args);
       engineWin.webContents.send(channel, ...args);
       regionWin.webContents.send(channel, ...args);
-      actionWin.webContents.send(channel, ...args);
       settingsWin.webContents.send(channel, ...args);
     }
   };
@@ -346,7 +309,6 @@ function debounce<T>(callback: (x: T) => void) {
   const actionCallbacks: Record<Action, () => void> = {
     showRegion: () => regionWin.show(),
     hideRegion: () => regionWin.close(),
-    hideAction: () => actionWin.close(),
     loadHashes: () => {
       const perspective = preferenceManager.getPreference('perspective');
       recognizer.load(perspective)
@@ -509,9 +471,14 @@ function debounce<T>(callback: (x: T) => void) {
       callback: () => {
         const locations = preferenceManager.getPreference('actionLocations');
         const action = locations[location];
-        if (action) {
-          actionCallbacks[action]();
+        if (!action) {
+          return;
         }
+        const callback = actionCallbacks[action];
+        if (!callback) {
+          throw new Error('No callback for action: '+action);
+        }
+        callback();
       },
       getRegion: () => {
         const region = preferenceManager.getPreference('region');
@@ -587,10 +554,6 @@ function debounce<T>(callback: (x: T) => void) {
   });
   onSignal('positionFEN', (value) => agent.loadPosition(value));
   onSignal('positionInfo', (value) => agent.loadPositionInfo(value));
-  onSignal('editActionLocation', (value) => {
-    sendSignal('editActionLocation', value);
-    actionWin.show();
-  });
   onSignal('action', (value) => actionCallbacks[value]());
   updateStatus('Ready');
 })();

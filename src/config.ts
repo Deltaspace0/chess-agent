@@ -141,7 +141,6 @@ export const preferenceNames = Object.keys(preferenceConfig) as Preference[];
 export const actionLabels: Record<Action, string> = {
   showRegion: 'Region',
   hideRegion: 'Return',
-  hideAction: 'Close',
   loadHashes: 'Load hashes',
   scanMove: 'Scan move',
   skipMove: 'Skip move',

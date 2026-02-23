@@ -1,5 +1,5 @@
 import '../App.css';
-import { useEffect, useMemo, useState, type JSX } from 'react';
+import { useEffect, useMemo, useRef, useState, type JSX } from 'react';
 import ActionButton from '../components/ActionButton.tsx';
 import ToggleButton from '../components/ToggleButton.tsx';
 import ToggleButtonPref from '../components/ToggleButtonPref.tsx';
@@ -28,6 +28,7 @@ function App() {
   }, [prefs.region.value, dpr]);
   const [autoAdjust, setAutoAdjust] = useState(true);
   const [hideAll, setHideAll] = useState(false);
+  const actionSelectRefs = useRef<Record<string, HTMLSelectElement | null>>({});
   const adjustRegion = () => {
     setHideAll(true);
     setTimeout(() => window.electronAPI.sendSignal('action', 'adjustRegion'), 10);
@@ -40,6 +41,10 @@ function App() {
       adjustRegion();
     }
   };
+  const optionComponents = [<option value=''>None</option>];
+  for (const [action, description] of Object.entries(actionDescriptions)) {
+    optionComponents.push(<option value={action}>{description}</option>);
+  }
   const actionRegionDivs: JSX.Element[] = [];
   if (region) {
     for (const location of possibleLocations) {
@@ -48,11 +53,26 @@ function App() {
       const backgroundColor = action
         ? 'rgba(255, 0, 0, 0.8)'
         : 'rgba(255, 255, 255, 0.8)';
+      actionRegionDivs.push(<select
+        ref={(e) => { actionSelectRefs.current[location] = e; }}
+        className='select-action'
+        style={selectedRegion}
+        value={action}
+        onChange={(e) => {
+          const newActionLocations = {...prefs.actionLocations.value};
+          newActionLocations[location] = e.target.value === ''
+            ? undefined
+            : e.target.value as Action;
+          prefs.actionLocations.send(newActionLocations);
+        }}>
+          {optionComponents}
+      </select>);
       actionRegionDivs.push(<div
-        onClick={() => window.electronAPI.sendSignal('editActionLocation', location)}
+        onClick={() => actionSelectRefs.current[location]?.showPicker()}
         title={action && actionDescriptions[action]}
         className='region-action'
-        style={{...selectedRegion, backgroundColor}}></div>);
+        style={{...selectedRegion, backgroundColor}}>    
+      </div>);
     }
   }
   useEffect(() => {
