@@ -167,8 +167,6 @@ fieldset {
   min-width: 100px;
   max-width: calc(100vw - 48px);
   margin: 0 auto;
-  border-top-left-radius: 12px;
-  border-bottom-left-radius: 12px;
 }
 
 legend {
@@ -273,7 +271,7 @@ p {
 }
 
 .App {
-  background: radial-gradient(#000000, 50%, #162644);
+  background: #0a111e;
   min-height: 100vh;
   display: flex;
   padding: 4px;
@@ -402,6 +400,5 @@ p {
   display: flex;
   justify-content: center;
   margin: 0 auto;
-  border-radius: 12px;
-  background-color: rgba(83, 117, 153, 0.3);
+  background-color: #40619f;
 }
