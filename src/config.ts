@@ -153,8 +153,6 @@ export const actionLabels: Record<Action, string> = {
   dialogEngine: 'Load engine',
   reloadEngine: 'Reload',
   showEngine: 'Engine',
-  showSettings: 'Settings',
-  hideSettings: 'Close',
   loadConfig: 'Load config',
   saveConfig: 'Save config',
   resetConfig: 'Reset config',

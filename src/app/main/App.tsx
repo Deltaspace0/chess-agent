@@ -5,10 +5,11 @@ import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import ActionButton from '../components/ActionButton.tsx';
 import Gauge from '../components/Gauge.tsx';
 import EditPanel from './EditPanel.tsx';
+import SettingsPanel from './SettingsPanel.tsx';
 import { actionDescriptions, preferenceConfig } from '../../config.ts';
 import { usePreferences, useSignal } from '../hooks.ts';
 
-type Panel = 'main' | 'promotion' | 'edit';
+type Panel = 'main' | 'promotion' | 'edit' | 'settings';
 
 function App() {
   const electron = window.electronAPI;
@@ -172,7 +173,8 @@ function App() {
         <button onClick={() => setPanelType('main')}>Cancel</button>
       </div>
     </fieldset>,
-    edit: <EditPanel positionFEN={positionFEN}/>
+    edit: <EditPanel positionFEN={positionFEN}/>,
+    settings: <SettingsPanel/>
   };
   const whiteSparePieces = <div className='spare-pieces-div'>
     <SparePiece pieceType='wP'/>
@@ -221,7 +223,9 @@ function App() {
           {panelType === 'edit'
             ? <button onClick={() => setPanelType('main')}>Return</button>
             : <button onClick={() => setPanelType('edit')}>Edit board</button>}
-          <ActionButton name='showSettings'/>
+          {panelType === 'settings'
+            ? <button onClick={() => setPanelType('main')}>Return</button>
+            : <button onClick={() => setPanelType('settings')}>Settings</button>}
         </div>
         {panels[panelType]}
       </div>

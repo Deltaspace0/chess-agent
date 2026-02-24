@@ -91,30 +91,6 @@ async function createRegionWindow(parent: BrowserWindow): Promise<BrowserWindow>
   return win;
 }
 
-async function createSettingsWindow(parent: BrowserWindow): Promise<BrowserWindow> {
-  const win = new BrowserWindow({
-    parent,
-    modal: true,
-    minimizable: false,
-    resizable: false,
-    width: 280,
-    height: 280,
-    show: false,
-    icon: iconPath,
-    useContentSize: true,
-    webPreferences: {
-      preload: preloadPath
-    }
-  });
-  const pagePath = `${appPath}/settings/index.html`;
-  if (app.isPackaged) {
-    await win.loadFile(pagePath);
-  } else {
-    await win.loadURL(pagePath);
-  }
-  return win;
-}
-
 function debounce<T>(callback: (x: T) => void) {
   let value: T;
   let sending = false;
@@ -166,23 +142,11 @@ function debounce<T>(callback: (x: T) => void) {
     mouse.setActive(true);
     e.preventDefault();
   });
-  const settingsWin = await createSettingsWindow(mainWin);
-  settingsWin.addListener('show', () => mouse.setActive(false));
-  settingsWin.addListener('close', (e) => {
-    if (!appRunning) {
-      return;
-    }
-    settingsWin.hide();
-    mainWin.show();
-    mouse.setActive(true);
-    e.preventDefault();
-  });
   const sendToApp = (channel: string, ...args: unknown[]) => {
     if (appRunning) {
       mainWin.webContents.send(channel, ...args);
       engineWin.webContents.send(channel, ...args);
       regionWin.webContents.send(channel, ...args);
-      settingsWin.webContents.send(channel, ...args);
     }
   };
   const sendSignal = <T extends Signal>(name: T, value?: Signals[T]) => {
@@ -346,11 +310,9 @@ function debounce<T>(callback: (x: T) => void) {
     },
     reloadEngine: () => reloadExternalEngine(),
     showEngine: () => engineWin.show(),
-    showSettings: () => settingsWin.show(),
-    hideSettings: () => settingsWin.close(),
     loadConfig: async () => {
       mouse.setActive(false);
-      const result = await dialog.showOpenDialog(settingsWin, {
+      const result = await dialog.showOpenDialog(mainWin, {
         properties: ['openFile'],
         filters: [{ name: 'Configuration file', extensions: ['json'] }]
       });
@@ -358,12 +320,11 @@ function debounce<T>(callback: (x: T) => void) {
       if (result.filePaths.length > 0) {
         preferenceManager.loadFromFile(result.filePaths[0]);
         updateStatus('Loaded configuration file');
-        settingsWin.hide();
       }
     },
     saveConfig: async () => {
       mouse.setActive(false);
-      const result = await dialog.showSaveDialog(settingsWin, {
+      const result = await dialog.showSaveDialog(mainWin, {
         properties: ['createDirectory'],
         filters: [{ name: 'Configuration file', extensions: ['json'] }]
       });
@@ -371,7 +332,6 @@ function debounce<T>(callback: (x: T) => void) {
       if (result.filePath) {
         preferenceManager.saveToFile(result.filePath);
         updateStatus('Saved configuration file');
-        settingsWin.hide();
       }
     },
     resetConfig: () => preferenceManager.reset(),

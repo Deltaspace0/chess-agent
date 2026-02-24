@@ -136,8 +136,6 @@ declare global {
     | 'dialogEngine'
     | 'reloadEngine'
     | 'showEngine'
-    | 'showSettings'
-    | 'hideSettings'
     | 'loadConfig'
     | 'saveConfig'
     | 'resetConfig'

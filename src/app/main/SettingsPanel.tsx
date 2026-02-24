@@ -1,20 +1,10 @@
-import '../App.css';
-import { useEffect } from 'react';
 import ActionButton from '../components/ActionButton.tsx';
 import CheckboxPref from '../components/CheckboxPref.tsx';
 import SliderPref from '../components/SliderPref.tsx';
 
-function App() {
-  useEffect(() => {
-    const escapeCallback = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        window.electronAPI.sendSignal('action', 'hideSettings');
-      }
-    };
-    window.addEventListener('keydown', escapeCallback);
-    return () => window.removeEventListener('keydown', escapeCallback);
-  }, []);
-  return (<div className='App'>
+function SettingsPanel() {
+  return (<fieldset className='scroll-field'>
+    <legend>Settings</legend>
     <div className='flex-column'>
       <div className='flex-row'>
         <ActionButton name='loadConfig'/>
@@ -42,7 +32,7 @@ function App() {
         </div>
       </div>
     </div>
-  </div>);
+  </fieldset>);
 }
 
-export default App;
+export default SettingsPanel;
