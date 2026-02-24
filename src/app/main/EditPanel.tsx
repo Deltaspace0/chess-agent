@@ -15,10 +15,14 @@ function EditPanel({ positionFEN }: EditProps) {
     blackCastlingRights: { 'k': true, 'q': true },
     isWhiteTurn: true
   };
-  const [inputFEN, setInputFEN] = useState('');
+  const [inputFEN, setInputFEN] = useState(positionFEN);
+  const [prevFEN, setPrevFEN] = useState(positionFEN);
   const [separateCastlingRow, setSeparateCastlingRow] = useState(false);
   const editFieldRef = useRef<HTMLFieldSetElement>(null);
-  useEffect(() => setInputFEN(positionFEN), [positionFEN]);
+  if (prevFEN !== positionFEN) {
+    setInputFEN(positionFEN);
+    setPrevFEN(positionFEN);
+  }
   useEffect(() => {
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
