@@ -194,7 +194,7 @@ function debounce<T>(callback: (x: T) => void) {
   };
   const sendEngineData = (name: string, data: string) => {
     sendSignal('engineData', { name, data });
-  }
+  };
   mouse.addListener('mousemove', async () => {
     const region = preferenceManager.getPreference('region');
     if (!region) {
@@ -231,7 +231,7 @@ function debounce<T>(callback: (x: T) => void) {
       'highlightMoves',
       'principalVariations',
       'engineInfo'
-    ]
+    ];
     for (const name of variableNames) {
       sendSignal(name);
     }

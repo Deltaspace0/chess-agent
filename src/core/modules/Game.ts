@@ -24,7 +24,7 @@ class Game implements AgentGame {
   private setTurn(color: Color): boolean {
     try {
       this.chess.setTurn(color);
-    } catch (e) {
+    } catch {
       return false;
     }
     this.positionCallback();
@@ -71,7 +71,7 @@ class Game implements AgentGame {
       this.chess.move(move);
       this.positionCallback();
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   }
@@ -85,7 +85,7 @@ class Game implements AgentGame {
     try {
       this.chess.move(move);
       this.chess.undo();
-    } catch (e) {
+    } catch {
       return false;
     }
     return true;
@@ -138,7 +138,7 @@ class Game implements AgentGame {
       for (const move of words.slice(2)) {
         chess.move(move);
       }
-    } catch (e) {
+    } catch {
       return '';
     }
     const headers = chess.getHeaders();
@@ -208,7 +208,7 @@ class Game implements AgentGame {
     if (whiteKingPosition && chess.isAttacked(whiteKingPosition, 'b')) {
       try {
         chess.setTurn('w');
-      } catch (e) {
+      } catch {
         return false;
       }
     }
@@ -216,7 +216,7 @@ class Game implements AgentGame {
     if (blackKingPosition && chess.isAttacked(blackKingPosition, 'w')) {
       try {
         chess.setTurn('b');
-      } catch (e) {
+      } catch {
         return false;
       }
     }

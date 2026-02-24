@@ -80,7 +80,7 @@ function App() {
       if (e.key === 'Escape') {
         window.electronAPI.sendSignal('action', 'hideRegion');
       }
-    }
+    };
     window.addEventListener('keydown', escapeCallback);
     return () => window.removeEventListener('keydown', escapeCallback);
   }, []);

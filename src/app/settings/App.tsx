@@ -10,7 +10,7 @@ function App() {
       if (e.key === 'Escape') {
         window.electronAPI.sendSignal('action', 'hideSettings');
       }
-    }
+    };
     window.addEventListener('keydown', escapeCallback);
     return () => window.removeEventListener('keydown', escapeCallback);
   }, []);

@@ -8,7 +8,7 @@ class EngineExternal extends EngineProcess {
     this.kill();
     try {
       this.process = spawn(path);
-    } catch (e) {
+    } catch {
       return false;
     }
     this.process.on('error', (e) => {

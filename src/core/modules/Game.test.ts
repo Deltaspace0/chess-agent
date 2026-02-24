@@ -95,7 +95,7 @@ describe('Game', () => {
       });
       expect(result).toBe(false);
       expect(callback).not.toHaveBeenCalled();
-    })
+    });
   });
 
   describe('Move skipping', () => {
