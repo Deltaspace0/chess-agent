@@ -6,7 +6,7 @@ import ActionButton from '../components/ActionButton.tsx';
 import Gauge from '../components/Gauge.tsx';
 import EditPanel from './EditPanel.tsx';
 import SettingsPanel from './SettingsPanel.tsx';
-import { actionDescriptions, preferenceConfig } from '../../config.ts';
+import { actionDescriptions } from '../../config.ts';
 import { usePreferences, useSignal } from '../hooks.ts';
 
 type Panel = 'main' | 'promotion' | 'edit' | 'settings';
@@ -137,11 +137,6 @@ function App() {
           <ActionButton name='bestMove' disabled={isNoRegion}/>
           <ActionButton name='scanMove' disabled={isNoRegion}/>
           <ActionButton name='resetPosition'/>
-          <button
-            title={preferenceConfig['perspective'].description}
-            onClick={() => prefs.perspective.send(!prefs.perspective.value)}>
-              {prefs.perspective.value ? 'White' : 'Black'} (flip)
-          </button>
         </div>
         <div className='flex-row'>
           <ActionButton name='recognizeBoard' disabled={isNoRegion}/>
@@ -210,6 +205,23 @@ function App() {
       <div className='flex-column'>
         {prefs.showEvalBar.value ? (<div className='board-gauge-div'>
           {chessboardComponent}
+          <div className='flex-column' style={{width: '16px'}}>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 8 8"
+              xmlns="http://www.w3.org"
+              style={{ cursor: 'pointer', margin: '4px 0' }}
+              onClick={() => electron.sendSignal('action', 'perspective')}
+              className="flip-icon">
+                <title>Flip board</title>
+                <style>
+                  {`.flip-icon { stroke: #aaa; }
+                  .flip-icon:hover { stroke: #fff; }`}
+                </style>
+                <path d="M3 1v6l-2-2m4 3V2l2 2"/>
+            </svg>
+          </div>
           <Gauge
             perspective={prefs.perspective.value}
             evaluation={engineInfo.evaluation}

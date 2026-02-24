@@ -345,7 +345,7 @@ p {
 
 .gauge {
   position: relative;
-  width: 32px;
+  width: 24px;
   height: min(calc(100vw - 64px), calc(100vh - 240px));
   min-height: 160px;
   background-color: #354f80;
@@ -355,7 +355,7 @@ p {
 }
 
 .gauge-light {
-  width: 32px;
+  width: 24px;
   background-color: #bdd3ff;
   transition: height 0.5s ease-in-out;
   z-index: 1;
