@@ -20,14 +20,12 @@ function App() {
   const hoveredActionDescription = hoveredAction
     && actionDescriptions[hoveredAction as keyof typeof actionDescriptions]
     || 'None';
-  const isNoRegion = !prefs.region.value;
   const engineInfo = useSignal('engineInfo') || {};
   const principalVariations = useSignal('principalVariations') || [];
   const [positionFEN, setPositionFEN] = useState('');
   const [arrows1, setArrows1] = useState<Arrow[]>([]);
   const [arrows2, setArrows2] = useState<Arrow[]>([]);
   const [panelType, setPanelType] = useState<Panel>('main');
-  const [showActions, setShowActions] = useState(true);
   const virtualCursorRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const offPosition = electron.onSignal('positionFEN', (value) => {
@@ -132,19 +130,6 @@ function App() {
   };
   const panels = {
     main: <>
-      {showActions ? (<fieldset>
-        <legend>Actions</legend>
-        <div className='flex-row'>
-          <ActionButton name='bestMove' label='Best move' disabled={isNoRegion}/>
-          <ActionButton name='scanMove' label='Scan move' disabled={isNoRegion}/>
-        </div>
-        <div className='flex-row'>
-          <ActionButton name='loadHashes' label='Load hashes' disabled={isNoRegion}/>
-          <button onClick={() => setShowActions(false)}>Hide actions</button>
-        </div>
-      </fieldset>) : (<div className='flex-row'>
-        <button onClick={() => setShowActions(true)}>Show actions</button>
-      </div>)}
       <fieldset className='pv-field'>
         <legend>Principal variations</legend>
         <p className='text'>
@@ -201,7 +186,7 @@ function App() {
   return (<ChessboardProvider options={chessboardOptions}>
     <div className='App'>
       <div className='flex-column'>
-        <div className='board-eval-bar-div'>
+        <div style={{ display: 'flex', margin: '0 auto' }}>
           {prefs.showEvalBar.value && <EvalBar
             perspective={prefs.perspective.value}
             evaluation={engineInfo.evaluation}
@@ -223,6 +208,10 @@ function App() {
             <ActionIcon
               name='recognizeBoard'
               svgPath='M5 2.5a4 2.5 0 1 0 0.01 0M5 3.5a1.5 1.5 0 1 0 0.01 0'
+            />
+            <ActionIcon
+              name='loadHashes'
+              svgPath='M3.5 1v8M6.5 1v8M1 3.5h8M1 6.5h8'
             />
           </div>
         </div>

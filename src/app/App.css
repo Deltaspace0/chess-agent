@@ -336,17 +336,10 @@ p {
   justify-content: center;
 }
 
-.board-eval-bar-div {
-  min-width: 220px;
-  width: min(calc(100vw - 8px), calc(100vh - 180px));
-  display: flex;
-  margin: 0 auto;
-}
-
 .eval-bar {
   position: relative;
   width: 24px;
-  height: min(calc(100vw - 64px), calc(100vh - 240px));
+  height: min(calc(100vw - 64px), calc(100vh - 80px));
   min-height: 160px;
   background-color: #354f80;
   margin: 4px auto;
@@ -374,11 +367,11 @@ p {
 .board-with-pieces {
   min-width: 160px;
   min-height: 160px;
-  width: min(calc(100vw - 64px), calc(100vh - 240px));
-  height: min(calc(100vw - 64px), calc(100vh - 240px));
+  width: min(calc(100vw - 64px), calc(100vh - 80px));
+  height: min(calc(100vw - 64px), calc(100vh - 80px));
   aspect-ratio: 1/1;
   margin: 4px auto;
-  flex-shrink: 0;
+  padding: 0 8px;
   display: flex;
   flex-direction: column;
   position: relative;
