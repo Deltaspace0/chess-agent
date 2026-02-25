@@ -4,9 +4,9 @@ import ActionButton from '../components/ActionButton.tsx';
 import ToggleButton from '../components/ToggleButton.tsx';
 import ToggleButtonPref from '../components/ToggleButtonPref.tsx';
 import RegionSelection from './RegionSelection.tsx';
-import { usePreferences } from '../hooks.ts';
+import { usePreferences, useSignal } from '../hooks.ts';
 import { actionDescriptions, possibleLocations } from '../../config.ts';
-import { selectRegion } from '../../util.ts';
+import { findRegion } from '../../util.ts';
 
 function multiplyRegion(region: Region | null, factor: number): Region | null {
   if (!region) {
@@ -26,6 +26,7 @@ function App() {
   const region = useMemo(() => {
     return multiplyRegion(prefs.region.value, 1/dpr);
   }, [prefs.region.value, dpr]);
+  const selectingRegion = useSignal('selectingRegion');
   const [autoAdjust, setAutoAdjust] = useState(true);
   const [hideAll, setHideAll] = useState(false);
   const actionSelectRefs = useRef<Record<string, HTMLSelectElement | null>>({});
@@ -48,7 +49,7 @@ function App() {
   const actionRegionDivs: JSX.Element[] = [];
   if (region) {
     for (const location of possibleLocations) {
-      const selectedRegion = selectRegion(region, location);
+      const selectedRegion = findRegion(region, location);
       const action = prefs.actionLocations.value[location];
       const backgroundColor = action
         ? 'rgba(255, 0, 0, 0.8)'
@@ -84,7 +85,7 @@ function App() {
     window.addEventListener('keydown', escapeCallback);
     return () => window.removeEventListener('keydown', escapeCallback);
   }, []);
-  return (<div className={hideAll ? 'Region hidden' : 'Region'}>
+  const regionModeDiv = <div className={hideAll ? 'Region hidden' : 'Region'}>
     <div className='region-panel'>
       <button
         onClick={() => prefs.region.send(null)}
@@ -108,7 +109,16 @@ function App() {
     {region && <div className='region-highlight' style={region}/>}
     <RegionSelection onChange={handleRegionChange}/>
     {prefs.actionRegion.value && actionRegionDivs}
-  </div>);
+  </div>;
+  const overlayModeDiv = <div style={{position: 'relative'}}>
+    {prefs.showRegion.value && region && <div
+      className='region-border'
+      style={region}
+    />}
+  </div>;
+  return (<>
+    {selectingRegion ? regionModeDiv : overlayModeDiv}
+  </>);
 }
 
 export default App;

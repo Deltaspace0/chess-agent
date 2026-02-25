@@ -9,7 +9,7 @@ export function squareToCoords(square: string, isWhite: boolean): [number, numbe
   return [Number(square[1])-1, 'hgfedcba'.indexOf(square[0])];
 }
 
-export function selectRegion(region: Region, location: string): Region {
+export function findRegion(region: Region, location: string): Region {
   const { left, top, width, height } = region;
   const index = Number(location[1]);
   if (location[0] === 'N') {

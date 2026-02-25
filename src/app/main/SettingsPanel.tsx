@@ -29,6 +29,7 @@ function SettingsPanel() {
           <CheckboxPref name='showArrows'/>
           <CheckboxPref name='showNotation'/>
           <CheckboxPref name='showCursor'/>
+          <CheckboxPref name='showRegion'/>
         </div>
       </div>
     </div>

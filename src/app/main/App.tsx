@@ -214,7 +214,7 @@ function App() {
               svgPath='M3.5 1v8M6.5 1v8M1 3.5h8M1 6.5h8'
             />
             <ActionIcon
-              name='showRegion'
+              name='selectRegion'
               svgPath='M2 2v6h6v-6z'
             />
             <ActionIcon

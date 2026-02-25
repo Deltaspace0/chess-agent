@@ -213,6 +213,14 @@ p {
   z-index: 1;
 }
 
+.region-border {
+  position: absolute;
+  border-width: 2px;
+  border-color: rgb(255, 0, 0);
+  border-style: dashed;
+  box-sizing: border-box;
+}
+
 .region-panel {
   top: 0;
   display: flex;

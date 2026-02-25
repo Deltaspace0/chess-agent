@@ -18,7 +18,7 @@ export const defaultActionLocations: ActionLocations = {
   W2: 'promoteRook',
   W3: 'promoteBishop',
   W4: 'promoteKnight',
-  E1: 'showRegion',
+  E1: 'selectRegion',
   E2: 'draggingMode',
   E7: 'loadHashes',
   E8: 'perspective'
@@ -85,6 +85,11 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     description: 'Show in the app where the cursor is inside the region',
     defaultValue: true
   },
+  showRegion: {
+    label: 'Show region',
+    description: 'Show the selected region on screen',
+    defaultValue: true
+  },
   analysisDuration: {
     label: 'Analysis duration (ms)',
     description: 'Time allotted for the engine to find the best move',
@@ -139,7 +144,7 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
 export const preferenceNames = Object.keys(preferenceConfig) as Preference[];
 
 export const actionDescriptions: Partial<Record<Action, string>> = {
-  showRegion: 'Go to region selection mode',
+  selectRegion: 'Go to region selection mode',
   loadHashes: 'Load piece image hashes',
   scanMove: 'Start detecting a move',
   skipMove: 'Skip current move',

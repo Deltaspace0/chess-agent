@@ -13,7 +13,7 @@ import Recognizer from './modules/Recognizer.ts';
 import { ConcreteMouse } from './modules/device/Mouse.ts';
 import { ConcreteScreen, getAdjustedRegion } from './modules/device/Screen.ts';
 import { possibleLocations } from '../config.ts';
-import { selectRegion } from '../util.ts';
+import { findRegion } from '../util.ts';
 
 const preloadPath = path.join(import.meta.dirname, 'preload.js');
 const iconPath = path.join(import.meta.dirname,
@@ -65,17 +65,15 @@ async function createEngineWindow(): Promise<BrowserWindow> {
   return win;
 }
 
-async function createOverlayWindow(parent: BrowserWindow): Promise<BrowserWindow> {
+async function createOverlayWindow(): Promise<BrowserWindow> {
   const primaryDisplay = screen.getPrimaryDisplay();
   const win = new BrowserWindow({
-    parent,
     alwaysOnTop: true,
     center: true,
     frame: false,
     width: primaryDisplay.size.width-4,
     height: primaryDisplay.size.height,
     resizable: false,
-    show: false,
     skipTaskbar: true,
     transparent: true,
     webPreferences: {
@@ -88,6 +86,7 @@ async function createOverlayWindow(parent: BrowserWindow): Promise<BrowserWindow
   } else {
     await win.loadURL(pagePath);
   }
+  win.setIgnoreMouseEvents(true);
   return win;
 }
 
@@ -115,6 +114,17 @@ function debounce<T>(callback: (x: T) => void) {
   mouse.start();
   const mainWin = await createMainWindow();
   let appRunning = true;
+  let selectingRegion = false;
+  const setSelectingRegion = (value: boolean) => {
+    selectingRegion = value;
+    sendSignal('selectingRegion', value);
+  };
+  mainWin.addListener('focus', () => {
+    if (selectingRegion) {
+      overlayWin.focus();
+    }
+    overlayWin.moveTop();
+  });
   mainWin.addListener('close', () => {
     appRunning = false;
     app.quit();
@@ -127,19 +137,16 @@ function debounce<T>(callback: (x: T) => void) {
     engineWin.hide();
     e.preventDefault();
   });
-  const overlayWin = await createOverlayWindow(mainWin);
-  overlayWin.addListener('show', () => {
-    mouse.setActive(false);
-    setTimeout(() => overlayWin.setOpacity(1), 100);
-  });
+  const overlayWin = await createOverlayWindow();
+  mainWin.show();
   overlayWin.addListener('close', (e) => {
     if (!appRunning) {
       return;
     }
-    overlayWin.hide();
-    overlayWin.setOpacity(0);
     mainWin.show();
+    overlayWin.setIgnoreMouseEvents(true);
     mouse.setActive(true);
+    setSelectingRegion(false);
     e.preventDefault();
   });
   const sendToApp = (channel: string, ...args: unknown[]) => {
@@ -151,6 +158,12 @@ function debounce<T>(callback: (x: T) => void) {
   };
   const sendSignal = <T extends Signal>(name: T, value?: Signals[T]) => {
     sendToApp('signal', name, value);
+  };
+  const selectRegion = () => {
+    overlayWin.setIgnoreMouseEvents(false);
+    overlayWin.show();
+    mouse.setActive(false);
+    setSelectingRegion(true);
   };
   const updateStatus = (status: string) => {
     console.log(status);
@@ -271,11 +284,11 @@ function debounce<T>(callback: (x: T) => void) {
     }
   });
   const actionCallbacks: Record<Action, () => void> = {
-    showRegion: () => overlayWin.show(),
+    selectRegion: () => selectRegion(),
     hideRegion: () => overlayWin.close(),
     loadHashes: () => {
       if (!preferenceManager.getPreference('region')) {
-        overlayWin.show();
+        selectRegion();
         return;
       }
       const perspective = preferenceManager.getPreference('perspective');
@@ -302,7 +315,7 @@ function debounce<T>(callback: (x: T) => void) {
     clearPosition: () => agent.clearPosition(),
     recognizeBoard: () => {
       if (!preferenceManager.getPreference('region')) {
-        overlayWin.show();
+        selectRegion();
         return;
       }
       if (!preferenceManager.getPreference('recognizerModel')) {
@@ -317,6 +330,7 @@ function debounce<T>(callback: (x: T) => void) {
       const result = await dialog.showOpenDialog(engineWin, {
         properties: ['openFile']
       });
+      overlayWin.moveTop();
       mouse.setActive(true);
       if (result.filePaths.length > 0) {
         preferenceManager.setPreference('enginePath', result.filePaths[0]);
@@ -330,6 +344,7 @@ function debounce<T>(callback: (x: T) => void) {
         properties: ['openFile'],
         filters: [{ name: 'Configuration file', extensions: ['json'] }]
       });
+      overlayWin.moveTop();
       mouse.setActive(true);
       if (result.filePaths.length > 0) {
         preferenceManager.loadFromFile(result.filePaths[0]);
@@ -342,6 +357,7 @@ function debounce<T>(callback: (x: T) => void) {
         properties: ['createDirectory'],
         filters: [{ name: 'Configuration file', extensions: ['json'] }]
       });
+      overlayWin.moveTop();
       mouse.setActive(true);
       if (result.filePath) {
         preferenceManager.saveToFile(result.filePath);
@@ -459,7 +475,7 @@ function debounce<T>(callback: (x: T) => void) {
         if (!region) {
           return null;
         }
-        return selectRegion(region, location);
+        return findRegion(region, location);
       }
     });
   }
@@ -470,6 +486,7 @@ function debounce<T>(callback: (x: T) => void) {
     alwaysOnTop: (value) => {
       mainWin.setAlwaysOnTop(value, 'normal');
       engineWin.setAlwaysOnTop(value, 'normal');
+      overlayWin.moveTop();
     },
     perspective: (value) => {
       board.setPerspective(value);

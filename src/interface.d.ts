@@ -45,6 +45,7 @@ declare global {
     showArrows: boolean;
     showNotation: boolean;
     showCursor: boolean;
+    showRegion: boolean;
     analysisDuration: number;
     multiPV: number;
     engineThreads: number;
@@ -107,6 +108,7 @@ declare global {
     pieceDropped: DroppedPiece;
     pieceDroppedEdit: DroppedPiece;
     action: Action;
+    selectingRegion: boolean;
   }
 
   type ToggleablePreference = keyof Pick<Preferences
@@ -122,7 +124,7 @@ declare global {
 
   type Action
     = ToggleablePreference
-    | 'showRegion'
+    | 'selectRegion'
     | 'hideRegion'
     | 'loadHashes'
     | 'scanMove'
