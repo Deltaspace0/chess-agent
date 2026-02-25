@@ -8,6 +8,7 @@ import EditPanel from './EditPanel.tsx';
 import SettingsPanel from './SettingsPanel.tsx';
 import { actionDescriptions } from '../../config.ts';
 import { usePreferences, useSignal } from '../hooks.ts';
+import ActionIcon from '../components/ActionIcon.tsx';
 
 type Panel = 'main' | 'promotion' | 'edit' | 'settings';
 
@@ -209,35 +210,17 @@ function App() {
           />
           {chessboardComponent}
           <div className='flex-column' style={{width: '16px'}}>
-            <svg
-              width='16'
-              height='16'
+            <ActionIcon
+              name='perspective'
               viewBox='0 0 8 8'
-              xmlns='http://www.w3.org'
-              onClick={() => electron.sendSignal('action', 'perspective')}
-              className='action-icon flip-icon'>
-                <title>Flip board</title>
-                <style>
-                  {`.flip-icon { stroke: #aaa; }
-                  .flip-icon:hover { stroke: #fff; }`}
-                </style>
-                <path d='M3 1v6l-2-2m4 3V2l2 2'/>
-            </svg>
-            <svg
-              width='16' 
-              height='16' 
-              viewBox='0 0 24 24' 
-              xmlns='http://www.w3.org/2000/svg'
+              svgPath='M3 1v6l-2-2m4 3V2l2 2'
+            />
+            <ActionIcon
+              name='resetPosition'
+              viewBox='0 0 24 24'
               style={{ strokeWidth: 3, strokeLinecap: 'round' }}
-              onClick={() => electron.sendSignal('action', 'resetPosition')}
-              className='action-icon reset-icon'>
-                <title>Reset game</title>
-                <style>{`
-                  .reset-icon { stroke: #aaa; }
-                  .reset-icon:hover { stroke: #fff; }
-                `}</style>
-                <path d='M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8 M3 3v5h5'/>
-            </svg>
+              svgPath='M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8 M3 3v5h5'
+            />
           </div>
         </div>) : chessboardComponent}
         <p className='status'>Status: {statusText}</p>
