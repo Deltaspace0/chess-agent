@@ -270,18 +270,12 @@ function debounce<T>(callback: (x: T) => void) {
       sendSignal('promotion');
     }
   });
-  const warnRegion = () => {
-    const region = preferenceManager.getPreference('region');
-    if (!region) {
-      updateStatus('Select region first');
-    }
-    return region;
-  };
   const actionCallbacks: Record<Action, () => void> = {
     showRegion: () => regionWin.show(),
     hideRegion: () => regionWin.close(),
     loadHashes: () => {
-      if (!warnRegion()) {
+      if (!preferenceManager.getPreference('region')) {
+        regionWin.show();
         return;
       }
       const perspective = preferenceManager.getPreference('perspective');
@@ -307,7 +301,8 @@ function debounce<T>(callback: (x: T) => void) {
     },
     clearPosition: () => agent.clearPosition(),
     recognizeBoard: () => {
-      if (!warnRegion()) {
+      if (!preferenceManager.getPreference('region')) {
+        regionWin.show();
         return;
       }
       if (!preferenceManager.getPreference('recognizerModel')) {
