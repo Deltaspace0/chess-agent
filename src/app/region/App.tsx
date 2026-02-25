@@ -103,7 +103,7 @@ function App() {
         }}
       />
       <ToggleButtonPref name='actionRegion'/>
-      <ActionButton name='hideRegion'/>
+      <ActionButton name='hideRegion' label='Return'/>
     </div>
     {region && <div className='region-highlight' style={region}/>}
     <RegionSelection onChange={handleRegionChange}/>

@@ -8,7 +8,7 @@ function App() {
   const [enginePath, sendEnginePath] = usePreference('enginePath');
   const engineInfo = useSignal('engineInfo') || {};
   const engineType = enginePath ? 'external' : 'internal';
-  const isInternalEngine = enginePath === null;
+  const isInternal = enginePath === null;
   const [engineInput, setEngineInput] = useState('');
   const [internalLines, setInternalLines] = useState<JSX.Element[]>([]);
   const [externalLines, setExternalLines] = useState<JSX.Element[]>([]);
@@ -55,11 +55,11 @@ function App() {
   return (<div className='App'>
     <div className='flex-column'>
       <div className='flex-row'>
-        <ActionButton name='dialogEngine'/>
-        <ActionButton name='reloadEngine' disabled={isInternalEngine}/>
+        <ActionButton name='dialogEngine' label='Load engine'/>
+        <ActionButton name='reloadEngine' label='Reload' disabled={isInternal}/>
         <button
           onClick={() => sendEnginePath(null)}
-          disabled={isInternalEngine}>
+          disabled={isInternal}>
             Disable
         </button>
       </div>
@@ -71,9 +71,9 @@ function App() {
       <p className='text'>Name: {engineInfo.name}</p>
       <p className='text'>Author: {engineInfo.author}</p>
       <div ref={containerRef} className='engine-uci-div'>
-        {isInternalEngine ? internalLines : externalLines}
+        {isInternal ? internalLines : externalLines}
       </div>
-      {(isInternalEngine || externalActive) ? (<div className='uci-input-div'>
+      {(isInternal || externalActive) ? (<div className='uci-input-div'>
         <input
           type='text'
           style={{minWidth: 'calc(100vw - 100px)'}}

@@ -7,9 +7,9 @@ function SettingsPanel() {
     <legend>Settings</legend>
     <div className='flex-column'>
       <div className='flex-row'>
-        <ActionButton name='loadConfig'/>
-        <ActionButton name='saveConfig'/>
-        <ActionButton name='resetConfig'/>
+        <ActionButton name='loadConfig' label='Load config'/>
+        <ActionButton name='saveConfig' label='Save config'/>
+        <ActionButton name='resetConfig' label='Reset config'/>
       </div>
       <SliderPref name='analysisDuration'/>
       <SliderPref name='multiPV'/>

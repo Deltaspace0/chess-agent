@@ -1,11 +1,11 @@
-import type React from 'react';
-import { actionDescriptions, actionLabels } from '../../config';
+import type { CSSProperties } from 'react';
+import { actionDescriptions } from '../../config.ts';
 
 export interface ActionButtonProps {
   name: Action;
-  label?: string;
+  label: string;
   disabled?: boolean;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 }
 
 function ActionButton(props: ActionButtonProps) {
@@ -15,7 +15,7 @@ function ActionButton(props: ActionButtonProps) {
       onClick={() => window.electronAPI.sendSignal('action', props.name)}
       disabled={props.disabled}
       style={props.style}>
-        {props.label ?? actionLabels[props.name]}
+        {props.label}
     </button>
   );
 }

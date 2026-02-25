@@ -138,40 +138,6 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
 
 export const preferenceNames = Object.keys(preferenceConfig) as Preference[];
 
-export const actionLabels: Record<Action, string> = {
-  showRegion: 'Region',
-  hideRegion: 'Return',
-  loadHashes: 'Load hashes',
-  scanMove: 'Scan move',
-  skipMove: 'Skip move',
-  undoMove: 'Undo move',
-  bestMove: 'Best move',
-  resetPosition: 'Reset',
-  clearPosition: 'Clear',
-  recognizeBoard: 'Recognize',
-  recognizeBoardSkipMove: 'Recognize',
-  dialogEngine: 'Load engine',
-  reloadEngine: 'Reload',
-  showEngine: 'Engine',
-  loadConfig: 'Load config',
-  saveConfig: 'Save config',
-  resetConfig: 'Reset config',
-  adjustRegion: 'Adjust region',
-  savePicture: 'Screenshot',
-  promoteQueen: 'Queen',
-  promoteRook: 'Rook',
-  promoteBishop: 'Bishop',
-  promoteKnight: 'Knight',
-  autoResponse: preferenceConfig.autoResponse.label,
-  autoScan: preferenceConfig.autoScan.label,
-  autoQueen: preferenceConfig.autoQueen.label,
-  perspective: preferenceConfig.perspective.label,
-  draggingMode: preferenceConfig.draggingMode.label,
-  actionRegion: preferenceConfig.actionRegion.label,
-  analysisDuration: preferenceConfig.analysisDuration.label,
-  mouseSpeed: preferenceConfig.mouseSpeed.label
-};
-
 export const actionDescriptions: Partial<Record<Action, string>> = {
   showRegion: 'Go to region selection mode',
   loadHashes: 'Load piece image hashes',

@@ -135,13 +135,13 @@ function App() {
       {showActions ? (<fieldset>
         <legend>Actions</legend>
         <div className='flex-row'>
-          <ActionButton name='bestMove' disabled={isNoRegion}/>
-          <ActionButton name='scanMove' disabled={isNoRegion}/>
-          <ActionButton name='undoMove'/>
+          <ActionButton name='bestMove' label='Best move' disabled={isNoRegion}/>
+          <ActionButton name='scanMove' label='Scan move' disabled={isNoRegion}/>
+          <ActionButton name='undoMove' label='Undo move'/>
         </div>
         <div className='flex-row'>
-          <ActionButton name='recognizeBoard' disabled={isNoRegion}/>
-          <ActionButton name='loadHashes' disabled={isNoRegion}/>
+          <ActionButton name='recognizeBoard' label='Recognize' disabled={isNoRegion}/>
+          <ActionButton name='loadHashes' label='Load hashes' disabled={isNoRegion}/>
           <button onClick={() => setShowActions(false)}>Hide actions</button>
         </div>
       </fieldset>) : (<div className='flex-row'>
@@ -159,10 +159,10 @@ function App() {
     promotion: <fieldset>
       <legend>Promote pawn to</legend>
       <div className='flex-row'>
-        <ActionButton name='promoteQueen'/>
-        <ActionButton name='promoteRook'/>
-        <ActionButton name='promoteBishop'/>
-        <ActionButton name='promoteKnight'/>
+        <ActionButton name='promoteQueen' label='Queen'/>
+        <ActionButton name='promoteRook' label='Rook'/>
+        <ActionButton name='promoteBishop' label='Bishop'/>
+        <ActionButton name='promoteKnight' label='Knight'/>
       </div>
       <div className='flex-row'>
         <button onClick={() => setPanelType('main')}>Cancel</button>
@@ -226,8 +226,8 @@ function App() {
         <p className='status'>Status: {statusText}</p>
         <p className='status'>Hovered action: {hoveredActionDescription}</p>
         <div className='flex-row'>
-          <ActionButton name='showRegion'/>
-          <ActionButton name='showEngine'/>
+          <ActionButton name='showRegion' label='Region'/>
+          <ActionButton name='showEngine' label='Engine'/>
           {panelType === 'edit'
             ? <button onClick={() => setPanelType('main')}>Return</button>
             : <button onClick={() => setPanelType('edit')}>Edit board</button>}
