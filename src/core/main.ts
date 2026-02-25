@@ -65,7 +65,7 @@ async function createEngineWindow(): Promise<BrowserWindow> {
   return win;
 }
 
-async function createRegionWindow(parent: BrowserWindow): Promise<BrowserWindow> {
+async function createOverlayWindow(parent: BrowserWindow): Promise<BrowserWindow> {
   const primaryDisplay = screen.getPrimaryDisplay();
   const win = new BrowserWindow({
     parent,
@@ -82,7 +82,7 @@ async function createRegionWindow(parent: BrowserWindow): Promise<BrowserWindow>
       preload: preloadPath
     }
   });
-  const pagePath = `${appPath}/region/index.html`;
+  const pagePath = `${appPath}/overlay/index.html`;
   if (app.isPackaged) {
     await win.loadFile(pagePath);
   } else {
@@ -127,17 +127,17 @@ function debounce<T>(callback: (x: T) => void) {
     engineWin.hide();
     e.preventDefault();
   });
-  const regionWin = await createRegionWindow(mainWin);
-  regionWin.addListener('show', () => {
+  const overlayWin = await createOverlayWindow(mainWin);
+  overlayWin.addListener('show', () => {
     mouse.setActive(false);
-    setTimeout(() => regionWin.setOpacity(1), 100);
+    setTimeout(() => overlayWin.setOpacity(1), 100);
   });
-  regionWin.addListener('close', (e) => {
+  overlayWin.addListener('close', (e) => {
     if (!appRunning) {
       return;
     }
-    regionWin.hide();
-    regionWin.setOpacity(0);
+    overlayWin.hide();
+    overlayWin.setOpacity(0);
     mainWin.show();
     mouse.setActive(true);
     e.preventDefault();
@@ -146,7 +146,7 @@ function debounce<T>(callback: (x: T) => void) {
     if (appRunning) {
       mainWin.webContents.send(channel, ...args);
       engineWin.webContents.send(channel, ...args);
-      regionWin.webContents.send(channel, ...args);
+      overlayWin.webContents.send(channel, ...args);
     }
   };
   const sendSignal = <T extends Signal>(name: T, value?: Signals[T]) => {
@@ -271,11 +271,11 @@ function debounce<T>(callback: (x: T) => void) {
     }
   });
   const actionCallbacks: Record<Action, () => void> = {
-    showRegion: () => regionWin.show(),
-    hideRegion: () => regionWin.close(),
+    showRegion: () => overlayWin.show(),
+    hideRegion: () => overlayWin.close(),
     loadHashes: () => {
       if (!preferenceManager.getPreference('region')) {
-        regionWin.show();
+        overlayWin.show();
         return;
       }
       const perspective = preferenceManager.getPreference('perspective');
@@ -302,7 +302,7 @@ function debounce<T>(callback: (x: T) => void) {
     clearPosition: () => agent.clearPosition(),
     recognizeBoard: () => {
       if (!preferenceManager.getPreference('region')) {
-        regionWin.show();
+        overlayWin.show();
         return;
       }
       if (!preferenceManager.getPreference('recognizerModel')) {

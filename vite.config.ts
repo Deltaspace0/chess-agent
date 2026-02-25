@@ -11,7 +11,7 @@ export default defineConfig({
       input: {
         main: resolve(import.meta.dirname, 'src/app/main/index.html'),
         engine: resolve(import.meta.dirname, 'src/app/engine/index.html'),
-        region: resolve(import.meta.dirname, 'src/app/region/index.html')
+        overlay: resolve(import.meta.dirname, 'src/app/overlay/index.html')
       }
     }
   }
