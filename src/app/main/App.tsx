@@ -136,12 +136,11 @@ function App() {
         <div className='flex-row'>
           <ActionButton name='bestMove' disabled={isNoRegion}/>
           <ActionButton name='scanMove' disabled={isNoRegion}/>
-          <ActionButton name='resetPosition'/>
+          <ActionButton name='undoMove'/>
         </div>
         <div className='flex-row'>
           <ActionButton name='recognizeBoard' disabled={isNoRegion}/>
           <ActionButton name='loadHashes' disabled={isNoRegion}/>
-          <ActionButton name='undoMove'/>
           <button onClick={() => setShowActions(false)}>Hide actions</button>
         </div>
       </fieldset>) : (<div className='flex-row'>
@@ -204,28 +203,42 @@ function App() {
     <div className='App'>
       <div className='flex-column'>
         {prefs.showEvalBar.value ? (<div className='board-gauge-div'>
+          <Gauge
+            perspective={prefs.perspective.value}
+            evaluation={engineInfo.evaluation}
+          />
           {chessboardComponent}
           <div className='flex-column' style={{width: '16px'}}>
             <svg
-              width="16"
-              height="16"
-              viewBox="0 0 8 8"
-              xmlns="http://www.w3.org"
-              style={{ cursor: 'pointer', margin: '4px 0' }}
+              width='16'
+              height='16'
+              viewBox='0 0 8 8'
+              xmlns='http://www.w3.org'
               onClick={() => electron.sendSignal('action', 'perspective')}
-              className="flip-icon">
+              className='action-icon flip-icon'>
                 <title>Flip board</title>
                 <style>
                   {`.flip-icon { stroke: #aaa; }
                   .flip-icon:hover { stroke: #fff; }`}
                 </style>
-                <path d="M3 1v6l-2-2m4 3V2l2 2"/>
+                <path d='M3 1v6l-2-2m4 3V2l2 2'/>
+            </svg>
+            <svg
+              width='16' 
+              height='16' 
+              viewBox='0 0 24 24' 
+              xmlns='http://www.w3.org/2000/svg'
+              style={{ strokeWidth: 3, strokeLinecap: 'round' }}
+              onClick={() => electron.sendSignal('action', 'resetPosition')}
+              className='action-icon reset-icon'>
+                <title>Reset game</title>
+                <style>{`
+                  .reset-icon { stroke: #aaa; }
+                  .reset-icon:hover { stroke: #fff; }
+                `}</style>
+                <path d='M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8 M3 3v5h5'/>
             </svg>
           </div>
-          <Gauge
-            perspective={prefs.perspective.value}
-            evaluation={engineInfo.evaluation}
-          />
         </div>) : chessboardComponent}
         <p className='status'>Status: {statusText}</p>
         <p className='status'>Hovered action: {hoveredActionDescription}</p>

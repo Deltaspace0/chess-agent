@@ -410,3 +410,9 @@ p {
   margin: 0 auto;
   background-color: #40619f;
 }
+
+.action-icon {
+  cursor: pointer;
+  margin: 4px 0;
+  fill: none;
+}
