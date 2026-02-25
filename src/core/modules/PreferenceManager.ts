@@ -32,9 +32,6 @@ class PreferenceManager {
 
   onUpdate(listener: typeof this.generalListener) {
     this.generalListener = listener;
-    for (const name of preferenceNames) {
-      listener(name, this.preferences[name]);
-    }
   }
 
   onUpdatePreference<T extends Preference>(

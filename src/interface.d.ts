@@ -109,6 +109,7 @@ declare global {
     pieceDroppedEdit: DroppedPiece;
     action: Action;
     selectingRegion: boolean;
+    requestPreference: Preference;
   }
 
   type ToggleablePreference = keyof Pick<Preferences

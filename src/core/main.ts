@@ -156,6 +156,9 @@ function debounce<T>(callback: (x: T) => void) {
       overlayWin.webContents.send(channel, ...args);
     }
   };
+  const sendPreference = <T extends Preference>(name: T, value: Preferences[T]) => {
+    sendToApp('preference', name, value);
+  };
   const sendSignal = <T extends Signal>(name: T, value?: Signals[T]) => {
     sendToApp('signal', name, value);
   };
@@ -479,9 +482,7 @@ function debounce<T>(callback: (x: T) => void) {
       }
     });
   }
-  preferenceManager.onUpdate((name, value) => {
-    sendToApp('preference', name, value);
-  });
+  preferenceManager.onUpdate((name, value) => sendPreference(name, value));
   const preferenceListeners: Partial<PreferenceListeners> = {
     alwaysOnTop: (value) => {
       mainWin.setAlwaysOnTop(value, 'normal');
@@ -546,5 +547,9 @@ function debounce<T>(callback: (x: T) => void) {
   onSignal('positionFEN', (value) => agent.loadPosition(value));
   onSignal('positionInfo', (value) => agent.loadPositionInfo(value));
   onSignal('action', (value) => actionCallbacks[value]());
+  onSignal('requestPreference', (name) => {
+    const value = preferenceManager.getPreference(name);
+    sendPreference(name, value);
+  });
   updateStatus('Ready');
 })();
