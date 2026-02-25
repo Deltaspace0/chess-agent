@@ -213,13 +213,19 @@ function App() {
               name='loadHashes'
               svgPath='M3.5 1v8M6.5 1v8M1 3.5h8M1 6.5h8'
             />
+            <ActionIcon
+              name='showRegion'
+              svgPath='M2 2v6h6v-6z'
+            />
+            <ActionIcon
+              name='showEngine'
+              svgPath='M1 2A2 1 36 1 0 9 5M9 5A2 1 -36 1 0 1 8L1 2'
+            />
           </div>
         </div>
         <p className='status'>Status: {statusText}</p>
         <p className='status'>Hovered action: {hoveredActionDescription}</p>
         <div className='flex-row'>
-          <ActionButton name='showRegion' label='Region'/>
-          <ActionButton name='showEngine' label='Engine'/>
           {panelType === 'edit'
             ? <button onClick={() => setPanelType('main')}>Return</button>
             : <button onClick={() => setPanelType('edit')}>Edit board</button>}

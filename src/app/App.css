@@ -371,7 +371,7 @@ p {
   height: min(calc(100vw - 64px), calc(100vh - 80px));
   aspect-ratio: 1/1;
   margin: 4px auto;
-  padding: 0 8px;
+  padding: 0 4px;
   display: flex;
   flex-direction: column;
   position: relative;
