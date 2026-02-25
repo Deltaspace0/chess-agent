@@ -170,12 +170,8 @@ export class Agent {
     try {
       pieces = await this.recognizer.recognizeBoard();
     } catch (e) {
-      if (e instanceof Error && e.message === 'no hashes') {
-        this.statusCallback('Load hashes first');
-      } else {
-        console.log(e);
-        this.statusCallback('Failed to recognize board');
-      }
+      console.log(e);
+      this.statusCallback('Failed to recognize board');
       return;
     }
     this.game.putPieces(pieces);
@@ -228,7 +224,7 @@ export class Agent {
     this.recognizer.stopScanning();
     try {
       this.game.load(fen);
-    } catch (e) {
+    } catch {
       this.statusCallback('Invalid FEN');
       return;
     }

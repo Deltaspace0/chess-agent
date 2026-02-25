@@ -270,10 +270,20 @@ function debounce<T>(callback: (x: T) => void) {
       sendSignal('promotion');
     }
   });
+  const warnRegion = () => {
+    const region = preferenceManager.getPreference('region');
+    if (!region) {
+      updateStatus('Select region first');
+    }
+    return region;
+  };
   const actionCallbacks: Record<Action, () => void> = {
     showRegion: () => regionWin.show(),
     hideRegion: () => regionWin.close(),
     loadHashes: () => {
+      if (!warnRegion()) {
+        return;
+      }
       const perspective = preferenceManager.getPreference('perspective');
       recognizer.load(perspective)
         .then((model) => {
@@ -296,7 +306,16 @@ function debounce<T>(callback: (x: T) => void) {
       }
     },
     clearPosition: () => agent.clearPosition(),
-    recognizeBoard: () => agent.recognizeBoard(),
+    recognizeBoard: () => {
+      if (!warnRegion()) {
+        return;
+      }
+      if (!preferenceManager.getPreference('recognizerModel')) {
+        updateStatus('Load hashes first');
+        return;
+      }
+      agent.recognizeBoard();
+    },
     recognizeBoardSkipMove: () => agent.recognizeBoard(true),
     dialogEngine: async () => {
       mouse.setActive(false);
