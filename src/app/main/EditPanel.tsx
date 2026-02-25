@@ -2,19 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import ActionButton from '../components/ActionButton.tsx';
 import Checkbox from '../components/Checkbox.tsx';
 import Radio from '../components/Radio.tsx';
-import { useSignal } from '../hooks.ts';
 
 interface EditProps {
   positionFEN: string;
+  positionInfo: PositionInfo;
 }
 
-function EditPanel({ positionFEN }: EditProps) {
+function EditPanel({ positionFEN, positionInfo }: EditProps) {
   const electron = window.electronAPI;
-  const positionInfo = useSignal('positionInfo') || {
-    whiteCastlingRights: { 'k': true, 'q': true },
-    blackCastlingRights: { 'k': true, 'q': true },
-    isWhiteTurn: true
-  };
   const [inputFEN, setInputFEN] = useState(positionFEN);
   const [prevFEN, setPrevFEN] = useState(positionFEN);
   const [separateCastlingRow, setSeparateCastlingRow] = useState(false);

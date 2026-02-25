@@ -23,6 +23,11 @@ function App() {
   const engineInfo = useSignal('engineInfo') || {};
   const principalVariations = useSignal('principalVariations') || [];
   const [positionFEN, setPositionFEN] = useState('');
+  const positionInfo = useSignal('positionInfo') || {
+    whiteCastlingRights: { 'k': true, 'q': true },
+    blackCastlingRights: { 'k': true, 'q': true },
+    isWhiteTurn: true
+  };
   const [arrows1, setArrows1] = useState<Arrow[]>([]);
   const [arrows2, setArrows2] = useState<Arrow[]>([]);
   const [panelType, setPanelType] = useState<Panel>('main');
@@ -151,7 +156,7 @@ function App() {
         <button onClick={() => setPanelType('main')}>Cancel</button>
       </div>
     </fieldset>,
-    edit: <EditPanel positionFEN={positionFEN}/>,
+    edit: <EditPanel positionFEN={positionFEN} positionInfo={positionInfo}/>,
     settings: <SettingsPanel/>
   };
   const whiteSparePieces = <div className='spare-pieces-div'>
