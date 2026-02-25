@@ -201,11 +201,11 @@ function App() {
   return (<ChessboardProvider options={chessboardOptions}>
     <div className='App'>
       <div className='flex-column'>
-        {prefs.showEvalBar.value ? (<div className='board-gauge-div'>
-          <Gauge
+        <div className='board-gauge-div'>
+          {prefs.showEvalBar.value && <Gauge
             perspective={prefs.perspective.value}
             evaluation={engineInfo.evaluation}
-          />
+          />}
           {chessboardComponent}
           <div className='flex-column' style={{width: '16px'}}>
             <ActionIcon
@@ -225,7 +225,7 @@ function App() {
               svgPath='M5 2.5a4 2.5 0 1 0 0.01 0M5 3.5a1.5 1.5 0 1 0 0.01 0'
             />
           </div>
-        </div>) : chessboardComponent}
+        </div>
         <p className='status'>Status: {statusText}</p>
         <p className='status'>Hovered action: {hoveredActionDescription}</p>
         <div className='flex-row'>
