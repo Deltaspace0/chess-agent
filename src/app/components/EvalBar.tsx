@@ -1,16 +1,16 @@
-export interface GaugeProps {
+export interface EvalBarProps {
   perspective: boolean;
   evaluation?: string;
 }
 
-function Gauge({ perspective, evaluation }: GaugeProps) {
+function EvalBar({ perspective, evaluation }: EvalBarProps) {
   const [type, n] = evaluation?.split(' ') ?? ['cp', '0'];
   const value = Number(n);
   let height = value > 0 ? 100 : 0;
   if (type === 'cp') {
     height = 50+Math.tanh(value/600)*50;
   }
-  const gaugeStyle = {
+  const evalBarStyle = {
     height: `${height}%`,
     ...(perspective ? {bottom: 0} : {})
   };
@@ -20,11 +20,11 @@ function Gauge({ perspective, evaluation }: GaugeProps) {
   };
   const evalText = type === 'mate' ? `M${value}` : value/100;
   return (
-    <div className='gauge'>
-      <p className='gauge-eval' style={evalStyle}>{evalText}</p>
-      <div className='gauge-light' style={gaugeStyle}/>
+    <div className='eval-bar'>
+      <p className='eval-bar-eval' style={evalStyle}>{evalText}</p>
+      <div className='eval-bar-light' style={evalBarStyle}/>
     </div>
   );
 }
 
-export default Gauge;
+export default EvalBar;

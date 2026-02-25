@@ -336,14 +336,14 @@ p {
   justify-content: center;
 }
 
-.board-gauge-div {
+.board-eval-bar-div {
   min-width: 220px;
   width: min(calc(100vw - 8px), calc(100vh - 180px));
   display: flex;
   margin: 0 auto;
 }
 
-.gauge {
+.eval-bar {
   position: relative;
   width: 24px;
   height: min(calc(100vw - 64px), calc(100vh - 240px));
@@ -354,7 +354,7 @@ p {
   justify-content: center;
 }
 
-.gauge-light {
+.eval-bar-light {
   width: 24px;
   background-color: #bdd3ff;
   transition: height 0.5s ease-in-out;
@@ -362,7 +362,7 @@ p {
   position: absolute;
 }
 
-.gauge-eval {
+.eval-bar-eval {
   position: absolute;
   margin: 0;
   padding: 0;

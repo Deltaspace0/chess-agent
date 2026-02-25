@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Chessboard, ChessboardProvider, SparePiece } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import ActionButton from '../components/ActionButton.tsx';
-import Gauge from '../components/Gauge.tsx';
+import EvalBar from '../components/EvalBar.tsx';
 import EditPanel from './EditPanel.tsx';
 import SettingsPanel from './SettingsPanel.tsx';
 import { actionDescriptions } from '../../config.ts';
@@ -201,8 +201,8 @@ function App() {
   return (<ChessboardProvider options={chessboardOptions}>
     <div className='App'>
       <div className='flex-column'>
-        <div className='board-gauge-div'>
-          {prefs.showEvalBar.value && <Gauge
+        <div className='board-eval-bar-div'>
+          {prefs.showEvalBar.value && <EvalBar
             perspective={prefs.perspective.value}
             evaluation={engineInfo.evaluation}
           />}
