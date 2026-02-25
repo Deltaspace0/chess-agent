@@ -211,19 +211,14 @@ function App() {
           <div className='flex-column' style={{width: '16px'}}>
             <ActionIcon
               name='perspective'
-              viewBox='0 0 8 8'
-              svgPath='M3 1v6l-2-2m4 3V2l2 2'
+              svgPath='M3.75 1.25v7.5l-2.5-2.5m5 3.75V2.5l2.5 2.5'
             />
             <ActionIcon
               name='resetPosition'
-              viewBox='0 0 24 24'
-              style={{ strokeWidth: 3, strokeLinecap: 'round' }}
-              svgPath='M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8 M3 3v5h5'
+              svgPath='M1.25 5a3.75 3.75 0 1 0 3.75-3.75 4 4 0 0 0-3 1L1.25 3.33 M1.25 0.25v3h3'
             />
             <ActionIcon
               name='undoMove'
-              viewBox='0 0 10 10'
-              style={{ strokeWidth: 2 }}
               svgPath='M7 1L3 5L7 9'
             />
           </div>

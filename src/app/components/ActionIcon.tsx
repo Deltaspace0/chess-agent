@@ -5,8 +5,8 @@ export interface ActionIconProps {
   name: Action;
   width?: number;
   height?: number;
+  viewBox?: string;
   style?: CSSProperties;
-  viewBox: string;
   svgPath: string;
 }
 
@@ -15,7 +15,7 @@ function ActionIcon(props: ActionIconProps) {
     <svg
       width={props.width ?? 16}
       height={props.height ?? 16}
-      viewBox={props.viewBox}
+      viewBox={props.viewBox ?? '0 0 10 10'}
       xmlns='http://www.w3.org'
       style={props.style}
       onClick={() => window.electronAPI.sendSignal('action', props.name)}
