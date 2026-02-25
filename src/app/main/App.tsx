@@ -139,7 +139,6 @@ function App() {
           <ActionButton name='scanMove' label='Scan move' disabled={isNoRegion}/>
         </div>
         <div className='flex-row'>
-          <ActionButton name='recognizeBoard' label='Recognize' disabled={isNoRegion}/>
           <ActionButton name='loadHashes' label='Load hashes' disabled={isNoRegion}/>
           <button onClick={() => setShowActions(false)}>Hide actions</button>
         </div>
@@ -211,15 +210,19 @@ function App() {
           <div className='flex-column' style={{width: '16px'}}>
             <ActionIcon
               name='perspective'
-              svgPath='M3.75 1.25v7.5l-2.5-2.5m5 3.75V2.5l2.5 2.5'
+              svgPath='M3 2v7m-2-2l2 2l2-2M7 9V2m2 2l-2-2l-2 2'
             />
             <ActionIcon
               name='resetPosition'
-              svgPath='M1.25 5a3.75 3.75 0 1 0 3.75-3.75 4 4 0 0 0-3 1L1.25 3.33 M1.25 0.25v3h3'
+              svgPath='M2 5A3 3 0 1 0 2.5 2.5 M3 0L2.5 2.5l2 0.5'
             />
             <ActionIcon
               name='undoMove'
-              svgPath='M7 1L3 5L7 9'
+              svgPath='M7 2L3 5L7 8'
+            />
+            <ActionIcon
+              name='recognizeBoard'
+              svgPath='M5 2.5a4 2.5 0 1 0 0.01 0M5 3.5a1.5 1.5 0 1 0 0.01 0'
             />
           </div>
         </div>) : chessboardComponent}
