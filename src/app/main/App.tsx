@@ -86,7 +86,7 @@ function App() {
       }
       const x = (!value || value.x > 1) ? -1 : value.x;
       const y = (!value || value.y > 1) ? -1 : value.y;
-      virtualCursor.style.left = `${x*100}%`;
+      virtualCursor.style.left = `calc(4px + ${x} * (100% - 8px))`;
       virtualCursor.style.top = `${y*100}%`;
     });
     return () => {
