@@ -28,7 +28,7 @@ describe('Game', () => {
       game.load('6k1/5p1p/6p1/8/8/7P/5PP1/6K1 w - - 0 1');
       const callback = vi.fn();
       game.onUpdatePosition(callback);
-      const result = game.putPiece({
+      const result = game.putPieceEdit({
         sourceSquare: null,
         targetSquare: 'a2',
         piece: 'wp'
@@ -43,7 +43,7 @@ describe('Game', () => {
       game.load('6k1/5p1p/6p1/8/8/7P/P4PP1/6K1 w - - 0 1');
       const callback = vi.fn();
       game.onUpdatePosition(callback);
-      const result = game.putPiece({
+      const result = game.putPieceEdit({
         sourceSquare: 'a2',
         targetSquare: null,
         piece: 'wp'
@@ -58,7 +58,7 @@ describe('Game', () => {
       game.load('6k1/5p1p/6p1/8/8/7P/5PP1/6K1 w - - 0 1');
       const callback = vi.fn();
       game.onUpdatePosition(callback);
-      const result = game.putPiece({
+      const result = game.putPieceEdit({
         sourceSquare: 'f2',
         targetSquare: 'a2',
         piece: 'wp'
@@ -73,7 +73,7 @@ describe('Game', () => {
       game.load('6k1/5p1p/6p1/8/8/7P/5PP1/6K1 w - - 0 1');
       const callback = vi.fn();
       game.onUpdatePosition(callback);
-      const result = game.putPiece({
+      const result = game.putPieceEdit({
         sourceSquare: null,
         targetSquare: 'a8',
         piece: 'wr'
@@ -88,13 +88,45 @@ describe('Game', () => {
       game.load('6k1/5p1p/6p1/8/8/7P/5PP1/6K1 w - - 0 1');
       const callback = vi.fn();
       game.onUpdatePosition(callback);
-      const result = game.putPiece({
+      const result = game.putPieceEdit({
         sourceSquare: null,
         targetSquare: 'f1',
         piece: 'wk'
       });
       expect(result).toBe(false);
       expect(callback).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Auto castling', () => {
+    it('should automatically set castling rights if possible', () => {
+      const game = new Game();
+      game.setAutoCastling(true);
+      game.load('rnbqkbnr/pppppppp/8/8/8/3K4/PPPPPPPP/RNBQ1BNR w kq - 0 1');
+      const callback = vi.fn();
+      game.onUpdatePosition(callback);
+      game.putPieceEdit({
+        sourceSquare: 'd3',
+        targetSquare: 'e1',
+        piece: 'wk'
+      });
+      const expectedFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+      expect(callback).toHaveBeenCalledWith(expectedFen);
+    });
+
+    it('should not set castling rights if auto castling is disabled', () => {
+      const game = new Game();
+      game.setAutoCastling(false);
+      game.load('rnbqkbnr/pppppppp/8/8/8/3K4/PPPPPPPP/RNBQ1BNR w kq - 0 1');
+      const callback = vi.fn();
+      game.onUpdatePosition(callback);
+      game.putPieceEdit({
+        sourceSquare: 'd3',
+        targetSquare: 'e1',
+        piece: 'wk'
+      });
+      const expectedFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w kq - 0 1';
+      expect(callback).toHaveBeenCalledWith(expectedFen);
     });
   });
 

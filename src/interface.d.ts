@@ -56,6 +56,7 @@ declare global {
     screenshotLength: number;
     recognizerModel: RecognizerModel | null;
     recognizerPutKings: boolean;
+    autoCastling: boolean;
   }
 
   interface PreferenceConfig<T extends Preference> {
@@ -122,6 +123,7 @@ declare global {
     | 'actionRegion'
     | 'analysisDuration'
     | 'mouseSpeed'
+    | 'autoCastling'
   >;
 
   type Action

@@ -6,7 +6,8 @@ import { preferenceConfig } from '../../config.ts';
 
 class Game implements AgentGame {
   private chess: Chess;
-  private perspective: boolean = preferenceConfig.perspective.defaultValue;
+  private perspective = preferenceConfig.perspective.defaultValue;
+  private autoCastling = preferenceConfig.autoCastling.defaultValue;
   private positionCallback = () => {};
 
   constructor() {
@@ -186,10 +187,14 @@ class Game implements AgentGame {
         console.log(`Failed to put ${type}${color} at ${square}`);
       }
     }
+    if (this.autoCastling) {
+      this.chess.setCastlingRights('w', { 'k': true, 'q': true });
+      this.chess.setCastlingRights('b', { 'k': true, 'q': true });
+    }
     this.positionCallback();
   }
 
-  putPiece({ sourceSquare, targetSquare, piece }: DroppedPiece): boolean {
+  putPieceEdit({ sourceSquare, targetSquare, piece }: DroppedPiece): boolean {
     const chess = new Chess();
     chess.load(this.chess.fen(), { skipValidation: true });
     if (sourceSquare) {
@@ -221,6 +226,10 @@ class Game implements AgentGame {
       }
     }
     this.chess.load(chess.fen(), { skipValidation: true });
+    if (this.autoCastling) {
+      this.chess.setCastlingRights('w', { 'k': true, 'q': true });
+      this.chess.setCastlingRights('b', { 'k': true, 'q': true });
+    }
     this.positionCallback();
     return true;
   }
@@ -237,6 +246,10 @@ class Game implements AgentGame {
 
   setPerspective(perspective: boolean) {
     this.perspective = perspective;
+  }
+
+  setAutoCastling(autoCastling: boolean) {
+    this.autoCastling = autoCastling;
   }
 }
 

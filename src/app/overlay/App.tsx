@@ -30,7 +30,8 @@ function App() {
     autoScan: usePreference('autoScan')[0],
     autoQueen: usePreference('autoQueen')[0],
     perspective: usePreference('perspective')[0],
-    draggingMode: usePreference('draggingMode')[0]
+    draggingMode: usePreference('draggingMode')[0],
+    autoCastling: usePreference('autoCastling')[0]
   };
   const [prefRegion, sendPrefRegion] = usePreference('region');
   const [actionLocations, sendActionLocations] = usePreference('actionLocations');

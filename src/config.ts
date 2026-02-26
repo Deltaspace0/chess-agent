@@ -143,6 +143,11 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     label: 'Put kings',
     description: 'Automatically add missing kings during position recognition',
     defaultValue: true
+  },
+  autoCastling: {
+    label: 'Auto castling',
+    description: 'Enable castling rights when possible',
+    defaultValue: true
   }
 };
 
@@ -174,5 +179,6 @@ export const actionDescriptions: Partial<Record<Action, string>> = {
   draggingMode: 'Toggle dragging/clicking mode',
   actionRegion: 'Disable action regions',
   analysisDuration: 'Switch analysis duration',
-  mouseSpeed: 'Switch mouse speed'
+  mouseSpeed: 'Switch mouse speed',
+  autoCastling: 'Toggle auto castling'
 };

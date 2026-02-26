@@ -12,7 +12,7 @@ import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
 import { ConcreteMouse } from './modules/device/Mouse.ts';
 import { ConcreteScreen, getAdjustedRegion } from './modules/device/Screen.ts';
-import { possibleLocations } from '../config.ts';
+import { possibleLocations, preferenceConfig } from '../config.ts';
 import { findRegion } from '../util.ts';
 
 const preloadPath = path.join(import.meta.dirname, 'preload.js');
@@ -286,6 +286,11 @@ function debounce<T>(callback: (x: T) => void) {
       sendSignal('promotion');
     }
   });
+  const toggleBooleanPreference = (name: BooleanPreference) => {
+    const value = preferenceManager.togglePreference(name);
+    const label = preferenceConfig[name].label;
+    updateStatus(`${label} is ${value ? 'enabled' : 'disabled'}`);
+  };
   const actionCallbacks: Record<Action, () => void> = {
     selectRegion: () => selectRegion(),
     hideRegion: () => overlayWin.close(),
@@ -411,18 +416,9 @@ function debounce<T>(callback: (x: T) => void) {
     promoteRook: () => agent.promoteTo('r'),
     promoteBishop: () => agent.promoteTo('b'),
     promoteKnight: () => agent.promoteTo('n'),
-    autoResponse: () => {
-      const value = preferenceManager.togglePreference('autoResponse');
-      updateStatus(`Auto response is ${value ? 'enabled' : 'disabled'}`);
-    },
-    autoScan: () => {
-      const value = preferenceManager.togglePreference('autoScan');
-      updateStatus(`Auto scan is ${value ? 'enabled' : 'disabled'}`);
-    },
-    autoQueen: () => {
-      const value = preferenceManager.togglePreference('autoQueen');
-      updateStatus(`Auto queen is ${value ? 'enabled' : 'disabled'}`);
-    },
+    autoResponse: () => toggleBooleanPreference('autoResponse'),
+    autoScan: () => toggleBooleanPreference('autoScan'),
+    autoQueen: () => toggleBooleanPreference('autoQueen'),
     perspective: () => {
       const value = preferenceManager.togglePreference('perspective');
       updateStatus(`${value ? 'White' : 'Black'} perspective`);
@@ -446,7 +442,8 @@ function debounce<T>(callback: (x: T) => void) {
       const newValue = value > 500 ? 500 : 10000;
       preferenceManager.setPreference('mouseSpeed', newValue);
       updateStatus(`Mouse speed: ${newValue}`);
-    }
+    },
+    autoCastling: () => toggleBooleanPreference('autoCastling')
   };
   const actionRegionManager = new ActionRegionManager(mouse);
   actionRegionManager.onHover((name?: string) => sendSignal('hoveredAction', name));
@@ -506,7 +503,8 @@ function debounce<T>(callback: (x: T) => void) {
       }
     },
     recognizerModel: (value) => recognizer.setModel(value),
-    recognizerPutKings: (value) => recognizer.setPutKings(value)
+    recognizerPutKings: (value) => recognizer.setPutKings(value),
+    autoCastling: (value) => game.setAutoCastling(value)
   };
   for (const [name, listener] of Object.entries(preferenceListeners)) {
     preferenceManager.onUpdatePreference(name as Preference, listener);

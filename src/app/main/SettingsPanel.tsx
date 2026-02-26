@@ -22,6 +22,7 @@ function SettingsPanel() {
           <CheckboxPref name='autoQueen'/>
           <CheckboxPref name='draggingMode'/>
           <CheckboxPref name='recognizerPutKings'/>
+          <CheckboxPref name='autoCastling'/>
         </div>
         <div className='flex-column' style={{margin: 'auto 0'}}>
           <CheckboxPref name='alwaysOnTop'/>

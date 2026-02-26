@@ -27,7 +27,7 @@ export interface AgentGame {
   printBoard(): void;
   getNextBoardStates(): BoardState[];
   putPieces(pieces: [Piece, number, number][]): void;
-  putPiece(droppedPiece: DroppedPiece): boolean;
+  putPieceEdit(droppedPiece: DroppedPiece): boolean;
   skipMove(): Color | null;
 }
 
@@ -241,7 +241,7 @@ export class Agent {
 
   putPiece(droppedPiece: DroppedPiece) {
     this.recognizer.stopScanning();
-    if (this.game.putPiece(droppedPiece)) {
+    if (this.game.putPieceEdit(droppedPiece)) {
       this.syncEngine();
     }
   }
