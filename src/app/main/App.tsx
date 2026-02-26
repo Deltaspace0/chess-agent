@@ -6,14 +6,18 @@ import ActionButton from '../components/ActionButton.tsx';
 import EvalBar from '../components/EvalBar.tsx';
 import EditPanel from './EditPanel.tsx';
 import SettingsPanel from './SettingsPanel.tsx';
-import { usePreferences, useSignal } from '../hooks.ts';
+import { usePreference, useSignal } from '../hooks.ts';
 import ActionIcon from '../components/ActionIcon.tsx';
 
 type Panel = 'main' | 'promotion' | 'edit' | 'settings';
 
 function App() {
   const electron = window.electronAPI;
-  const prefs = usePreferences();
+  const [showNotation] = usePreference('showNotation');
+  const [showArrows] = usePreference('showArrows');
+  const [showEvalBar] = usePreference('showEvalBar');
+  const [showCursor] = usePreference('showCursor');
+  const [perspective] = usePreference('perspective');
   const statusText = useSignal('status');
   const engineInfo = useSignal('engineInfo') || {};
   const principalVariations = useSignal('principalVariations') || [];
@@ -104,11 +108,10 @@ function App() {
     darkSquareNotationStyle: {
       color: '#87a6de'
     },
-    showNotation: prefs.showNotation.value,
-    arrows: prefs.showArrows.value
-      ? (prefs.perspective.value ? arrows1 : arrows2) : [],
+    showNotation,
+    arrows: showArrows ? (perspective ? arrows1 : arrows2) : [],
     allowDrawingArrows: false,
-    boardOrientation: prefs.perspective.value ? 'white' : 'black',
+    boardOrientation: perspective ? 'white' : 'black',
     position: positionFEN,
     onPieceDrop: ({ sourceSquare, targetSquare, piece }) => {
       const source = piece.isSparePiece ? null : sourceSquare;
@@ -172,23 +175,20 @@ function App() {
   </div>;
   const chessboardComponent = <div className='board-with-pieces'>
     {panelType === 'edit' ? (<>
-      {prefs.perspective.value ? blackSparePieces : whiteSparePieces}
+      {perspective ? blackSparePieces : whiteSparePieces}
       <div className='board'>
         <Chessboard/>
       </div>
-      {prefs.perspective.value ? whiteSparePieces : blackSparePieces}
+      {perspective ? whiteSparePieces : blackSparePieces}
     </>) : <Chessboard/>}
-    {prefs.showCursor.value && <div
-      ref={virtualCursorRef}
-      className='virtual-cursor'
-    />}
+    {showCursor && <div ref={virtualCursorRef} className='virtual-cursor'/>}
   </div>;
   return (<ChessboardProvider options={chessboardOptions}>
     <div className='App'>
       <div className='flex-column'>
         <div style={{ display: 'flex', margin: '0 auto' }}>
-          {prefs.showEvalBar.value && <EvalBar
-            perspective={prefs.perspective.value}
+          {showEvalBar && <EvalBar
+            perspective={perspective}
             evaluation={engineInfo.evaluation}
           />}
           {chessboardComponent}
