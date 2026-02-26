@@ -6,7 +6,6 @@ import ActionButton from '../components/ActionButton.tsx';
 import EvalBar from '../components/EvalBar.tsx';
 import EditPanel from './EditPanel.tsx';
 import SettingsPanel from './SettingsPanel.tsx';
-import { actionDescriptions } from '../../config.ts';
 import { usePreferences, useSignal } from '../hooks.ts';
 import ActionIcon from '../components/ActionIcon.tsx';
 
@@ -16,10 +15,6 @@ function App() {
   const electron = window.electronAPI;
   const prefs = usePreferences();
   const statusText = useSignal('status');
-  const hoveredAction = useSignal('hoveredAction');
-  const hoveredActionDescription = hoveredAction
-    && actionDescriptions[hoveredAction as keyof typeof actionDescriptions]
-    || 'None';
   const engineInfo = useSignal('engineInfo') || {};
   const principalVariations = useSignal('principalVariations') || [];
   const [positionFEN, setPositionFEN] = useState('');
@@ -229,7 +224,6 @@ function App() {
           </div>
         </div>
         <p className='status'>Status: {statusText}</p>
-        <p className='status'>Hovered action: {hoveredActionDescription}</p>
         <div className='flex-row'>
           {panelType === 'edit'
             ? <button onClick={() => setPanelType('main')}>Return</button>

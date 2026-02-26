@@ -449,15 +449,7 @@ function debounce<T>(callback: (x: T) => void) {
     }
   };
   const actionRegionManager = new ActionRegionManager(mouse);
-  actionRegionManager.onHover((name?: string) => {
-    if (!name) {
-      sendSignal('hoveredAction');
-      return;
-    }
-    const locations = preferenceManager.getPreference('actionLocations');
-    const action = locations[name as keyof ActionLocations];
-    sendSignal('hoveredAction', action);
-  });
+  actionRegionManager.onHover((name?: string) => sendSignal('hoveredAction', name));
   for (const location of possibleLocations) {
     actionRegionManager.addActionRegion({
       name: location,

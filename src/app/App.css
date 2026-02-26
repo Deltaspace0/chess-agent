@@ -247,6 +247,7 @@ p {
   position: absolute;
   cursor: pointer;
   z-index: 1;
+  box-sizing: border-box;
 }
 
 .scroll-field {

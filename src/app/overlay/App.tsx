@@ -1,10 +1,12 @@
+import 'tippy.js/dist/tippy.css';
 import '../App.css';
 import { useEffect, useMemo, useRef, useState, type JSX } from 'react';
+import tippy, { type Instance, type Placement } from 'tippy.js';
 import ActionButton from '../components/ActionButton.tsx';
 import ToggleButton from '../components/ToggleButton.tsx';
 import ToggleButtonPref from '../components/ToggleButtonPref.tsx';
 import RegionSelection from './RegionSelection.tsx';
-import { usePreferences, useSignal } from '../hooks.ts';
+import { usePreference, useSignal } from '../hooks.ts';
 import { actionDescriptions, possibleLocations } from '../../config.ts';
 import { findRegion } from '../../util.ts';
 
@@ -21,23 +23,28 @@ function multiplyRegion(region: Region | null, factor: number): Region | null {
 }
 
 function App() {
+  const electron = window.electronAPI;
   const dpr = window.devicePixelRatio;
-  const prefs = usePreferences();
+  const [prefRegion, sendPrefRegion] = usePreference('region');
+  const [actionLocations, sendActionLocations] = usePreference('actionLocations');
+  const [actionRegion] = usePreference('actionRegion');
+  const [showRegion] = usePreference('showRegion');
   const region = useMemo(() => {
-    return multiplyRegion(prefs.region.value, 1/dpr);
-  }, [prefs.region.value, dpr]);
+    return multiplyRegion(prefRegion, 1/dpr);
+  }, [prefRegion, dpr]);
   const selectingRegion = useSignal('selectingRegion');
   const [autoAdjust, setAutoAdjust] = useState(true);
   const [hideAll, setHideAll] = useState(false);
-  const actionSelectRefs = useRef<Record<string, HTMLSelectElement | null>>({});
+  const actionSelectsRef = useRef<Record<string, HTMLSelectElement | null>>({});
+  const tooltipInstancesRef = useRef<Record<string, Instance>>({});
   const adjustRegion = () => {
     setHideAll(true);
-    setTimeout(() => window.electronAPI.sendSignal('action', 'adjustRegion'), 10);
+    setTimeout(() => electron.sendSignal('action', 'adjustRegion'), 10);
     setTimeout(() => setHideAll(false), 20);
   };
   const handleRegionChange = (changedRegion: Region) => {
     const newRegion = multiplyRegion(changedRegion, dpr);
-    prefs.region.send(newRegion);
+    sendPrefRegion(newRegion);
     if (autoAdjust) {
       adjustRegion();
     }
@@ -47,48 +54,96 @@ function App() {
     optionComponents.push(<option value={action}>{description}</option>);
   }
   const actionRegionDivs: JSX.Element[] = [];
+  const actionOverlayDivs: JSX.Element[] = [];
   if (region) {
     for (const location of possibleLocations) {
       const selectedRegion = findRegion(region, location);
-      const action = prefs.actionLocations.value[location];
+      const action = actionLocations[location];
       const backgroundColor = action
         ? 'rgba(255, 0, 0, 0.8)'
         : 'rgba(255, 255, 255, 0.8)';
       actionRegionDivs.push(<select
-        ref={(e) => { actionSelectRefs.current[location] = e; }}
+        ref={(e) => { actionSelectsRef.current[location] = e; }}
         className='select-action'
         style={selectedRegion}
         value={action}
         onChange={(e) => {
-          const newActionLocations = {...prefs.actionLocations.value};
+          const newActionLocations = {...actionLocations};
           newActionLocations[location] = e.target.value === ''
             ? undefined
             : e.target.value as Action;
-          prefs.actionLocations.send(newActionLocations);
+          sendActionLocations(newActionLocations);
         }}>
           {optionComponents}
       </select>);
       actionRegionDivs.push(<div
-        onClick={() => actionSelectRefs.current[location]?.showPicker()}
+        onClick={() => actionSelectsRef.current[location]?.showPicker()}
         title={action && actionDescriptions[action]}
         className='region-action'
-        style={{...selectedRegion, backgroundColor}}>    
+        style={{...selectedRegion, backgroundColor}}>
+      </div>);
+      if (!action) {
+        continue;
+      }
+      const overlayColor = 'rgba(255, 255, 255, 0.5)';
+      actionOverlayDivs.push(<div
+        id={`region-action-${location}`}
+        className='region-action'
+        style={{...selectedRegion, backgroundColor: overlayColor}}>
       </div>);
     }
   }
   useEffect(() => {
+    const tooltipInstances = tooltipInstancesRef.current;
+    const placements: Record<string, string | undefined> = {
+      'N': 'top',
+      'S': 'bottom',
+      'W': 'left',
+      'E': 'right'
+    };
+    for (const location of possibleLocations) {
+      const action = actionLocations[location];
+      if (!action) {
+        continue;
+      }
+      tooltipInstances[location] = tippy(`#region-action-${location}`, {
+        duration: 0,
+        content: actionDescriptions[action],
+        placement: placements[location[0]] as Placement,
+        popperOptions: { modifiers: [{ name: 'flip', enabled: false }] }
+      })[0];
+    }
+    return () => {
+      for (const location in tooltipInstances) {
+        tooltipInstances[location]?.destroy();
+        delete tooltipInstances[location];
+      }
+    };
+  }, [actionLocations, selectingRegion, region]);
+  useEffect(() => {
+    const tooltipInstances = tooltipInstancesRef.current;
+    return electron.onSignal('hoveredAction', (location) => {
+      for (const instance of Object.values(tooltipInstances)) {
+        instance?.hide();
+      }
+      if (location) {
+        tooltipInstances[location]?.show();
+      }
+    });
+  }, [electron]);
+  useEffect(() => {
     const escapeCallback = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        window.electronAPI.sendSignal('action', 'hideRegion');
+        electron.sendSignal('action', 'hideRegion');
       }
     };
     window.addEventListener('keydown', escapeCallback);
     return () => window.removeEventListener('keydown', escapeCallback);
-  }, []);
+  }, [electron]);
   const regionModeDiv = <div className={hideAll ? 'Region hidden' : 'Region'}>
     <div className='region-panel'>
       <button
-        onClick={() => prefs.region.send(null)}
+        onClick={() => sendPrefRegion(null)}
         disabled={!region}>
           Remove
       </button>
@@ -108,13 +163,11 @@ function App() {
     </div>
     {region && <div className='region-highlight' style={region}/>}
     <RegionSelection onChange={handleRegionChange}/>
-    {prefs.actionRegion.value && actionRegionDivs}
+    {actionRegion && actionRegionDivs}
   </div>;
   const overlayModeDiv = <div style={{position: 'relative'}}>
-    {prefs.showRegion.value && region && <div
-      className='region-border'
-      style={region}
-    />}
+    {showRegion && region && <div className='region-border' style={region}/>}
+    {actionRegion && actionOverlayDivs}
   </div>;
   return (<>
     {selectingRegion ? regionModeDiv : overlayModeDiv}
