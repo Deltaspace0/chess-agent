@@ -25,6 +25,13 @@ function multiplyRegion(region: Region | null, factor: number): Region | null {
 function App() {
   const electron = window.electronAPI;
   const dpr = window.devicePixelRatio;
+  const booleanPreferences: Record<string, boolean> = {
+    autoResponse: usePreference('autoResponse')[0],
+    autoScan: usePreference('autoScan')[0],
+    autoQueen: usePreference('autoQueen')[0],
+    perspective: usePreference('perspective')[0],
+    draggingMode: usePreference('draggingMode')[0]
+  };
   const [prefRegion, sendPrefRegion] = usePreference('region');
   const [actionLocations, sendActionLocations] = usePreference('actionLocations');
   const [actionRegion] = usePreference('actionRegion');
@@ -85,7 +92,10 @@ function App() {
       if (!action) {
         continue;
       }
-      const overlayColor = 'rgba(255, 255, 255, 0.5)';
+      const preferenceValue = booleanPreferences[action];
+      const overlayColor = preferenceValue !== undefined
+        ? (preferenceValue ? 'rgba(0, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)')
+        : 'rgba(255, 255, 255, 0.5)';
       actionOverlayDivs.push(<div
         id={`region-action-${location}`}
         className='region-action'
@@ -110,7 +120,12 @@ function App() {
         duration: 0,
         content: actionDescriptions[action],
         placement: placements[location[0]] as Placement,
-        popperOptions: { modifiers: [{ name: 'flip', enabled: false }] }
+        popperOptions: {
+          modifiers: [{
+            name: 'flip',
+            options: { fallbackPlacements: ['right'] }
+          }]
+        }
       })[0];
     }
     return () => {
