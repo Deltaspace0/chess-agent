@@ -46,6 +46,7 @@ declare global {
     showNotation: boolean;
     showCursor: boolean;
     showRegion: boolean;
+    showActionRegion: boolean;
     analysisDuration: number;
     multiPV: number;
     engineThreads: number;

@@ -57,12 +57,12 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
   },
   actionRegion: {
     label: 'Actions',
-    description: 'Enable invisible action regions',
+    description: 'Enable action regions',
     defaultValue: false
   },
   actionLocations: {
     label: 'Action regions',
-    description: 'Locations of invisible action regions',
+    description: 'Locations of action regions',
     defaultValue: defaultActionLocations
   },
   showEvalBar: {
@@ -88,6 +88,11 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
   showRegion: {
     label: 'Show region',
     description: 'Show the selected region on screen',
+    defaultValue: true
+  },
+  showActionRegion: {
+    label: 'Show action regions',
+    description: 'Show action regions on screen',
     defaultValue: true
   },
   analysisDuration: {
@@ -167,7 +172,7 @@ export const actionDescriptions: Partial<Record<Action, string>> = {
   autoQueen: 'Toggle auto queen',
   perspective: 'Flip board',
   draggingMode: 'Toggle dragging/clicking mode',
-  actionRegion: 'Disable invisible action regions',
+  actionRegion: 'Disable action regions',
   analysisDuration: 'Switch analysis duration',
   mouseSpeed: 'Switch mouse speed'
 };

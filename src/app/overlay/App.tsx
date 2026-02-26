@@ -36,6 +36,7 @@ function App() {
   const [actionLocations, sendActionLocations] = usePreference('actionLocations');
   const [actionRegion] = usePreference('actionRegion');
   const [showRegion] = usePreference('showRegion');
+  const [showActionRegion] = usePreference('showActionRegion');
   const region = useMemo(() => {
     return multiplyRegion(prefRegion, 1/dpr);
   }, [prefRegion, dpr]);
@@ -182,7 +183,7 @@ function App() {
   </div>;
   const overlayModeDiv = <div style={{position: 'relative'}}>
     {showRegion && region && <div className='region-border' style={region}/>}
-    {actionRegion && actionOverlayDivs}
+    {showActionRegion && actionRegion && actionOverlayDivs}
   </div>;
   return (<>
     {selectingRegion ? regionModeDiv : overlayModeDiv}

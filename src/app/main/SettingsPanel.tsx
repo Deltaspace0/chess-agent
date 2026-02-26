@@ -30,6 +30,7 @@ function SettingsPanel() {
           <CheckboxPref name='showNotation'/>
           <CheckboxPref name='showCursor'/>
           <CheckboxPref name='showRegion'/>
+          <CheckboxPref name='showActionRegion'/>
         </div>
       </div>
     </div>
