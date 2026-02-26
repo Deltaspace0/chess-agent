@@ -83,8 +83,8 @@ function App() {
       if (!virtualCursor) {
         return;
       }
-      const x = (!value || value.x > 1) ? -1 : value.x;
-      const y = (!value || value.y > 1) ? -1 : value.y;
+      const x = (!value || value.x > 1 || value.x < 0) ? -1 : value.x;
+      const y = (!value || value.y > 1 || value.y < 0) ? -1 : value.y;
       virtualCursor.style.left = `calc(4px + ${x} * (100% - 8px))`;
       virtualCursor.style.top = `${y*100}%`;
     });

@@ -124,7 +124,7 @@ function App() {
         popperOptions: {
           modifiers: [{
             name: 'flip',
-            options: { fallbackPlacements: ['right'] }
+            options: { fallbackPlacements: ['right', 'left'] }
           }]
         }
       })[0];
