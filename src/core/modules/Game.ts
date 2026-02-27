@@ -149,15 +149,6 @@ class Game implements AgentGame {
     return evalText+' '+chess.pgn({ newline: ' ' });
   }
 
-  printBoard() {
-    const ascii = this.chess.ascii()+'  ';
-    if (this.perspective) {
-      console.log(ascii);
-      return;
-    }
-    console.log(ascii.split('').reverse().join(''));
-  }
-
   getNextBoardStates(): BoardState[] {
     const boardStates = [];
     const history = this.chess.history({ verbose: true });

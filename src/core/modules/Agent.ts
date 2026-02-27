@@ -24,7 +24,6 @@ export interface AgentGame {
   setPositionInfo(info: PositionInfo): boolean;
   setMyTurn(): boolean;
   setOppTurn(): boolean;
-  printBoard(): void;
   getNextBoardStates(): BoardState[];
   putPieces(pieces: [Piece, number, number][]): void;
   putPieceEdit(droppedPiece: DroppedPiece): boolean;
@@ -99,7 +98,6 @@ export class Agent {
     const gameOver = this.game.isGameOver();
     const moves = this.engine.sendMove(move, gameOver);
     console.log(`Moves: ${moves}`);
-    this.game.printBoard();
     if (gameOver) {
       this.statusCallback('Game is over');
       this.recognizer.stopScanning();
@@ -184,7 +182,6 @@ export class Agent {
       this.statusCallback('Failed to set turn');
     }
     this.syncEngine();
-    this.game.printBoard();
   }
 
   skipMove() {
@@ -203,7 +200,6 @@ export class Agent {
     this.game.undo();
     const moves = this.engine.undo();
     console.log(`Moves: ${moves}`);
-    this.game.printBoard();
   }
 
   resetPosition() {
