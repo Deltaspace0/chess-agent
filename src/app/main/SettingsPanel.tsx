@@ -1,4 +1,3 @@
-import ActionButton from '../components/ActionButton.tsx';
 import CheckboxPref from '../components/CheckboxPref.tsx';
 import SliderPref from '../components/SliderPref.tsx';
 
@@ -6,11 +5,6 @@ function SettingsPanel() {
   return (<fieldset className='scroll-field'>
     <legend>Settings</legend>
     <div className='flex-column'>
-      <div className='flex-row'>
-        <ActionButton name='loadConfig' label='Load config'/>
-        <ActionButton name='saveConfig' label='Save config'/>
-        <ActionButton name='resetConfig' label='Reset'/>
-      </div>
       <div className='section-line'>Agent</div>
       <SliderPref name='mouseSpeed'/>
       <CheckboxPref name='autoResponse'/>

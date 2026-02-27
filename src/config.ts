@@ -161,7 +161,7 @@ export const actionDescriptions: Partial<Record<Action, string>> = {
   recognizeBoard: 'Recognize current position on the board',
   recognizeBoardSkipMove: 'Recognize position with opponent to move',
   showEngine: 'Open engine UCI terminal',
-  loadConfig: 'Load configuration file',
+  loadConfig: 'Open configuration file',
   saveConfig: 'Save configuration file',
   resetConfig: 'Reset configuration to default values',
   savePicture: 'Save a screenshot of the board',
