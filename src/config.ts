@@ -121,7 +121,7 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
   mouseSpeed: {
     label: 'Mouse speed',
     description: 'How fast the mouse should move when playing a move',
-    defaultValue: 10000,
+    defaultValue: 50000,
     sliderValues: [500, 1000, 2000, 10000, 50000]
   },
   region: {

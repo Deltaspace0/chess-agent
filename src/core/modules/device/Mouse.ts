@@ -62,6 +62,10 @@ export class ConcreteMouse extends Mouse {
   }
 
   async move(point: Point): Promise<void> {
+    if (mouse.config.mouseSpeed > 10000) {
+      await mouse.move([point]);
+      return;
+    }
     await mouse.move(straightTo(point));
   }
 

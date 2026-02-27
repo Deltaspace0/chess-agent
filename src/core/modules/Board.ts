@@ -90,9 +90,7 @@ class Board {
   async playMove(move: string) {
     this.playingMove = true;
     await this.mouse.move(this.getPoint(move.substring(0, 2)));
-    await this.mouse.sleep(50);
     await (this.draggingMode ? this.mouse.press(0) : this.mouse.click(0));
-    await this.mouse.sleep(50);
     await this.mouse.move(this.getPoint(move.substring(2, 4)));
     await (this.draggingMode ? this.mouse.release(0) : this.mouse.click(0));
     if (!this.autoPromotion || move.length < 5) {
