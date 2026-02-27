@@ -23,6 +23,7 @@ function EvalBar({ perspective, evaluation }: EvalBarProps) {
     <div className='eval-bar'>
       <p className='eval-bar-eval' style={evalStyle}>{evalText}</p>
       <div className='eval-bar-light' style={evalBarStyle}/>
+      <div className='eval-bar-middle'/>
     </div>
   );
 }

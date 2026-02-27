@@ -359,11 +359,20 @@ p {
 }
 
 .eval-bar-light {
-  width: 24px;
+  position: absolute;
+  width: 100%;
   background-color: #bdd3ff;
   transition: height 0.5s ease-in-out;
   z-index: 1;
+}
+
+.eval-bar-middle {
   position: absolute;
+  width: 100%;
+  top: calc(50% - 4px);
+  height: 8px;
+  background-color: #ff000092;
+  z-index: 2;
 }
 
 .eval-bar-eval {
