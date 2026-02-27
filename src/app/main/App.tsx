@@ -183,6 +183,11 @@ function App() {
     </>) : <Chessboard/>}
     {showCursor && <div ref={virtualCursorRef} className='virtual-cursor'/>}
   </div>;
+  const mainPanelIcon = <ActionIcon
+    title='Return'
+    onClick={() => setPanelType('main')}
+    svgPath='M1 1l8 8M9 1l-8 8'
+  />;
   return (<ChessboardProvider options={chessboardOptions}>
     <div className='App'>
       <div className='flex-column'>
@@ -195,21 +200,22 @@ function App() {
           <div className='flex-column' style={{width: '16px'}}>
             <ActionIcon
               name='perspective'
-              svgPath='M3 2v7m-2-2l2 2l2-2M7 9V2m2 2l-2-2l-2 2'
+              svgPath='M3 1v7m-2-2l2 2l2-2M7 9V2m2 2l-2-2l-2 2'
             />
             <ActionIcon
               name='resetPosition'
-              svgPath='M2 5A3 3 0 1 0 2.5 2.5 M3 0L2.5 2.5l2 0.5'
+              svgPath='M1 5a4 4 0 1 0 0.5-2m0-3v3h3'
             />
             {panelType === 'edit' ? <>
               <ActionIcon
                 name='clearPosition'
-                svgPath='M1 2h8M3 2L3.5 8h3L7 2M4 2v-1h2v1M5 3v4'
+                title='Clear position on the board'
+                svgPath='M1 2h8M2.5 2L3 8h4L7.5 2M4 2v-1h2v1M5 2v6'
               />
             </> : <>
               <ActionIcon
                 name='undoMove'
-                svgPath='M7 2L3 5L7 8'
+                svgPath='M8 1L2 5L8 9'
               />
               <ActionIcon
                 name='recognizeBoard'
@@ -219,25 +225,29 @@ function App() {
                 name='loadHashes'
                 svgPath='M3.5 1v8M6.5 1v8M1 3.5h8M1 6.5h8'
               />
-              <ActionIcon
-                name='selectRegion'
-                svgPath='M2 1l2 8l1.5-4l4-1z'
-              />
-              <ActionIcon
-                name='showEngine'
-                svgPath='M1 2A2 1 36 1 0 9 5M9 5A2 1 -36 1 0 1 8L1 2'
-              />
             </>}
           </div>
         </div>
-        <p className='status'>Status: {statusText}</p>
-        <div className='flex-row'>
-          {panelType === 'edit'
-            ? <button onClick={() => setPanelType('main')}>Return</button>
-            : <button onClick={() => setPanelType('edit')}>Edit board</button>}
-          {panelType === 'settings'
-            ? <button onClick={() => setPanelType('main')}>Return</button>
-            : <button onClick={() => setPanelType('settings')}>Settings</button>}
+        <div className='flex-row' style={{justifyContent: 'left', margin: '0 4px'}}>
+          {panelType === 'settings' ? mainPanelIcon : <ActionIcon
+            title='Settings'
+            onClick={() => setPanelType('settings')}
+            svgPath='M1 2.5h8m-2-1v2M1 5h8m-6-1v2M1 7.5h8m-4-1v2'
+          />}
+          {panelType === 'edit' ? mainPanelIcon : <ActionIcon
+            title='Edit board'
+            onClick={() => setPanelType('edit')}
+            svgPath='M7 1l-6 6v2h2l6-6zm-2 2l2 2'
+          />}
+          <ActionIcon
+            name='showEngine'
+            svgPath='M1 2A2 1 36 1 0 9 5M9 5A2 1 -36 1 0 1 8L1 2M7 5h1'
+          />
+          <ActionIcon
+            name='selectRegion'
+            svgPath='M1 1l2 8l1.5-4l4-1z'
+          />
+          <p className='status'>Status: {statusText}</p>
         </div>
         {panels[panelType]}
       </div>

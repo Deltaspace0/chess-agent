@@ -171,6 +171,7 @@ fieldset {
 
 legend {
   font-size: 12px;
+  user-select: none;
 }
 
 li {
@@ -276,6 +277,7 @@ p {
   text-align: left;
   margin: 4px 0;
   min-width: 200px;
+  user-select: none;
 }
 
 .text {
@@ -416,5 +418,11 @@ p {
 .action-icon {
   cursor: pointer;
   margin: 4px 0;
+  margin-right: 8px;
   fill: none;
+  stroke: #aaa;
+}
+
+.action-icon:hover {
+  stroke: #fff;
 }

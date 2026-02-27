@@ -166,7 +166,6 @@ export const actionDescriptions: Partial<Record<Action, string>> = {
   undoMove: 'Undo last move',
   bestMove: 'Play the best move',
   resetPosition: 'Reset game',
-  clearPosition: 'Clear position on the board',
   recognizeBoard: 'Recognize current position on the board',
   recognizeBoardSkipMove: 'Recognize position with opponent to move',
   showEngine: 'Open engine UCI terminal',
