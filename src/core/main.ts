@@ -29,7 +29,6 @@ async function createMainWindow(): Promise<BrowserWindow> {
     width: 380,
     height: 580,
     maxWidth: 480,
-    maxHeight: 640,
     icon: iconPath,
     useContentSize: true,
     webPreferences: {

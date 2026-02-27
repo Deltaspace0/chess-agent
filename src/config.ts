@@ -31,23 +31,21 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     defaultValue: true
   },
   autoResponse: {
-    label: 'Auto response',
-    description: 'Automatically play the best move after the opponent\'s move',
+    label: 'Automatically play the best move',
     defaultValue: false
   },
   autoScan: {
-    label: 'Auto scan',
-    description: 'Automatically start detecting a move after making a move',
+    label: 'Automatically detect moves',
     defaultValue: false
   },
   autoQueen: {
     label: 'Auto queen',
-    description: 'Pawns are automatically assumed to be promoted to Queen',
+    description: 'Pawns are always assumed to be promoted to Queen',
     defaultValue: false
   },
   autoPromotion: {
     label: 'Auto promotion',
-    description: 'Assume chess.com/lichess.org interface for pawn promotion',
+    description: 'Use chess.com/lichess.org interface for pawn promotion',
     defaultValue: true
   },
   perspective: {
@@ -56,8 +54,8 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     defaultValue: true
   },
   draggingMode: {
-    label: 'Dragging',
-    description: 'Whether the mouse should perform dragging or clicking motion',
+    label: 'Perform dragging motion',
+    description: 'Perform dragging motion (clicking if unchecked)',
     defaultValue: true
   },
   actionRegion: {
@@ -71,12 +69,11 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     defaultValue: defaultActionLocations
   },
   showEvalBar: {
-    label: 'Show eval bar',
-    description: 'Show the evaluation bar',
+    label: 'Show the evaluation bar',
     defaultValue: true
   },
   showArrows: {
-    label: 'Show arrows',
+    label: 'Best move arrows',
     description: 'Highlight best moves with arrows on the board',
     defaultValue: true
   },
@@ -86,41 +83,38 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     defaultValue: true
   },
   showCursor: {
-    label: 'Show cursor',
+    label: 'Show virtual cursor',
     description: 'Show in the app where the cursor is inside the region',
     defaultValue: true
   },
   showRegion: {
-    label: 'Show region',
-    description: 'Show the selected region on screen',
+    label: 'Show the selected region on screen',
     defaultValue: true
   },
   showActionRegion: {
-    label: 'Show action regions',
-    description: 'Show action regions on screen',
+    label: 'Show action regions on screen',
     defaultValue: true
   },
   analysisDuration: {
-    label: 'Analysis duration (ms)',
-    description: 'Time allotted for the engine to find the best move',
+    label: 'Analysis duration',
+    description: 'Time allotted for the engine to find the best move (in milliseconds)',
     defaultValue: 1000,
     sliderValues: [100, 300, 1000, 3000, 5000, 10000]
   },
   multiPV: {
     label: 'Multiple lines',
-    description: 'How many best moves to calculate',
+    description: 'Maximum number of best moves to show',
     defaultValue: 1,
     sliderValues: [1, 2, 3, 4, 5, 10, 20]
   },
   engineThreads: {
     label: 'Threads',
-    description: 'How many threads can the engine use',
+    description: 'Maximum number of threads the engine can utilize',
     defaultValue: 1,
     sliderValues: [...Array(33).keys()].slice(1)
   },
   mouseSpeed: {
     label: 'Mouse speed',
-    description: 'How fast the mouse should move when playing a move',
     defaultValue: 50000,
     sliderValues: [500, 1000, 2000, 10000, 50000]
   },
@@ -136,7 +130,6 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
   },
   screenshotLength: {
     label: 'screenshotLength',
-    description: 'screenshotLength',
     defaultValue: 1
   },
   recognizerModel: {
@@ -145,13 +138,12 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     defaultValue: null
   },
   recognizerPutKings: {
-    label: 'Put kings',
-    description: 'Automatically add missing kings during position recognition',
+    label: 'Add missing kings',
+    description: 'Add missing kings during position recognition',
     defaultValue: true
   },
   autoCastling: {
-    label: 'Auto castling',
-    description: 'Enable castling rights when possible',
+    label: 'Enable castling rights when possible',
     defaultValue: true
   }
 };
