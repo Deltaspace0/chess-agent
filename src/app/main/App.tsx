@@ -221,7 +221,7 @@ function App() {
               />
               <ActionIcon
                 name='selectRegion'
-                svgPath='M2 2v6h6v-6z'
+                svgPath='M2 1l2 8l1.5-4l4-1z'
               />
               <ActionIcon
                 name='showEngine'
