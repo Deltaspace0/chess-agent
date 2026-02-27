@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import ActionButton from '../components/ActionButton.tsx';
 import Checkbox from '../components/Checkbox.tsx';
 import Radio from '../components/Radio.tsx';
 
@@ -96,9 +95,6 @@ function EditPanel({ positionFEN, positionInfo }: EditProps) {
         <button onClick={() => electron.sendSignal('positionFEN', inputFEN)}>
           Set FEN
         </button>
-      </div>
-      <div className='flex-row'>
-        <ActionButton name='clearPosition' label='Clear position'/>
       </div>
       <div className='flex-row'>
         <div className={separateCastlingRow ? 'flex-row' : 'flex-column'}>

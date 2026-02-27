@@ -201,26 +201,33 @@ function App() {
               name='resetPosition'
               svgPath='M2 5A3 3 0 1 0 2.5 2.5 M3 0L2.5 2.5l2 0.5'
             />
-            <ActionIcon
-              name='undoMove'
-              svgPath='M7 2L3 5L7 8'
-            />
-            <ActionIcon
-              name='recognizeBoard'
-              svgPath='M5 2.5a4 2.5 0 1 0 0.01 0M5 3.5a1.5 1.5 0 1 0 0.01 0'
-            />
-            <ActionIcon
-              name='loadHashes'
-              svgPath='M3.5 1v8M6.5 1v8M1 3.5h8M1 6.5h8'
-            />
-            <ActionIcon
-              name='selectRegion'
-              svgPath='M2 2v6h6v-6z'
-            />
-            <ActionIcon
-              name='showEngine'
-              svgPath='M1 2A2 1 36 1 0 9 5M9 5A2 1 -36 1 0 1 8L1 2'
-            />
+            {panelType === 'edit' ? <>
+              <ActionIcon
+                name='clearPosition'
+                svgPath='M1 2h8M3 2L3.5 8h3L7 2M4 2v-1h2v1M5 3v4'
+              />
+            </> : <>
+              <ActionIcon
+                name='undoMove'
+                svgPath='M7 2L3 5L7 8'
+              />
+              <ActionIcon
+                name='recognizeBoard'
+                svgPath='M5 2.5a4 2.5 0 1 0 0.01 0M5 3.5a1.5 1.5 0 1 0 0.01 0'
+              />
+              <ActionIcon
+                name='loadHashes'
+                svgPath='M3.5 1v8M6.5 1v8M1 3.5h8M1 6.5h8'
+              />
+              <ActionIcon
+                name='selectRegion'
+                svgPath='M2 2v6h6v-6z'
+              />
+              <ActionIcon
+                name='showEngine'
+                svgPath='M1 2A2 1 36 1 0 9 5M9 5A2 1 -36 1 0 1 8L1 2'
+              />
+            </>}
           </div>
         </div>
         <p className='status'>Status: {statusText}</p>
