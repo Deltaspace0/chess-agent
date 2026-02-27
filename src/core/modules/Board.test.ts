@@ -7,6 +7,7 @@ function getBoard(mouse: MouseMock): Board {
   board.setDraggingMode(true);
   board.setRegion({ left: 0, top: 0, width: 8, height: 8 });
   board.setPerspective(true);
+  board.setAutoPromotion(true);
   return board;
 }
 
@@ -122,61 +123,246 @@ describe('Board', () => {
       await mouse.press();
       await expect.poll(() => callback).toHaveBeenCalledWith('b5');
     });
+  
+    describe('Promotion', () => {
+      it('should detect Queen promotion', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        const callback = vi.fn();
+        board.onPromotion(callback);
+        board.setPromotionMove('a7a8');
+        await mouse.move({ x: 0.5, y: 0.5 });
+        await mouse.click();
+        await expect.poll(() => callback).toHaveBeenCalledWith('q');
+      });
+
+      it('should detect Knight promotion', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        const callback = vi.fn();
+        board.onPromotion(callback);
+        board.setPromotionMove('b7b8');
+        await mouse.move({ x: 1.5, y: 1.5 });
+        await mouse.click();
+        await expect.poll(() => callback).toHaveBeenCalledWith('n');
+      });
+
+      it('should detect Rook promotion', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        const callback = vi.fn();
+        board.onPromotion(callback);
+        board.setPromotionMove('c7c8');
+        await mouse.move({ x: 2.5, y: 2.5 });
+        await mouse.click();
+        await expect.poll(() => callback).toHaveBeenCalledWith('r');
+      });
+
+      it('should detect Bishop promotion', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        const callback = vi.fn();
+        board.onPromotion(callback);
+        board.setPromotionMove('d7d8');
+        await mouse.move({ x: 3.5, y: 3.5 });
+        await mouse.click();
+        await expect.poll(() => callback).toHaveBeenCalledWith('b');
+      });
+
+      it('should detect Bishop promotion on the flipped board', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        board.setPerspective(false);
+        const callback = vi.fn();
+        board.onPromotion(callback);
+        board.setPromotionMove('d7d8');
+        await mouse.move({ x: 4.5, y: 4.5 });
+        await mouse.click();
+        await expect.poll(() => callback).toHaveBeenCalledWith('b');
+      });
+
+      it('should not detect promotion with disabled autoPromotion', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        board.setAutoPromotion(false);
+        const callback = vi.fn();
+        board.onPromotion(callback);
+        board.setPromotionMove('d7d8');
+        await mouse.move({ x: 3.5, y: 3.5 });
+        await mouse.click();
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        expect(callback).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('Output', () => {
-    it('should perform a dragging move', async () => {
-      const mouse = new MouseMock();
-      const board = getBoard(mouse);
-      await board.playMove('e2e4');
-      expect(mouse.getActions()).toSatisfy(getMatcher([{
-        type: 'down',
-        point: { x: 4, y: 6 }
-      }, {
-        type: 'up',
-        point: { x: 4, y: 4 }
-      }]));
+    describe('Move', () => {
+      it('should perform a dragging move', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        await board.playMove('e2e4');
+        expect(mouse.getActions()).toSatisfy(getMatcher([{
+          type: 'down',
+          point: { x: 4, y: 6 }
+        }, {
+          type: 'up',
+          point: { x: 4, y: 4 }
+        }]));
+      });
+
+      it('should perform a clicking move', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        board.setDraggingMode(false);
+        await board.playMove('e2e4');
+        expect(mouse.getActions()).toSatisfy(getMatcher([{
+          type: 'down',
+          point: { x: 4, y: 6 }
+        }, {
+          type: 'up',
+          point: { x: 4, y: 6 }
+        }, {
+          type: 'down',
+          point: { x: 4, y: 4 }
+        }, {
+          type: 'up',
+          point: { x: 4, y: 4 }
+        }]));
+      });
+
+      it('should perform a move on the flipped board', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        board.setPerspective(false);
+        await board.playMove('e2e4');
+        expect(mouse.getActions()).toSatisfy(getMatcher([{
+          type: 'down',
+          point: { x: 3, y: 1 }
+        }, {
+          type: 'up',
+          point: { x: 3, y: 3 }
+        }]));
+      });
+
+      it('should throw an error when the region is null', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        board.setRegion(null);
+        await expect(board.playMove('e2e4')).rejects.toThrow();
+      });
     });
 
-    it('should perform a clicking move', async () => {
-      const mouse = new MouseMock();
-      const board = getBoard(mouse);
-      board.setDraggingMode(false);
-      await board.playMove('e2e4');
-      expect(mouse.getActions()).toSatisfy(getMatcher([{
-        type: 'down',
-        point: { x: 4, y: 6 }
-      }, {
-        type: 'up',
-        point: { x: 4, y: 6 }
-      }, {
-        type: 'down',
-        point: { x: 4, y: 4 }
-      }, {
-        type: 'up',
-        point: { x: 4, y: 4 }
-      }]));
-    });
+    describe('Promotion', () => {
+      it('should promote to Queen', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        await board.playMove('g7f8q');
+        expect(mouse.getActions()).toSatisfy(getMatcher([{
+          type: 'down',
+          point: { x: 6, y: 1 }
+        }, {
+          type: 'up',
+          point: { x: 5, y: 0 }
+        }, {
+          type: 'down',
+          point: { x: 5, y: 0 }
+        }, {
+          type: 'up',
+          point: { x: 5, y: 0 }
+        }]));
+      });
 
-    it('should perform a move on the flipped board', async () => {
-      const mouse = new MouseMock();
-      const board = getBoard(mouse);
-      board.setPerspective(false);
-      await board.playMove('e2e4');
-      expect(mouse.getActions()).toSatisfy(getMatcher([{
-        type: 'down',
-        point: { x: 3, y: 1 }
-      }, {
-        type: 'up',
-        point: { x: 3, y: 3 }
-      }]));
-    });
+      it('should promote to Knight', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        await board.playMove('g7g8n');
+        expect(mouse.getActions()).toSatisfy(getMatcher([{
+          type: 'down',
+          point: { x: 6, y: 1 }
+        }, {
+          type: 'up',
+          point: { x: 6, y: 0 }
+        }, {
+          type: 'down',
+          point: { x: 6, y: 1 }
+        }, {
+          type: 'up',
+          point: { x: 6, y: 1 }
+        }]));
+      });
 
-    it('should throw an error when the region is null', async () => {
-      const mouse = new MouseMock();
-      const board = getBoard(mouse);
-      board.setRegion(null);
-      await expect(board.playMove('e2e4')).rejects.toThrow();
+      it('should promote to Rook', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        await board.playMove('g7h8r');
+        expect(mouse.getActions()).toSatisfy(getMatcher([{
+          type: 'down',
+          point: { x: 6, y: 1 }
+        }, {
+          type: 'up',
+          point: { x: 7, y: 0 }
+        }, {
+          type: 'down',
+          point: { x: 7, y: 2 }
+        }, {
+          type: 'up',
+          point: { x: 7, y: 2 }
+        }]));
+      });
+
+      it('should promote to Bishop', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        await board.playMove('a7a8b');
+        expect(mouse.getActions()).toSatisfy(getMatcher([{
+          type: 'down',
+          point: { x: 0, y: 1 }
+        }, {
+          type: 'up',
+          point: { x: 0, y: 0 }
+        }, {
+          type: 'down',
+          point: { x: 0, y: 3 }
+        }, {
+          type: 'up',
+          point: { x: 0, y: 3 }
+        }]));
+      });
+
+      it('should promote to Bishop on the flipped board', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        board.setPerspective(false);
+        await board.playMove('a7a8b');
+        expect(mouse.getActions()).toSatisfy(getMatcher([{
+          type: 'down',
+          point: { x: 7, y: 6 }
+        }, {
+          type: 'up',
+          point: { x: 7, y: 7 }
+        }, {
+          type: 'down',
+          point: { x: 7, y: 4 }
+        }, {
+          type: 'up',
+          point: { x: 7, y: 4 }
+        }]));
+      });
+
+      it('should not promote with disabled autoPromotion', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        board.setAutoPromotion(false);
+        await board.playMove('a7a8b');
+        expect(mouse.getActions()).toSatisfy(getMatcher([{
+          type: 'down',
+          point: { x: 0, y: 1 }
+        }, {
+          type: 'up',
+          point: { x: 0, y: 0 }
+        }]));
+      });
     });
   });
 });

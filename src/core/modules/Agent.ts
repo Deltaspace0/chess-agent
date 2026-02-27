@@ -51,7 +51,7 @@ export class Agent {
   private promotionMove: string = '';
   private stopBestMove: (() => void) | null = null;
   private afterMoveCallback: (value: string) => void = () => {};
-  private promotionCallback: () => void = () => {};
+  private promotionCallback: (move: string) => void = () => {};
   private statusCallback: (status: string) => void = console.log;
 
   constructor(modules: AgentModules) {
@@ -85,7 +85,7 @@ export class Agent {
         move = this.promotionMove;
       } else {
         this.promotionMove = move;
-        this.promotionCallback();
+        this.promotionCallback(move);
         return true;
       }
     }
@@ -256,7 +256,7 @@ export class Agent {
     this.afterMoveCallback = callback;
   }
 
-  onPromotion(callback: () => void) {
+  onPromotion(callback: (move: string) => void) {
     this.promotionCallback = callback;
   }
 

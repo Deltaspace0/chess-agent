@@ -20,6 +20,7 @@ function SettingsPanel() {
           <CheckboxPref name='autoResponse'/>
           <CheckboxPref name='autoScan'/>
           <CheckboxPref name='autoQueen'/>
+          <CheckboxPref name='autoPromotion'/>
           <CheckboxPref name='draggingMode'/>
           <CheckboxPref name='recognizerPutKings'/>
           <CheckboxPref name='autoCastling'/>

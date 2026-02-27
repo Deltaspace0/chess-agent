@@ -37,6 +37,7 @@ declare global {
     autoResponse: boolean;
     autoScan: boolean;
     autoQueen: boolean;
+    autoPromotion: boolean;
     perspective: boolean;
     draggingMode: boolean;
     actionRegion: boolean;
@@ -118,6 +119,7 @@ declare global {
     , 'autoResponse'
     | 'autoScan'
     | 'autoQueen'
+    | 'autoPromotion'
     | 'perspective'
     | 'draggingMode'
     | 'actionRegion'

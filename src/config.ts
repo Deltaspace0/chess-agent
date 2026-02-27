@@ -43,6 +43,11 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
   autoQueen: {
     label: 'Auto queen',
     description: 'Pawns are automatically assumed to be promoted to Queen',
+    defaultValue: false
+  },
+  autoPromotion: {
+    label: 'Auto promotion',
+    description: 'Assume chess.com/lichess.org interface for pawn promotion',
     defaultValue: true
   },
   perspective: {

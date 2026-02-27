@@ -193,6 +193,7 @@ function debounce<T>(callback: (x: T) => void) {
   const board = new Board(mouse);
   board.onMove((move) => agent.processMove(move));
   board.onMouseDownSquare(() => recognizer.stopScanning());
+  board.onPromotion((piece) => agent.promoteTo(piece));
   const engineExternal = new EngineExternal();
   engineExternal.addListener('stdin', (data) => {
     sendEngineData('external', '<<< '+data);
@@ -269,21 +270,23 @@ function debounce<T>(callback: (x: T) => void) {
     }
   };
   agent.onUpdateStatus(updateStatus);
-  agent.onMove(() => {
+  agent.onMove(async () => {
     if (!preferenceManager.getPreference('region')) {
       return;
     }
     if (preferenceManager.getPreference('autoResponse') && game.isMyTurn()) {
       playBestMove();
     } else if (preferenceManager.getPreference('autoScan')) {
+      await screen.sleep(100);
       agent.scanMove();
     }
   });
-  agent.onPromotion(() => {
+  agent.onPromotion((move) => {
     if (preferenceManager.getPreference('autoQueen')) {
       agent.promoteTo('q');
     } else {
       sendSignal('promotion');
+      board.setPromotionMove(move);
     }
   });
   const toggleBooleanPreference = (name: BooleanPreference) => {
@@ -419,6 +422,7 @@ function debounce<T>(callback: (x: T) => void) {
     autoResponse: () => toggleBooleanPreference('autoResponse'),
     autoScan: () => toggleBooleanPreference('autoScan'),
     autoQueen: () => toggleBooleanPreference('autoQueen'),
+    autoPromotion: () => toggleBooleanPreference('autoPromotion'),
     perspective: () => {
       const value = preferenceManager.togglePreference('perspective');
       updateStatus(`${value ? 'White' : 'Black'} perspective`);
@@ -478,6 +482,7 @@ function debounce<T>(callback: (x: T) => void) {
       engineWin.setAlwaysOnTop(value, 'normal');
       overlayWin.moveTop();
     },
+    autoPromotion: (value) => board.setAutoPromotion(value),
     perspective: (value) => {
       board.setPerspective(value);
       game.setPerspective(value);

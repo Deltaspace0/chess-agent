@@ -29,6 +29,7 @@ function App() {
     autoResponse: usePreference('autoResponse')[0],
     autoScan: usePreference('autoScan')[0],
     autoQueen: usePreference('autoQueen')[0],
+    autoPromotion: usePreference('autoPromotion')[0],
     perspective: usePreference('perspective')[0],
     draggingMode: usePreference('draggingMode')[0],
     autoCastling: usePreference('autoCastling')[0]
