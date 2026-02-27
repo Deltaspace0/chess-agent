@@ -341,7 +341,6 @@ function debounce<T>(callback: (x: T) => void) {
       const result = await dialog.showOpenDialog(engineWin, {
         properties: ['openFile']
       });
-      overlayWin.moveTop();
       mouse.setActive(true);
       if (result.filePaths.length > 0) {
         preferenceManager.setPreference('enginePath', result.filePaths[0]);
