@@ -15,6 +15,7 @@ function SettingsPanel() {
       <SliderPref name='analysisDuration'/>
       <SliderPref name='multiPV'/>
       <SliderPref name='engineThreads'/>
+      <SliderPref name='engineLevel'/>
       <div className='section-line'>Board</div>
       <CheckboxPref name='autoQueen'/>
       <CheckboxPref name='recognizerPutKings'/>

@@ -113,6 +113,12 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     defaultValue: 1,
     sliderValues: [...Array(33).keys()].slice(1)
   },
+  engineLevel: {
+    label: 'Skill Level',
+    description: 'Weaken the engine by injecting intentional mistakes',
+    defaultValue: 20,
+    sliderValues: [...Array(21).keys()]
+  },
   mouseSpeed: {
     label: 'Mouse speed',
     defaultValue: 50000,

@@ -51,6 +51,7 @@ declare global {
     analysisDuration: number;
     multiPV: number;
     engineThreads: number;
+    engineLevel: number;
     mouseSpeed: number;
     region: Region | null;
     enginePath: string | null;

@@ -6,11 +6,13 @@ interface EngineOptions {
   duration: number;
   multiPV: number;
   threads: number;
+  skillLevel: number;
 }
 
 const optionNames: Partial<Record<keyof EngineOptions, string>> = {
   multiPV: 'MultiPV',
-  threads: 'Threads'
+  threads: 'Threads',
+  skillLevel: 'Skill Level'
 };
 
 function getNumberValue(words: string[], name: string): number {
@@ -30,7 +32,8 @@ class EngineUCI implements AgentEngine {
   private options: EngineOptions = {
     duration: preferenceConfig.analysisDuration.defaultValue,
     multiPV: preferenceConfig.multiPV.defaultValue,
-    threads: preferenceConfig.engineThreads.defaultValue
+    threads: preferenceConfig.engineThreads.defaultValue,
+    skillLevel: preferenceConfig.engineLevel.defaultValue
   };
   private principalMoves: string[] = [];
   private processListener: (data: string) => void = this.processData.bind(this);

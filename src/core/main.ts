@@ -488,6 +488,7 @@ function debounce<T>(callback: (x: T) => void) {
     analysisDuration: (value) => engineUCI.setOption('duration', value),
     multiPV: (value) => engineUCI.setOption('multiPV', value),
     engineThreads: (value) => engineUCI.setOption('threads', value),
+    engineLevel: (value) => engineUCI.setOption('skillLevel', value),
     mouseSpeed: (value) => mouse.setSpeed(value),
     region: (value) => {
       board.setRegion(value);
