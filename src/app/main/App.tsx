@@ -18,6 +18,8 @@ function App() {
   const [showEvalBar] = usePreference('showEvalBar');
   const [showCursor] = usePreference('showCursor');
   const [perspective] = usePreference('perspective');
+  const [region] = usePreference('region');
+  const [recognizerModel] = usePreference('recognizerModel');
   const statusText = useSignal('status');
   const engineInfo = useSignal('engineInfo') || {};
   const principalVariations = useSignal('principalVariations') || [];
@@ -219,10 +221,14 @@ function App() {
               />
               <ActionIcon
                 name='recognizeBoard'
+                disabled={!region || !recognizerModel}
+                disabledTitle={region ? 'Please load hashes' : 'Please select region'}
                 svgPath='M5 2.5a4 2.5 0 1 0 0.01 0M5 3.5a1.5 1.5 0 1 0 0.01 0'
               />
               <ActionIcon
                 name='loadHashes'
+                disabled={!region}
+                disabledTitle='Please select region'
                 svgPath='M3.5 1v8M6.5 1v8M1 3.5h8M1 6.5h8'
               />
             </>}

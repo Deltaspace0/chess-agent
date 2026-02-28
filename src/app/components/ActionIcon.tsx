@@ -8,6 +8,8 @@ export interface ActionIconProps {
   height?: number;
   viewBox?: string;
   style?: CSSProperties;
+  disabled?: boolean;
+  disabledTitle?: string;
   onClick?: () => void;
   svgPath: string;
 }
@@ -26,9 +28,9 @@ function ActionIcon(props: ActionIconProps) {
       viewBox={props.viewBox ?? '0 0 10 10'}
       xmlns='http://www.w3.org'
       style={props.style}
-      onClick={onClick}
-      className={'action-icon'}>
-        <title>{title}</title>
+      onClick={!props.disabled ? onClick : undefined}
+      className={props.disabled ? 'action-icon-disabled' : 'action-icon'}>
+        <title>{props.disabled ? props.disabledTitle : title}</title>
         <path d={props.svgPath}/>
     </svg>
   );

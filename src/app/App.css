@@ -466,3 +466,11 @@ p {
 .action-icon:hover {
   stroke: #fff;
 }
+
+.action-icon-disabled {
+  cursor: not-allowed;
+  margin: 4px 0;
+  margin-right: 8px;
+  fill: none;
+  stroke: #aaa5;
+}

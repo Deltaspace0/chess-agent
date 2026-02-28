@@ -298,7 +298,6 @@ function debounce<T>(callback: (x: T) => void) {
     hideRegion: () => overlayWin.close(),
     loadHashes: () => {
       if (!preferenceManager.getPreference('region')) {
-        selectRegion();
         return;
       }
       const perspective = preferenceManager.getPreference('perspective');
@@ -325,7 +324,6 @@ function debounce<T>(callback: (x: T) => void) {
     clearPosition: () => agent.clearPosition(),
     recognizeBoard: () => {
       if (!preferenceManager.getPreference('region')) {
-        selectRegion();
         return;
       }
       if (!preferenceManager.getPreference('recognizerModel')) {
