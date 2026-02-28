@@ -18,12 +18,12 @@ class Board {
   constructor(mouse: Mouse) {
     this.mouse = mouse;
     mouse.addListener('mousedown', async () => {
-      if (this.playingMove) {
-        return;
-      }
       const square = await this.getSquare();
       if (square && this.downListener) {
         this.downListener(square);
+      }
+      if (this.playingMove) {
+        return;
       }
       if (square && this.autoPromotion && this.promotionListener) {
         if (this.promotionMove && this.promotionMove.length >= 4) {
