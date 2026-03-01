@@ -14,24 +14,22 @@ function App() {
   const [externalLines, setExternalLines] = useState<JSX.Element[]>([]);
   const [externalActive, setExternalActive] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    return electron.onSignal('engineData', ({ name, data }) => {
-      if (name === 'external-event') {
-        setExternalActive(data !== 'exit');
-        return;
-      }
-      let color = '#ffffff';
-      if (data.substring(0, 3) === '<<<') {
-        color = '#f6ee11ff';
-      } else if (data.substring(0, 3) === '!>>') {
-        color = '#fc9288ff';
-      }
-      const line = <span style={{color}}>{data}</span>;
-      (name === 'internal' ? setInternalLines : setExternalLines)((x) => {
-        return [...x, line].slice(-1000);
-      });
+  useEffect(() => electron.onSignal('engineData', ({ name, data }) => {
+    if (name === 'external-event') {
+      setExternalActive(data !== 'exit');
+      return;
+    }
+    let color = '#ffffff';
+    if (data.substring(0, 3) === '<<<') {
+      color = '#f6ee11ff';
+    } else if (data.substring(0, 3) === '!>>') {
+      color = '#fc9288ff';
+    }
+    const line = <span style={{color}}>{data}</span>;
+    (name === 'internal' ? setInternalLines : setExternalLines)((x) => {
+      return [...x, line].slice(-1000);
     });
-  }, [electron]);
+  }), [electron]);
   useEffect(() => {
     document.title = engineInfo.name || 'Engine';
   }, [engineInfo.name]);
