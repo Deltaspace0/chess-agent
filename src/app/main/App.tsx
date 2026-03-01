@@ -212,7 +212,7 @@ function App() {
               <ActionIcon
                 name='clearPosition'
                 title='Clear position on the board'
-                svgPath='M1 2h8M2.5 2L3 8h4L7.5 2M4 2v-1h2v1M5 2v6'
+                svgPath='M1 2h8M2.5 2L3 9h4L7.5 2M4 2v-1h2v1M5 2v7'
               />
             </> : <>
               <ActionIcon
@@ -247,7 +247,7 @@ function App() {
             />
             <ActionIcon
               name='resetConfig'
-              svgPath='M1 2h8M2.5 2L3 8h4L7.5 2M4 2v-1h2v1M5 2v6'
+              svgPath='M1 2h8M2.5 2L3 9h4L7.5 2M4 2v-1h2v1M5 2v7'
             />
           </> : <>
             <ActionIcon
