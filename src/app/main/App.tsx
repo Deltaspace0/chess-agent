@@ -1,11 +1,12 @@
 import '../App.css';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Chessboard, ChessboardProvider, SparePiece } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import ActionButton from '../components/ActionButton.tsx';
 import EvalBar from '../components/EvalBar.tsx';
 import EditPanel from './EditPanel.tsx';
 import SettingsPanel from './SettingsPanel.tsx';
+import VirtualCursor from './VirtualCursor.tsx';
 import { usePreference, useSignal } from '../hooks.ts';
 import ActionIcon from '../components/ActionIcon.tsx';
 
@@ -32,7 +33,6 @@ function App() {
   const [arrows1, setArrows1] = useState<Arrow[]>([]);
   const [arrows2, setArrows2] = useState<Arrow[]>([]);
   const [panelType, setPanelType] = useState<Panel>('main');
-  const virtualCursorRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const offPosition = electron.onSignal('positionFEN', (value) => {
       setPositionFEN(value);
@@ -80,21 +80,10 @@ function App() {
     const offPromotion = electron.onSignal('promotion', () => {
       setPanelType('promotion');
     });
-    const offMousePosition = electron.onSignal('mousePosition', (value) => {
-      const virtualCursor = virtualCursorRef.current;
-      if (!virtualCursor) {
-        return;
-      }
-      const x = (!value || value.x > 1 || value.x < 0) ? -1 : value.x;
-      const y = (!value || value.y > 1 || value.y < 0) ? -1 : value.y;
-      virtualCursor.style.left = `calc(4px + ${x} * (100% - 8px))`;
-      virtualCursor.style.top = `${y*100}%`;
-    });
     return () => {
       offPosition();
       offHighlight();
       offPromotion();
-      offMousePosition();
     };
   }, [electron]);
   const chessboardOptions: ChessboardOptions = {
@@ -183,7 +172,7 @@ function App() {
       </div>
       {perspective ? whiteSparePieces : blackSparePieces}
     </>) : <Chessboard/>}
-    {showCursor && <div ref={virtualCursorRef} className='virtual-cursor'/>}
+    {showCursor && <VirtualCursor/>}
   </div>;
   const mainPanelIcon = <ActionIcon
     title='Return'
