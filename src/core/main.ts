@@ -207,14 +207,8 @@ function debounce<T>(callback: (x: T) => void) {
     updateStatus('Engine has been closed');
     sendEngineData('external-event', 'exit');
     sendEngineData('external', `Exit code: ${code}`);
-    const variableNames: Signal[] = [
-      'highlightMoves',
-      'principalVariations',
-      'engineInfo'
-    ];
-    for (const name of variableNames) {
-      sendSignal(name);
-    }
+    sendSignal('principalVariations');
+    sendSignal('engineInfo');
   });
   const spawnExternalEngine = (path: string) => {
     if (engineExternal.spawn(path)) {
@@ -243,10 +237,8 @@ function debounce<T>(callback: (x: T) => void) {
     sendEngineData('internal', '!>> '+data);
   });
   const engineUCI = new EngineUCI();
-  engineUCI.onPrincipalMoves(debounce((value) => {
-    const moves = value.map((x) => x.split(' ').slice(0, 3));
-    const variations = value.map((x) => game.formatEvalMoves(x));
-    sendSignal('highlightMoves', moves);
+  engineUCI.onPrincipalVariations(debounce((value) => {
+    const variations = value.map((x) => game.formatPrincipalVariation(x));
     sendSignal('principalVariations', variations);
   }));
   engineUCI.onEngineInfo(debounce((value) => {

@@ -6,9 +6,12 @@ describe('Game', () => {
     it('should format uci cp evaluation with moves', () => {
       const game = new Game();
       game.move('e2e4');
-      const input = 'cp 28 c7c5 g1f3 b8c6 d2d4 c5d4 f3d4';
+      const { pgn } = game.formatPrincipalVariation({
+        evaluation: 'cp 28',
+        variation: 'c7c5 g1f3 b8c6 d2d4 c5d4 f3d4'
+      });
       const output = '0.28  1. ... c5 2. Nf3 Nc6 3. d4 cxd4 4. Nxd4 *';
-      expect(game.formatEvalMoves(input)).toBe(output);
+      expect(pgn).toBe(output);
     });
 
     it('should format uci mate evaluation with moves', () => {
@@ -16,9 +19,12 @@ describe('Game', () => {
       game.move('f2f3');
       game.move('e7e5');
       game.move('g2g4');
-      const input = 'mate -1 d8h4';
+      const { pgn } = game.formatPrincipalVariation({
+        evaluation: 'mate -1',
+        variation: 'd8h4'
+      });
       const output = 'M-1  2. ... Qh4# *';
-      expect(game.formatEvalMoves(input)).toBe(output);
+      expect(pgn).toBe(output);
     });
   });
 

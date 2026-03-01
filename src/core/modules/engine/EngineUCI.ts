@@ -35,11 +35,11 @@ class EngineUCI implements AgentEngine {
     threads: preferenceConfig.engineThreads.defaultValue,
     skillLevel: preferenceConfig.engineLevel.defaultValue
   };
-  private principalMoves: string[] = [];
-  private processListener: (data: string) => void = this.processData.bind(this);
-  private principalMovesCallback: (value: string[]) => void = () => {};
+  private principalVariations: PrincipalVariation[] = [];
+  private principalCallback: (value: PrincipalVariation[]) => void = () => {};
   private bestMoveCallback: (value: string) => void = () => {};
   private engineInfoCallback: (value: EngineInfo) => void = () => {};
+  private processListener = this.processData.bind(this);
 
   private async sendToProcess(data: string | string[]) {
     await this.processLock;
@@ -86,8 +86,8 @@ class EngineUCI implements AgentEngine {
       if (pv === 0) {
         this.engineInfo.evaluation = evaluation;
       }
-      const moves = words.slice(words.indexOf('pv')+1).join(' ');
-      this.setPrincipalMove(pv, evaluation+' '+moves);
+      const variation = words.slice(words.indexOf('pv')+1).join(' ');
+      this.setPrincipalVariation(pv, { evaluation, variation });
     }
     if (words.includes('bestmove')) {
       const move = words[words.indexOf('bestmove')+1].trim();
@@ -106,17 +106,17 @@ class EngineUCI implements AgentEngine {
   }
 
   private sendEngineInfo() {
-    this.principalMovesCallback(this.principalMoves);
+    this.principalCallback(this.principalVariations);
     this.engineInfoCallback(this.engineInfo);
   }
 
-  private setPrincipalMove(pv: number, move: string) {
-    this.principalMoves[pv] = move;
+  private setPrincipalVariation(pv: number, move: PrincipalVariation) {
+    this.principalVariations[pv] = move;
     this.sendEngineInfo();
   }
 
   private resetAnalysis() {
-    this.principalMoves = [];
+    this.principalVariations = [];
     this.bestMove = null;
     this.ponderMove = null;
     this.engineInfo = {
@@ -188,8 +188,8 @@ class EngineUCI implements AgentEngine {
     }
   }
 
-  onPrincipalMoves(callback: (value: string[]) => void) {
-    this.principalMovesCallback = callback;
+  onPrincipalVariations(callback: (value: PrincipalVariation[]) => void) {
+    this.principalCallback = callback;
   }
 
   onBestMove(callback: (value: string) => void) {

@@ -95,6 +95,12 @@ declare global {
     piece: string;
   }
 
+  interface PrincipalVariation {
+    evaluation: string;
+    variation: string;
+    pgn?: string;
+  }
+
   type Signal = keyof Signals;
   type SignalListeners = { [T in Signal]: (value: Signals[T]) => void };
 
@@ -104,8 +110,7 @@ declare global {
     positionInfo: PositionInfo;
     engineData: { name: string, data: string };
     engineInfo?: EngineInfo;
-    highlightMoves?: string[][];
-    principalVariations?: string[];
+    principalVariations?: PrincipalVariation[];
     mousePosition?: Point;
     hoveredAction?: string;
     promotion: void;

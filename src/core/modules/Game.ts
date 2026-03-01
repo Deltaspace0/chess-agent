@@ -129,24 +129,26 @@ class Game implements AgentGame {
     return this.setTurn(this.getOppPerspectiveColor());
   }
 
-  formatEvalMoves(input: string): string {
-    const words = input.split(' ');
-    const evaluation = Number(words[1]);
-    const evalText = words[0] === 'mate' ? `M${evaluation}` : evaluation/100;
+  formatPrincipalVariation(pv: PrincipalVariation): PrincipalVariation {
+    const evalWords = pv.evaluation.split(' ');
+    const evalNumber = Number(evalWords[1]);
+    const evalText = evalWords[0] === 'mate'
+      ? `M${evalNumber}`
+      : `${evalNumber/100}`;
     const chess = new Chess();
     try {
       chess.load(this.chess.fen());
-      for (const move of words.slice(2)) {
+      for (const move of pv.variation.split(' ')) {
         chess.move(move);
       }
     } catch {
-      return '';
+      return pv;
     }
     const headers = chess.getHeaders();
     for (const header in headers) {
       chess.setHeader(header, '');
     }
-    return evalText+' '+chess.pgn({ newline: ' ' });
+    return { ...pv, pgn: evalText+' '+chess.pgn({ newline: ' ' }) };
   }
 
   getNextBoardStates(): BoardState[] {

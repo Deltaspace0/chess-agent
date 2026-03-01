@@ -1,5 +1,5 @@
 import '../App.css';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Chessboard, ChessboardProvider, SparePiece } from 'react-chessboard';
 import type { Arrow, ChessboardOptions } from 'react-chessboard';
 import ActionButton from '../components/ActionButton.tsx';
@@ -23,69 +23,58 @@ function App() {
   const [recognizerModel] = usePreference('recognizerModel');
   const statusText = useSignal('status');
   const engineInfo = useSignal('engineInfo') || {};
-  const principalVariations = useSignal('principalVariations') || [];
+  const principalVariations = useSignal('principalVariations');
   const [positionFEN, setPositionFEN] = useState('');
   const positionInfo = useSignal('positionInfo') || {
     whiteCastlingRights: { 'k': true, 'q': true },
     blackCastlingRights: { 'k': true, 'q': true },
     isWhiteTurn: true
   };
-  const [arrows1, setArrows1] = useState<Arrow[]>([]);
-  const [arrows2, setArrows2] = useState<Arrow[]>([]);
   const [panelType, setPanelType] = useState<Panel>('main');
-  useEffect(() => {
-    const offPosition = electron.onSignal('positionFEN', (value) => {
-      setPositionFEN(value);
-      setPanelType((x) => x === 'promotion' ? 'main' : x);
-    });
-    const offHighlight = electron.onSignal('highlightMoves', (evalMoves) => {
-      if (!evalMoves) {
-        setArrows1([]);
-        setArrows2([]);
-        return;
-      }
-      const newArrows1: Arrow[] = [];
-      const newArrows2: Arrow[] = [];
-      for (let i = evalMoves.length-1; i >= 0; i--) {
-        const [type, evaluation, move] = evalMoves[i];
-        const opacity = i === 0 ? 1 : 0.5;
-        const n = Math.tanh(Number(evaluation)/300);
-        const colorN = 255*(1-Math.abs(n));
-        const color1 = type === 'mate'
-          ? `rgba(0, 255, 238, ${opacity})`
-          : `rgba(${colorN}, 255, ${colorN}, ${opacity})`;
-        const color2 = type === 'mate'
-          ? `rgba(255, 98, 0, ${opacity})`
-          : `rgba(255, ${colorN}, ${colorN}, ${opacity})`;
-        const newArrow = {
-          startSquare: move.substring(0, 2),
-          endSquare: move.substring(2, 4)
-        };
-        let index = newArrows1.length;
-        for (let j = 0; j < newArrows1.length; j++) {
-          const { startSquare, endSquare } = newArrows1[j];
-          let same = startSquare === newArrow.startSquare;
-          same &&= endSquare === newArrow.endSquare;
-          if (same) {
-            index = j;
-            break;
-          }
+  const arrows = useMemo(() => {
+    if (!principalVariations) {
+      return [[], []];
+    }
+    const arrows1: Arrow[] = [];
+    const arrows2: Arrow[] = [];
+    for (let i = principalVariations.length-1; i >= 0; i--) {
+      const { evaluation, variation } = principalVariations[i];
+      const [evalType, evalNumber] = evaluation.split(' ');
+      const opacity = i === 0 ? 1 : 0.5;
+      const n = Math.tanh(Number(evalNumber)/300);
+      const colorN = 255*(1-Math.abs(n));
+      const color1 = evalType === 'mate'
+        ? `rgba(0, 255, 238, ${opacity})`
+        : `rgba(${colorN}, 255, ${colorN}, ${opacity})`;
+      const color2 = evalType === 'mate'
+        ? `rgba(255, 98, 0, ${opacity})`
+        : `rgba(255, ${colorN}, ${colorN}, ${opacity})`;
+      const newArrow = {
+        startSquare: variation.substring(0, 2),
+        endSquare: variation.substring(2, 4)
+      };
+      let index = arrows1.length;
+      for (let j = 0; j < arrows1.length; j++) {
+        const { startSquare, endSquare } = arrows1[j];
+        let same = startSquare === newArrow.startSquare;
+        same &&= endSquare === newArrow.endSquare;
+        if (same) {
+          index = j;
+          break;
         }
-        newArrows1[index] = { ...newArrow, color: n > 0 ? color1 : color2 };
-        newArrows2[index] = { ...newArrow, color: n > 0 ? color2 : color1 };
       }
-      setArrows1(newArrows1);
-      setArrows2(newArrows2);
-    });
-    const offPromotion = electron.onSignal('promotion', () => {
-      setPanelType('promotion');
-    });
-    return () => {
-      offPosition();
-      offHighlight();
-      offPromotion();
-    };
-  }, [electron]);
+      arrows1[index] = { ...newArrow, color: n > 0 ? color2 : color1 };
+      arrows2[index] = { ...newArrow, color: n > 0 ? color1 : color2 };
+    }
+    return [arrows1, arrows2];
+  }, [principalVariations]);
+  useEffect(() => electron.onSignal('positionFEN', (value) => {
+    setPositionFEN(value);
+    setPanelType((x) => x === 'promotion' ? 'main' : x);
+  }), [electron]);
+  useEffect(() => electron.onSignal('promotion', () => {
+    setPanelType('promotion');
+  }), [electron]);
   const chessboardOptions: ChessboardOptions = {
     lightSquareStyle: {
       background: '#718fc6'
@@ -100,7 +89,7 @@ function App() {
       color: '#87a6de'
     },
     showNotation,
-    arrows: showArrows ? (perspective ? arrows1 : arrows2) : [],
+    arrows: showArrows ? arrows[Number(perspective)] : [],
     allowDrawingArrows: false,
     boardOrientation: perspective ? 'white' : 'black',
     position: positionFEN,
@@ -130,7 +119,7 @@ function App() {
           Depth: {engineInfo.depth}, time: {engineInfo.time} ms,
           nodes: {engineInfo.nodes}
         </p>
-        {principalVariations.map((x) => <p className='text'>{x}</p>)}
+        {(principalVariations ?? []).map((x) => <p className='text'>{x.pgn}</p>)}
       </fieldset>
     </>,
     promotion: <fieldset>

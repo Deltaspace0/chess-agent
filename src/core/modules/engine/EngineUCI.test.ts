@@ -151,7 +151,7 @@ describe('EngineUCI', () => {
       engine.setOption('multiPV', 3);
       await waitMessageMatch(process, /^go /);
       const callback = vi.fn();
-      engine.onPrincipalMoves(callback);
+      engine.onPrincipalVariations(callback);
       process.output('info depth 13 seldepth 19 multipv 1 score cp 80 nodes '+
         '252001 nps 251498 hashfull 102 tbhits 0 time 1002 pv e2e4');
       process.output('info depth 12 seldepth 17 multipv 2 score cp 52 nodes '+
@@ -159,7 +159,9 @@ describe('EngineUCI', () => {
       process.output('info depth 12 seldepth 12 multipv 3 score cp 52 nodes '+
         '252001 nps 251498 hashfull 102 tbhits 0 time 1002 pv d2d4 d7d5');
       await expect.poll(() => callback).toHaveBeenCalledWith([
-        'cp 80 e2e4', 'cp 52 c2c4 e7e6', 'cp 52 d2d4 d7d5'
+        { evaluation: 'cp 80', variation: 'e2e4' },
+        { evaluation: 'cp 52', variation: 'c2c4 e7e6' },
+        { evaluation: 'cp 52', variation: 'd2d4 d7d5' }
       ]);
     });
 
