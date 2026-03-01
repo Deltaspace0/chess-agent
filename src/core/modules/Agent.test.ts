@@ -10,8 +10,7 @@ function getEngineMock(): AgentEngine {
     clear: vi.fn(),
     undo: vi.fn(),
     sendMove: vi.fn(),
-    getBestMove: vi.fn(),
-    getPonderMove: vi.fn(),
+    getEngineInfo: vi.fn(),
     onBestMove: vi.fn()
   };
 }
@@ -80,16 +79,16 @@ describe('Agent', () => {
     it('should return the best move immediately', async () => {
       const engine = getEngineMock();
       const agent = getAgent(engine, getRecognizerMock());
-      engine.getBestMove = vi.fn(() => 'e2e4');
+      engine.getEngineInfo = vi.fn(() => ({ bestMove: 'e2e4' }));
       const move = await agent.findBestMove();
       expect(move).toBe('e2e4');
-      expect(engine.getBestMove).toHaveBeenCalled();
+      expect(engine.getEngineInfo).toHaveBeenCalled();
     });
 
     it('should return the best move after waiting', async () => {
       const engine = getEngineMock();
       const agent = getAgent(engine, getRecognizerMock());
-      engine.getBestMove = vi.fn(() => null);
+      engine.getEngineInfo = vi.fn(() => ({}));
       engine.onBestMove = vi.fn((f) => f('e2e4'));
       const move = await agent.findBestMove();
       expect(move).toBe('e2e4');
@@ -99,11 +98,11 @@ describe('Agent', () => {
     it('should stop waiting for the best move', async () => {
       const engine = getEngineMock();
       const agent = getAgent(engine, getRecognizerMock());
-      engine.getBestMove = vi.fn(() => null);
+      engine.getEngineInfo = vi.fn(() => ({}));
       const movePromise = agent.findBestMove();
       agent.findBestMove();
       await expect(movePromise).resolves.toBe(null);
-    })
+    });
   });
 
   describe('Scanning', () => {
@@ -188,7 +187,7 @@ describe('Agent', () => {
 
     it('should automatically promote to the best move', async () => {
       const engine = getEngineMock();
-      engine.getBestMove = vi.fn(() => 'b7b8r');
+      engine.getEngineInfo = vi.fn(() => ({ bestMove: 'b7b8r' }));
       const agent = getAgent(engine, getRecognizerMock());
       agent.loadPosition('6k1/1P6/8/8/8/8/8/6K1 w - - 0 1');
       await agent.findBestMove();

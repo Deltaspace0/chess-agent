@@ -26,8 +26,6 @@ class EngineUCI implements AgentEngine {
   private moves: string[] = [];
   private whiteFirst: boolean = true;
   private fen: string | null = null;
-  private bestMove: string | null = null;
-  private ponderMove: string | null = null;
   private engineInfo: EngineInfo = {};
   private options: EngineOptions = {
     duration: preferenceConfig.analysisDuration.defaultValue,
@@ -91,8 +89,8 @@ class EngineUCI implements AgentEngine {
     }
     if (words.includes('bestmove')) {
       const move = words[words.indexOf('bestmove')+1].trim();
-      this.bestMove = move;
-      this.ponderMove = words[words.indexOf('ponder')+1];
+      this.engineInfo.bestMove = move;
+      this.engineInfo.ponderMove = words[words.indexOf('ponder')+1];
       this.bestMoveCallback(move);
     }
   }
@@ -117,8 +115,6 @@ class EngineUCI implements AgentEngine {
 
   private resetAnalysis() {
     this.principalVariations = [];
-    this.bestMove = null;
-    this.ponderMove = null;
     this.engineInfo = {
       name: this.engineInfo.name,
       author: this.engineInfo.author
@@ -163,12 +159,8 @@ class EngineUCI implements AgentEngine {
     this.loadingProcess = null;
   }
 
-  getBestMove(): string | null {
-    return this.bestMove;
-  }
-
-  getPonderMove(): string | null {
-    return this.ponderMove;
+  getEngineInfo(): EngineInfo {
+    return this.engineInfo;
   }
 
   getMoves(): string {

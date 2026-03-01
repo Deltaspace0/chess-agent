@@ -172,7 +172,8 @@ describe('EngineUCI', () => {
       engine.onBestMove(callback);
       process.output('bestmove e2e4 ponder e7e5');
       await expect.poll(() => callback).toHaveBeenCalledWith('e2e4');
-      expect(engine.getPonderMove()).toBe('e7e5');
+      const { ponderMove } = engine.getEngineInfo();
+      expect(ponderMove).toBe('e7e5');
     });
   });
 });

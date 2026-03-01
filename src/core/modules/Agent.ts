@@ -5,8 +5,7 @@ export interface AgentEngine {
   clear(): void;
   undo(): string;
   sendMove(move: string, skipAnalysis?: boolean): string;
-  getBestMove(): string | null;
-  getPonderMove(): string | null;
+  getEngineInfo(): EngineInfo;
   onBestMove(callback: (value: string) => void): void;
 }
 
@@ -115,25 +114,25 @@ export class Agent {
     if (this.game.isGameOver()) {
       return null;
     }
-    let move = this.engine.getBestMove();
-    if (move === null) {
+    let { bestMove } = this.engine.getEngineInfo();
+    if (!bestMove) {
       this.statusCallback('Waiting for best move...');
-      move = await new Promise((resolve) => {
-        this.stopBestMove = () => resolve(null);
+      bestMove = await new Promise((resolve) => {
+        this.stopBestMove = () => resolve(undefined);
         this.engine.onBestMove(resolve);
       });
     }
     this.stopBestMove = null;
-    if (move === null) {
+    if (!bestMove) {
       this.statusCallback('Canceled best move');
       return null;
     }
-    const ponderMove = this.engine.getPonderMove();
-    this.statusCallback(`Best move: ${move}, ponder: ${ponderMove}`);
-    if (move !== null) {
-      this.promotionMove = move;
+    const { ponderMove } = this.engine.getEngineInfo();
+    this.statusCallback(`Best move: ${bestMove}, ponder: ${ponderMove}`);
+    if (bestMove !== null) {
+      this.promotionMove = bestMove;
     }
-    return move;
+    return bestMove;
   }
 
   async scanMove(): Promise<string | null> {

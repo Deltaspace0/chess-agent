@@ -74,6 +74,8 @@ declare global {
   }
 
   interface EngineInfo {
+    bestMove?: string;
+    ponderMove?: string;
     depth?: number;
     evaluation?: string;
     nodes?: number;
