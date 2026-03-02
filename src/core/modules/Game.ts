@@ -159,6 +159,22 @@ class Game implements AgentGame {
     for (const [piece, row, col] of pieces) {
       targetBoard[row][col] = piece;
     }
+    const changedSquares: string[] = [];
+    const startBoardState = this.board();
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        const type1 = startBoardState[i][j]?.type;
+        const color1 = startBoardState[i][j]?.color;
+        const type2 = targetBoard[i][j]?.type;
+        const color2 = targetBoard[i][j]?.color;
+        if (type1 !== type2 || color1 !== color2) {
+          changedSquares.push(coordsToSquare([i, j], this.perspective));
+        }
+      }
+    }
+    if (changedSquares.length > 6) {
+      return null;
+    }
     const moves: string[] = [];
     const moveStack: string[][] = [];
     while (true) {
@@ -186,7 +202,11 @@ class Game implements AgentGame {
         return moves;
       }
       const possibleMoves = this.chess.moves({ verbose: true });
-      const lanMoves = possibleMoves.map((x) => x.lan);
+      const lanMoves = possibleMoves.map((x) => x.lan).filter((x) => {
+        const s1 = x.substring(0, 2);
+        const s2 = x.substring(2, 4);
+        return changedSquares.includes(s1) || changedSquares.includes(s2);
+      });
       const nextMove = lanMoves.pop();
       if (moveStack.length > 1 || !nextMove) {
         let finishSearch = true;

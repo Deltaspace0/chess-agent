@@ -202,11 +202,11 @@ describe('Game', () => {
 
     it('should return two moves', () => {
       const game = new Game();
-      game.load('rnbqkb1r/pppppppp/5n2/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 1');
+      game.load('r1b1k2r/ppp1bppp/2n5/3qp3/8/3P1NP1/PP2PP1P/R1BQKB1R w KQkq - 0 8');
       const pieces = getPieces(game);
-      game.load('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+      game.load('r1bqk2r/ppp1bppp/2n5/3np3/8/2NP1NP1/PP2PP1P/R1BQKB1R w KQkq - 1 7');
       const moves = game.findMovesForPieces(pieces);
-      expect(moves).toStrictEqual(['d2d4', 'g8f6']);
+      expect(moves).toStrictEqual(['c3d5', 'd8d5']);
     });
   });
 });
