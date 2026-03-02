@@ -84,7 +84,6 @@ declare global {
     ponderMove?: string;
     principalVariations: PrincipalVariation[];
     depth?: number;
-    evaluation?: string;
     nodes?: number;
     nodesPerSecond?: number;
     time?: number;

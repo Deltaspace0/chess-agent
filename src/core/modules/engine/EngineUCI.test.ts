@@ -139,7 +139,6 @@ describe('EngineUCI', () => {
         '322797 nps 321831 hashfull 148 tbhits 0 time 1003 pv e7e5');
       await expect.poll(() => callback).toHaveBeenCalledWith({
         depth: 13,
-        evaluation: 'cp -96',
         nodes: 322797,
         nodesPerSecond: 321831,
         time: 1003,

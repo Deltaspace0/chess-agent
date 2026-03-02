@@ -79,9 +79,6 @@ class EngineUCI implements AgentEngine {
       this.engineInfo.time = getNumberValue(words, 'time');
       const i = words.indexOf('score');
       const evaluation = this.signEvaluation(words[i+1]+' '+words[i+2]);
-      if (pv === 0) {
-        this.engineInfo.evaluation = evaluation;
-      }
       const variation = words.slice(words.indexOf('pv')+1).join(' ');
       this.setPrincipalVariation(pv, { evaluation, variation });
     }

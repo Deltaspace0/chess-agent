@@ -176,7 +176,7 @@ function App() {
         <div style={{ display: 'flex', margin: '0 auto' }}>
           {showEvalBar && <EvalBar
             perspective={perspective}
-            evaluation={engineInfo.evaluation}
+            evaluation={engineInfo.principalVariations[0]?.evaluation}
           />}
           {chessboardComponent}
           <div className='flex-column' style={{width: '16px'}}>
