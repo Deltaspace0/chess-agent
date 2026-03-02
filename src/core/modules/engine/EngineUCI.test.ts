@@ -178,5 +178,16 @@ describe('EngineUCI', () => {
         expect.objectContaining({ bestMove: 'e2e4', ponderMove: 'e7e5' })
       );
     });
+
+    it('should not send ponder move if it is not provided', async () => {
+      const process = new ProcessMock();
+      const engine = await getInitializedEngine(process);
+      const callback = vi.fn();
+      engine.onEngineInfo(callback);
+      process.output('bestmove e2e4');
+      await expect.poll(() => callback).toHaveBeenCalledWith(
+        expect.objectContaining({ bestMove: 'e2e4', ponderMove: undefined })
+      );
+    });
   });
 });

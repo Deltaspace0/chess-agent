@@ -84,7 +84,9 @@ class EngineUCI implements AgentEngine {
     if (words.includes('bestmove')) {
       const move = words[words.indexOf('bestmove')+1].trim();
       this.engineInfo.bestMove = move;
-      this.engineInfo.ponderMove = words[words.indexOf('ponder')+1];
+      this.engineInfo.ponderMove = words.includes('ponder')
+        ? words[words.indexOf('ponder')+1]
+        : undefined;
       this.sendEngineInfo();
     }
   }
