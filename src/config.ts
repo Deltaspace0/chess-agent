@@ -104,7 +104,7 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
   multiPV: {
     label: 'Multiple lines',
     description: 'Maximum number of best moves to show',
-    defaultValue: 1,
+    defaultValue: 3,
     sliderValues: [1, 2, 3, 4, 5, 10, 20]
   },
   engineThreads: {

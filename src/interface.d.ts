@@ -120,6 +120,7 @@ declare global {
     action: Action;
     selectingRegion: boolean;
     requestPreference: Preference;
+    registerMove: string;
   }
 
   type ToggleablePreference = keyof Pick<Preferences

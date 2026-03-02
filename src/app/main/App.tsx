@@ -145,6 +145,13 @@ function App() {
         color: '#fff'
       }]);
     }}
+    onClick={() => {
+      if (!text) {
+        return;
+      }
+      const trimmedMove = (move ?? text).substring(0, 4);
+      electron.sendSignal('registerMove', trimmedMove);
+    }}
   >
     {text}
   </a>;

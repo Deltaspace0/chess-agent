@@ -532,5 +532,6 @@ function debounce<T>(callback: (x: T) => void) {
     const value = preferenceManager.getPreference(name);
     sendPreference(name, value);
   });
+  onSignal('registerMove', (move) => agent.processMove(move));
   updateStatus('Ready');
 })();
