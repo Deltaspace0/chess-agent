@@ -33,8 +33,7 @@ class EngineUCI implements AgentEngine {
     threads: preferenceConfig.engineThreads.defaultValue,
     skillLevel: preferenceConfig.engineLevel.defaultValue
   };
-  private bestMoveCallback: (value: string) => void = () => {};
-  private engineInfoCallback: (value: EngineInfo) => void = () => {};
+  private infoListeners = new Set<(value: EngineInfo) => void>();
   private processListener = this.processData.bind(this);
 
   private async sendToProcess(data: string | string[]) {
@@ -86,7 +85,7 @@ class EngineUCI implements AgentEngine {
       const move = words[words.indexOf('bestmove')+1].trim();
       this.engineInfo.bestMove = move;
       this.engineInfo.ponderMove = words[words.indexOf('ponder')+1];
-      this.bestMoveCallback(move);
+      this.sendEngineInfo();
     }
   }
 
@@ -99,7 +98,9 @@ class EngineUCI implements AgentEngine {
   }
 
   private sendEngineInfo() {
-    this.engineInfoCallback(this.engineInfo);
+    for (const listener of this.infoListeners) {
+      listener(this.engineInfo);
+    }
   }
 
   private setPrincipalVariation(pv: number, move: PrincipalVariation) {
@@ -174,14 +175,6 @@ class EngineUCI implements AgentEngine {
     }
   }
 
-  onBestMove(callback: (value: string) => void) {
-    this.bestMoveCallback = callback;
-  }
-
-  onEngineInfo(callback: (value: EngineInfo) => void) {
-    this.engineInfoCallback = callback;
-  }
-
   reset(fen?: string) {
     if (fen) {
       this.fen = fen;
@@ -214,6 +207,14 @@ class EngineUCI implements AgentEngine {
     this.moves.pop();
     this.analyzePosition();
     return this.getMoves();
+  }
+
+  onEngineInfo(listener: (value: EngineInfo) => void) {
+    this.infoListeners.add(listener);
+  }
+
+  offEngineInfo(listener: (value: EngineInfo) => void) {
+    this.infoListeners.delete(listener);
   }
 }
 

@@ -172,11 +172,11 @@ describe('EngineUCI', () => {
       const process = new ProcessMock();
       const engine = await getInitializedEngine(process);
       const callback = vi.fn();
-      engine.onBestMove(callback);
+      engine.onEngineInfo(callback);
       process.output('bestmove e2e4 ponder e7e5');
-      await expect.poll(() => callback).toHaveBeenCalledWith('e2e4');
-      const { ponderMove } = engine.getEngineInfo();
-      expect(ponderMove).toBe('e7e5');
+      await expect.poll(() => callback).toHaveBeenCalledWith(
+        expect.objectContaining({ bestMove: 'e2e4', ponderMove: 'e7e5' })
+      );
     });
   });
 });

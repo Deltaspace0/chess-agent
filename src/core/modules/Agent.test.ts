@@ -11,7 +11,8 @@ function getEngineMock(bestMove?: string): AgentEngine {
     undo: vi.fn(),
     sendMove: vi.fn(),
     getEngineInfo: vi.fn(() => ({ bestMove, principalVariations: [] })),
-    onBestMove: vi.fn()
+    onEngineInfo: vi.fn(),
+    offEngineInfo: vi.fn()
   };
 }
 
@@ -82,15 +83,17 @@ describe('Agent', () => {
       const move = await agent.findBestMove();
       expect(move).toBe('e2e4');
       expect(engine.getEngineInfo).toHaveBeenCalled();
+      expect(engine.offEngineInfo).not.toHaveBeenCalled();
     });
 
     it('should return the best move after waiting', async () => {
       const engine = getEngineMock();
       const agent = getAgent(engine, getRecognizerMock());
-      engine.onBestMove = vi.fn((f) => f('e2e4'));
+      engine.onEngineInfo = vi.fn((f) => f({ bestMove: 'e2e4' }));
       const move = await agent.findBestMove();
       expect(move).toBe('e2e4');
-      expect(engine.onBestMove).toHaveBeenCalled();
+      expect(engine.onEngineInfo).toHaveBeenCalled();
+      expect(engine.offEngineInfo).toHaveBeenCalled();
     });
 
     it('should stop waiting for the best move', async () => {
@@ -99,6 +102,7 @@ describe('Agent', () => {
       const movePromise = agent.findBestMove();
       agent.findBestMove();
       await expect(movePromise).resolves.toBe(null);
+      expect(engine.offEngineInfo).toHaveBeenCalled();
     });
   });
 

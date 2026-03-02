@@ -6,7 +6,8 @@ export interface AgentEngine {
   undo(): string;
   sendMove(move: string, skipAnalysis?: boolean): string;
   getEngineInfo(): EngineInfo;
-  onBestMove(callback: (value: string) => void): void;
+  onEngineInfo(callback: (value: EngineInfo) => void): void;
+  offEngineInfo(callback: (value: EngineInfo) => void): void;
 }
 
 export interface AgentGame {
@@ -114,12 +115,21 @@ export class Agent {
     if (this.game.isGameOver()) {
       return null;
     }
-    let { bestMove } = this.engine.getEngineInfo();
+    let { bestMove, ponderMove } = this.engine.getEngineInfo();
     if (!bestMove) {
       this.statusCallback('Waiting for best move...');
-      bestMove = await new Promise((resolve) => {
-        this.stopBestMove = () => resolve(undefined);
-        this.engine.onBestMove(resolve);
+      [bestMove, ponderMove] = await new Promise((resolve) => {
+        const resolveInfo = (bestMove?: string, ponderMove?: string) => {
+          this.engine.offEngineInfo(listener);
+          resolve([bestMove, ponderMove]);
+        };
+        this.stopBestMove = () => resolveInfo();
+        const listener = ({ bestMove, ponderMove }: EngineInfo) => {
+          if (bestMove !== undefined) {
+            resolveInfo(bestMove, ponderMove);
+          }
+        };
+        this.engine.onEngineInfo(listener);
       });
     }
     this.stopBestMove = null;
@@ -127,7 +137,6 @@ export class Agent {
       this.statusCallback('Canceled best move');
       return null;
     }
-    const { ponderMove } = this.engine.getEngineInfo();
     this.statusCallback(`Best move: ${bestMove}, ponder: ${ponderMove}`);
     if (bestMove !== null) {
       this.promotionMove = bestMove;
