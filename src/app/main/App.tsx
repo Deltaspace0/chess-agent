@@ -37,8 +37,14 @@ function App() {
     if (!principalVariations) {
       return [];
     }
-    const arrows1: Arrow[] = [];
-    const arrows2: Arrow[] = [];
+    const arrows: Arrow[] = [];
+    if (engineInfo.bestMove) {
+      arrows.push({
+        startSquare: engineInfo.bestMove.substring(0, 2),
+        endSquare: engineInfo.bestMove.substring(2, 4),
+        color: '#fffb00'
+      });
+    }
     for (let i = principalVariations.length-1; i >= 0; i--) {
       const { evaluation, variation } = principalVariations[i];
       const [evalType, evalNumber] = evaluation.split(' ');
@@ -55,21 +61,23 @@ function App() {
         startSquare: variation.substring(0, 2),
         endSquare: variation.substring(2, 4)
       };
-      let index = arrows1.length;
-      for (let j = 0; j < arrows1.length; j++) {
-        const { startSquare, endSquare } = arrows1[j];
-        let same = startSquare === newArrow.startSquare;
+      let same = false;
+      for (const { startSquare, endSquare } of arrows) {
+        same = startSquare === newArrow.startSquare;
         same &&= endSquare === newArrow.endSquare;
         if (same) {
-          index = j;
           break;
         }
       }
-      arrows1[index] = { ...newArrow, color: n > 0 ? color1 : color2 };
-      arrows2[index] = { ...newArrow, color: n > 0 ? color2 : color1 };
+      if (!same) {
+        arrows.push({
+          ...newArrow,
+          color: (n > 0) === perspective ? color1 : color2
+        });
+      }
     }
-    return perspective ? arrows1 : arrows2;
-  }, [principalVariations, perspective]);
+    return arrows;
+  }, [principalVariations, perspective, engineInfo.bestMove]);
   const [quickArrows, setQuickArrows] = useState<Arrow[]>([]);
   const arrows = quickArrows.length ? quickArrows : principalArrows;
   useEffect(() => electron.onSignal('positionFEN', (value) => {
