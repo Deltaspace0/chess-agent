@@ -27,7 +27,7 @@ function App() {
   const dpr = window.devicePixelRatio;
   const booleanPreferences: Record<string, boolean> = {
     autoResponse: usePreference('autoResponse')[0],
-    autoScan: usePreference('autoScan')[0],
+    autoRecognition: usePreference('autoRecognition')[0],
     autoQueen: usePreference('autoQueen')[0],
     autoPromotion: usePreference('autoPromotion')[0],
     perspective: usePreference('perspective')[0],

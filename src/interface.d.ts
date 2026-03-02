@@ -1,4 +1,3 @@
-import type { Piece } from 'chess.js';
 import type { RecognizerModel } from './core/modules/Recognizer.ts';
 import { possibleLocations } from './config.ts';
 
@@ -35,7 +34,7 @@ declare global {
   interface Preferences {
     alwaysOnTop: boolean;
     autoResponse: boolean;
-    autoScan: boolean;
+    autoRecognition: boolean;
     autoQueen: boolean;
     autoPromotion: boolean;
     perspective: boolean;
@@ -66,11 +65,6 @@ declare global {
     description?: string;
     defaultValue: Preferences[T];
     sliderValues?: Preferences[T] extends number ? number[] : never;
-  }
-
-  interface BoardState {
-    move: string | null;
-    grid: (Piece | null)[][];
   }
 
   interface PrincipalVariation {
@@ -125,7 +119,7 @@ declare global {
 
   type ToggleablePreference = keyof Pick<Preferences
     , 'autoResponse'
-    | 'autoScan'
+    | 'autoRecognition'
     | 'autoQueen'
     | 'autoPromotion'
     | 'perspective'
@@ -141,7 +135,6 @@ declare global {
     | 'selectRegion'
     | 'hideRegion'
     | 'loadHashes'
-    | 'scanMove'
     | 'skipMove'
     | 'undoMove'
     | 'bestMove'
@@ -149,6 +142,7 @@ declare global {
     | 'clearPosition'
     | 'recognizeBoard'
     | 'recognizeBoardSkipMove'
+    | 'recognizeBoardAfterMove'
     | 'dialogEngine'
     | 'reloadEngine'
     | 'showEngine'

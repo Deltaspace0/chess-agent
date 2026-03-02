@@ -191,7 +191,6 @@ function debounce<T>(callback: (x: T) => void) {
   });
   const board = new Board(mouse);
   board.onMove((move) => agent.processMove(move));
-  board.onMouseDownSquare(() => recognizer.stopScanning());
   board.onPromotion((piece) => agent.promoteTo(piece));
   const engineExternal = new EngineExternal();
   engineExternal.addListener('stdin', (data) => {
@@ -264,9 +263,8 @@ function debounce<T>(callback: (x: T) => void) {
     }
     if (preferenceManager.getPreference('autoResponse') && game.isMyTurn()) {
       playBestMove();
-    } else if (preferenceManager.getPreference('autoScan')) {
-      await screen.sleep(100);
-      agent.scanMove();
+    } else if (preferenceManager.getPreference('autoRecognition')) {
+      agent.recognizeBoardAfterMove();
     }
   });
   agent.onPromotion((move) => {
@@ -300,7 +298,6 @@ function debounce<T>(callback: (x: T) => void) {
           console.log(e);
         });
     },
-    scanMove: () => void agent.scanMove(),
     skipMove: () => agent.skipMove(),
     undoMove: () => agent.undoMove(),
     bestMove: () => playBestMove(),
@@ -322,6 +319,7 @@ function debounce<T>(callback: (x: T) => void) {
       agent.recognizeBoard();
     },
     recognizeBoardSkipMove: () => agent.recognizeBoard(true),
+    recognizeBoardAfterMove: () => agent.recognizeBoardAfterMove(),
     dialogEngine: async () => {
       mouse.setActive(false);
       const result = await dialog.showOpenDialog(engineWin, {
@@ -405,7 +403,7 @@ function debounce<T>(callback: (x: T) => void) {
     promoteBishop: () => agent.promoteTo('b'),
     promoteKnight: () => agent.promoteTo('n'),
     autoResponse: () => toggleBooleanPreference('autoResponse'),
-    autoScan: () => toggleBooleanPreference('autoScan'),
+    autoRecognition: () => toggleBooleanPreference('autoRecognition'),
     autoQueen: () => toggleBooleanPreference('autoQueen'),
     autoPromotion: () => toggleBooleanPreference('autoPromotion'),
     perspective: () => {

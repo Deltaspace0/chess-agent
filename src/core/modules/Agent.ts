@@ -24,36 +24,35 @@ export interface AgentGame {
   setPositionInfo(info: PositionInfo): boolean;
   setMyTurn(): boolean;
   setOppTurn(): boolean;
-  getNextBoardStates(): BoardState[];
   putPieces(pieces: [Piece, number, number][]): void;
   putPieceEdit(droppedPiece: DroppedPiece): boolean;
   skipMove(): Color | null;
 }
 
-export interface AgentRecognizer {
-  recognizeBoard(): Promise<[Piece, number, number][]>;
-  isScanning(): boolean;
-  stopScanning(): void;
-  scanMove(boardStates: BoardState[]): Promise<string>;
+export interface AgentRecognizer<T> {
+  recognizeBoard(hashes?: T): Promise<[Piece, number, number][]>;
+  isWaitingMove(): boolean;
+  stopWaitingMove(): void;
+  waitMove(): Promise<T>
 }
 
-interface AgentModules {
+interface AgentModules<T> {
   engine: AgentEngine;
   game: AgentGame;
-  recognizer: AgentRecognizer;
+  recognizer: AgentRecognizer<T>;
 }
 
-export class Agent {
+export class Agent<T> {
   private engine: AgentEngine;
   private game: AgentGame;
-  private recognizer: AgentRecognizer;
+  private recognizer: AgentRecognizer<T>;
   private promotionMove: string = '';
   private stopBestMove: (() => void) | null = null;
   private afterMoveCallback: (value: string) => void = () => {};
   private promotionCallback: (move: string) => void = () => {};
   private statusCallback: (status: string) => void = console.log;
 
-  constructor(modules: AgentModules) {
+  constructor(modules: AgentModules<T>) {
     this.engine = modules.engine;
     this.game = modules.game;
     this.recognizer = modules.recognizer;
@@ -100,7 +99,7 @@ export class Agent {
     console.log(`Moves: ${moves}`);
     if (gameOver) {
       this.statusCallback('Game is over');
-      this.recognizer.stopScanning();
+      this.recognizer.stopWaitingMove();
       return true;
     }
     this.afterMoveCallback(move);
@@ -144,37 +143,11 @@ export class Agent {
     return bestMove;
   }
 
-  async scanMove(): Promise<string | null> {
-    if (this.recognizer.isScanning()) {
-      this.recognizer.stopScanning();
-      return null;
-    }
-    this.statusCallback('Scanning move');
-    let move;
-    try {
-      const boardStates = this.game.getNextBoardStates();
-      move = await this.recognizer.scanMove(boardStates);
-    } catch (e) {
-      if (e instanceof Error && e.message === 'no hashes') {
-        this.statusCallback('Load hashes first');
-      } else if (e instanceof Error && e.message === 'stop') {
-        this.statusCallback('Stopped scanning');
-      } else {
-        console.log(e);
-        this.statusCallback('Failed to scan move');
-      }
-      return null;
-    }
-    this.statusCallback(`Found move: ${move}`);
-    this.processMove(move);
-    return move;
-  }
-
-  async recognizeBoard(opponentToMove?: boolean) {
+  async recognizeBoard(opponentToMove?: boolean, hashes?: T) {
     this.statusCallback('Recognizing board...');
     let pieces;
     try {
-      pieces = await this.recognizer.recognizeBoard();
+      pieces = await this.recognizer.recognizeBoard(hashes);
     } catch (e) {
       console.log(e);
       this.statusCallback('Failed to recognize board');
@@ -192,8 +165,27 @@ export class Agent {
     this.syncEngine();
   }
 
+  async recognizeBoardAfterMove(opponentToMove?: boolean) {
+    if (this.recognizer.isWaitingMove()) {
+      this.recognizer.stopWaitingMove();
+      return;
+    }
+    this.statusCallback('Waiting for move...');
+    try {
+      const hashes = await this.recognizer.waitMove();
+      return this.recognizeBoard(opponentToMove, hashes);
+    } catch (e) {
+      if (e instanceof Error && e.message === 'stop') {
+        this.statusCallback('Stopped waiting');
+      } else {
+        console.log(e);
+        this.statusCallback('Error during move waiting');
+      }
+    }
+  }
+
   skipMove() {
-    this.recognizer.stopScanning();
+    this.recognizer.stopWaitingMove();
     const result = this.game.skipMove();
     if (!result) {
       this.statusCallback(`Failed to skip turn`);
@@ -204,28 +196,28 @@ export class Agent {
   }
 
   undoMove() {
-    this.recognizer.stopScanning();
+    this.recognizer.stopWaitingMove();
     this.game.undo();
     const moves = this.engine.undo();
     console.log(`Moves: ${moves}`);
   }
 
   resetPosition() {
-    this.recognizer.stopScanning();
+    this.recognizer.stopWaitingMove();
     this.game.reset();
     this.engine.reset();
     this.statusCallback('Reset');
   }
 
   clearPosition() {
-    this.recognizer.stopScanning();
+    this.recognizer.stopWaitingMove();
     this.game.clear();
     this.syncEngine();
     this.statusCallback('Clear');
   }
 
   loadPosition(fen: string) {
-    this.recognizer.stopScanning();
+    this.recognizer.stopWaitingMove();
     try {
       this.game.load(fen);
     } catch {
@@ -237,14 +229,14 @@ export class Agent {
   }
 
   loadPositionInfo(info: PositionInfo) {
-    this.recognizer.stopScanning();
+    this.recognizer.stopWaitingMove();
     if (this.game.setPositionInfo(info)) {
       this.syncEngine();
     }
   }
 
   putPiece(droppedPiece: DroppedPiece) {
-    this.recognizer.stopScanning();
+    this.recognizer.stopWaitingMove();
     if (this.game.putPieceEdit(droppedPiece)) {
       this.syncEngine();
     }

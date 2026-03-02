@@ -3,6 +3,8 @@ import type { AgentRecognizer } from './Agent.ts';
 import PixelGrid from './PixelGrid.ts';
 import { Screen } from './device/Screen.ts';
 
+type Hashes = Uint8Array[][];
+
 export interface RecognizerModel {
   colors: number[];
   hashes: Record<string, Uint8Array>;
@@ -10,11 +12,6 @@ export interface RecognizerModel {
 
 export interface RecognizerParameters {
   putKings?: boolean;
-}
-
-interface MoveResidual {
-  move: string | null;
-  residual: number;
 }
 
 function compareHashes(hash1: Uint8Array, hash2: Uint8Array): number {
@@ -25,14 +22,11 @@ function compareHashes(hash1: Uint8Array, hash2: Uint8Array): number {
   return residual;
 }
 
-function getChangedSquares(
-  oldHashes: Uint8Array[][],
-  newHashes: Uint8Array[][]
-): [number, number][] {
+function getChangedSquares(old: Hashes, hashes: Hashes): [number, number][] {
   const changedSquares: [number, number][] = [];
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
-      const residual = compareHashes(newHashes[i][j], oldHashes[i][j]);
+      const residual = compareHashes(hashes[i][j], old[i][j]);
       if (residual > 10) {
         changedSquares.push([i, j]);
       }
@@ -104,9 +98,9 @@ function getPieceColors(
   return pieceColors;
 }
 
-class Recognizer implements AgentRecognizer {
+class Recognizer implements AgentRecognizer<Hashes> {
   private screen: Screen;
-  private scanning: boolean = false;
+  private waitingMove: boolean = false;
   private pieceColors: Set<number> = new Set();
   private pieceHashes: Record<string, Uint8Array> = {};
   private parameters: RecognizerParameters;
@@ -167,9 +161,9 @@ class Recognizer implements AgentRecognizer {
     return squareGrid;
   }
 
-  private async getBoardHashes(): Promise<Uint8Array[][]> {
+  private async getBoardHashes(): Promise<Hashes> {
     const grid = await this.grabBoard();
-    const boardHashes: Uint8Array[][] = [];
+    const boardHashes: Hashes = [];
     for (let i = 0; i < 8; i++) {
       const rowHashes: Uint8Array[] = [];
       for (let j = 0; j < 8; j++) {
@@ -178,44 +172,6 @@ class Recognizer implements AgentRecognizer {
       boardHashes.push(rowHashes);
     }
     return boardHashes;
-  }
-
-  private getPieceHashResidual(
-    piece: Piece | null,
-    hash: Uint8Array
-  ): number {
-    let foundPieceHash = false;
-    let minResidual = Infinity;
-    const pieceType = piece ? piece.type : 'e';
-    for (const key in this.pieceHashes) {
-      if (pieceType === key[0] && (!piece || piece.color === key[1])) {
-        foundPieceHash = true;
-        const residual = compareHashes(hash, this.pieceHashes[key]);
-        minResidual = Math.min(residual, minResidual);
-      }
-    }
-    if (!foundPieceHash) {
-      throw new Error('no hash for piece type: '+pieceType);
-    }
-    return minResidual;
-  }
-
-  private getMoveResiduals(
-    hashes: Uint8Array[][],
-    states: BoardState[]
-  ): MoveResidual[] {
-    const moveResiduals: MoveResidual[] = [];
-    for (const { move, grid } of states) {
-      let residual = 0;
-      for (let i = 0; i < 8; i++) {
-        for (let j = 0; j < 8; j++) {
-          const hash = hashes[i][j];
-          residual += this.getPieceHashResidual(grid[i][j], hash);
-        }
-      }
-      moveResiduals.push({ move, residual });
-    }
-    return moveResiduals;
   }
 
   setModel(model: RecognizerModel | null) {
@@ -285,11 +241,13 @@ class Recognizer implements AgentRecognizer {
     return { colors: [...this.pieceColors], hashes: this.pieceHashes };
   }
 
-  async recognizeBoard(): Promise<[Piece, number, number][]> {
+  async recognizeBoard(hashes?: Hashes): Promise<[Piece, number, number][]> {
     if (!this.pieceHashes['rb1']) {
       throw new Error('no hashes');
     }
-    const grid = await this.grabBoard();
+    if (!hashes) {
+      hashes = await this.getBoardHashes();
+    }
     const pieces: [Piece, number, number][] = [];
     let whiteKingPut = false;
     let blackKingPut = false;
@@ -298,7 +256,7 @@ class Recognizer implements AgentRecognizer {
     let maxMinResidual = -1;
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
-        const currentHash = this.getHash(grid[i][j]);
+        const currentHash = hashes[i][j];
         let minResidual = Infinity;
         let likelyPieceString = 'e';
         for (const pieceString in this.pieceHashes) {
@@ -338,26 +296,23 @@ class Recognizer implements AgentRecognizer {
     return pieces;
   }
 
-  isScanning(): boolean {
-    return this.scanning;
+  isWaitingMove(): boolean {
+    return this.waitingMove;
   }
 
-  stopScanning() {
-    this.scanning = false;
+  stopWaitingMove() {
+    this.waitingMove = false;
   }
 
-  async scanMove(boardStates: BoardState[]): Promise<string> {
-    if (!this.pieceHashes['rb1']) {
-      throw new Error('no hashes');
-    }
-    if (this.scanning) {
-      throw new Error('already scanning');
+  async waitMove(): Promise<Hashes> {
+    if (this.waitingMove) {
+      throw new Error('already waiting');
     }
     await this.screen.sleep(50);
-    this.scanning = true;
+    this.waitingMove = true;
     let prevBoardHashes = await this.getBoardHashes();
-    let waitingForMovement = false;
-    while (this.scanning) {
+    let waitingForMovement = true;
+    while (this.waitingMove) {
       await this.screen.sleep(50);
       const boardHashes = await this.getBoardHashes();
       const changedSquares = getChangedSquares(prevBoardHashes, boardHashes);
@@ -365,14 +320,8 @@ class Recognizer implements AgentRecognizer {
         waitingForMovement = false;
       }
       if (changedSquares.length === 0 && !waitingForMovement) {
-        const moveResiduals = this.getMoveResiduals(boardHashes, boardStates);
-        moveResiduals.sort((a, b) => a.residual-b.residual);
-        const { move, residual } = moveResiduals[0];
-        if (move !== null && residual < moveResiduals[1].residual*0.9) {
-          this.scanning = false;
-          return move;
-        }
-        waitingForMovement = true;
+        this.waitingMove = false;
+        return boardHashes;
       }
       prevBoardHashes = boardHashes;
     }

@@ -12,7 +12,7 @@ export const defaultActionLocations: ActionLocations = {
   S4: 'autoResponse',
   S5: 'undoMove',
   S6: 'skipMove',
-  S7: 'scanMove',
+  S7: 'recognizeBoardAfterMove',
   S8: 'analysisDuration',
   W1: 'promoteQueen',
   W2: 'promoteRook',
@@ -34,8 +34,8 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     label: 'Automatically play the best move',
     defaultValue: false
   },
-  autoScan: {
-    label: 'Automatically detect moves',
+  autoRecognition: {
+    label: 'Automatically recognize position on the board',
     defaultValue: false
   },
   autoQueen: {
@@ -159,13 +159,13 @@ export const preferenceNames = Object.keys(preferenceConfig) as Preference[];
 export const actionDescriptions: Partial<Record<Action, string>> = {
   selectRegion: 'Go to region selection mode',
   loadHashes: 'Load piece image hashes',
-  scanMove: 'Start detecting a move',
   skipMove: 'Skip current move',
   undoMove: 'Undo last move',
   bestMove: 'Play the best move',
   resetPosition: 'Reset game',
   recognizeBoard: 'Recognize current position on the board',
   recognizeBoardSkipMove: 'Recognize position with opponent to move',
+  recognizeBoardAfterMove: 'Recognize position on the board after a move',
   showEngine: 'Open engine UCI terminal',
   loadConfig: 'Open configuration file',
   saveConfig: 'Save configuration file',
@@ -176,7 +176,7 @@ export const actionDescriptions: Partial<Record<Action, string>> = {
   promoteBishop: 'Promote the pawn to Bishop',
   promoteKnight: 'Promote the pawn to Knight',
   autoResponse: 'Toggle auto response',
-  autoScan: 'Toggle auto scan',
+  autoRecognition: 'Toggle auto recognition',
   autoQueen: 'Toggle auto queen',
   perspective: 'Flip board',
   draggingMode: 'Toggle dragging/clicking mode',

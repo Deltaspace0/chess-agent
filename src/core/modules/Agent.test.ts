@@ -16,19 +16,22 @@ function getEngineMock(bestMove?: string): AgentEngine {
   };
 }
 
-function getRecognizerMock(): AgentRecognizer {
+function getRecognizerMock(): AgentRecognizer<void> {
   let resolveMove: (() => void) | null = null;
   return {
-    recognizeBoard: vi.fn(),
-    isScanning: vi.fn(() => resolveMove !== null),
-    stopScanning: vi.fn(() => resolveMove && resolveMove()),
-    scanMove: vi.fn(() => new Promise<string>((_, reject) => {
+    recognizeBoard: vi.fn(() => Promise.resolve([])),
+    isWaitingMove: vi.fn(() => resolveMove !== null),
+    stopWaitingMove: vi.fn(() => resolveMove && resolveMove()),
+    waitMove: vi.fn(() => new Promise<void>((_, reject) => {
       resolveMove = reject;
     }))
   };
 }
 
-function getAgent(engine: AgentEngine, recognizer: AgentRecognizer): Agent {
+function getAgent(
+  engine: AgentEngine,
+  recognizer: AgentRecognizer<void>
+): Agent<void> {
   return new Agent({ engine, game: new Game(), recognizer });
 }
 
@@ -106,33 +109,6 @@ describe('Agent', () => {
     });
   });
 
-  describe('Scanning', () => {
-    it('should process the scanned move', async () => {
-      const recognizer = getRecognizerMock();
-      recognizer.scanMove = vi.fn(() => Promise.resolve('e2e4'));
-      const agent = getAgent(getEngineMock(), recognizer);
-      const callback = vi.fn();
-      agent.onMove(callback);
-      const move = await agent.scanMove();
-      expect(move).toBe('e2e4');
-      expect(recognizer.scanMove).toHaveBeenCalled();
-      expect(callback).toHaveBeenCalledWith('e2e4');
-    });
-
-    it('should stop the move scanning', async () => {
-      const recognizer = getRecognizerMock();
-      const agent = getAgent(getEngineMock(), recognizer);
-      const callback = vi.fn();
-      agent.onMove(callback);
-      const movePromise = agent.scanMove();
-      agent.scanMove();
-      await expect(movePromise).resolves.toBe(null);
-      expect(recognizer.isScanning).toHaveBeenCalled();
-      expect(recognizer.stopScanning).toHaveBeenCalled();
-      expect(callback).not.toHaveBeenCalled();
-    });
-  });
-
   describe('Recognition', () => {
     it('should reset the engine with recognized position', async () => {
       const engine = getEngineMock();
@@ -151,10 +127,27 @@ describe('Agent', () => {
     it('should clear the engine if there are no kings', async () => {
       const engine = getEngineMock();
       const recognizer = getRecognizerMock();
-      recognizer.recognizeBoard = vi.fn(() => Promise.resolve([]));
       const agent = getAgent(engine, recognizer);
       await agent.recognizeBoard();
       expect(engine.clear).toHaveBeenCalled();
+    });
+
+    it('should recognize board after move', async () => {
+      const recognizer = getRecognizerMock();
+      recognizer.waitMove = vi.fn(() => Promise.resolve());
+      const agent = getAgent(getEngineMock(), recognizer);
+      await agent.recognizeBoardAfterMove();
+      expect(recognizer.waitMove).toHaveBeenCalled();
+      expect(recognizer.recognizeBoard).toHaveBeenCalled();
+    });
+
+    it('should stop waiting move', async () => {
+      const recognizer = getRecognizerMock();
+      const agent = getAgent(getEngineMock(), recognizer);
+      agent.recognizeBoardAfterMove();
+      agent.recognizeBoardAfterMove();
+      expect(recognizer.isWaitingMove).toHaveBeenCalled();
+      expect(recognizer.stopWaitingMove).toHaveBeenCalled();
     });
   });
 

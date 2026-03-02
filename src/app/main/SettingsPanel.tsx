@@ -8,7 +8,7 @@ function SettingsPanel() {
       <div className='section-line'>Agent</div>
       <SliderPref name='mouseSpeed'/>
       <CheckboxPref name='autoResponse'/>
-      <CheckboxPref name='autoScan'/>
+      <CheckboxPref name='autoRecognition'/>
       <CheckboxPref name='draggingMode'/>
       <CheckboxPref name='autoPromotion'/>
       <div className='section-line'>Engine</div>
