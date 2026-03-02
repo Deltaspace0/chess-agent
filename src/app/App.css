@@ -1,3 +1,11 @@
+a {
+  cursor: pointer;
+}
+
+a:hover {
+  color: #00f2ff;
+}
+
 label {
   display: flex;
   align-items: center;

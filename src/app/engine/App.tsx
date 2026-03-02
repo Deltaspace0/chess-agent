@@ -6,7 +6,7 @@ import { usePreference, useSignal } from '../hooks.ts';
 function App() {
   const electron = window.electronAPI;
   const [enginePath, sendEnginePath] = usePreference('enginePath');
-  const engineInfo = useSignal('engineInfo') || {};
+  const engineInfo = useSignal('engineInfo');
   const engineType = enginePath ? 'external' : 'internal';
   const isInternal = enginePath === null;
   const [engineInput, setEngineInput] = useState('');
@@ -31,8 +31,8 @@ function App() {
     });
   }), [electron]);
   useEffect(() => {
-    document.title = engineInfo.name || 'Engine';
-  }, [engineInfo.name]);
+    document.title = engineInfo?.name || 'Engine';
+  }, [engineInfo?.name]);
   useEffect(() => {
     const container = containerRef.current;
     if (!container) {
@@ -66,8 +66,8 @@ function App() {
         value={enginePath ?? '(Internal engine)'}
         readOnly={true}
       />
-      <p className='text'>Name: {engineInfo.name}</p>
-      <p className='text'>Author: {engineInfo.author}</p>
+      <p className='text'>Name: {engineInfo?.name}</p>
+      <p className='text'>Author: {engineInfo?.author}</p>
       <div ref={containerRef} className='engine-uci-div'>
         {isInternal ? internalLines : externalLines}
       </div>

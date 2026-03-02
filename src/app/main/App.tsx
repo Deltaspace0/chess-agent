@@ -33,9 +33,9 @@ function App() {
     isWhiteTurn: true
   };
   const [panelType, setPanelType] = useState<Panel>('main');
-  const arrows = useMemo(() => {
+  const principalArrows = useMemo(() => {
     if (!principalVariations) {
-      return [[], []];
+      return [];
     }
     const arrows1: Arrow[] = [];
     const arrows2: Arrow[] = [];
@@ -65,11 +65,13 @@ function App() {
           break;
         }
       }
-      arrows1[index] = { ...newArrow, color: n > 0 ? color2 : color1 };
-      arrows2[index] = { ...newArrow, color: n > 0 ? color1 : color2 };
+      arrows1[index] = { ...newArrow, color: n > 0 ? color1 : color2 };
+      arrows2[index] = { ...newArrow, color: n > 0 ? color2 : color1 };
     }
-    return [arrows1, arrows2];
-  }, [principalVariations]);
+    return perspective ? arrows1 : arrows2;
+  }, [principalVariations, perspective]);
+  const [quickArrows, setQuickArrows] = useState<Arrow[]>([]);
+  const arrows = quickArrows.length ? quickArrows : principalArrows;
   useEffect(() => electron.onSignal('positionFEN', (value) => {
     setPositionFEN(value);
     setPanelType((x) => x === 'promotion' ? 'main' : x);
@@ -91,7 +93,7 @@ function App() {
       color: '#87a6de'
     },
     showNotation,
-    arrows: showArrows ? arrows[Number(perspective)] : [],
+    arrows: showArrows ? arrows : [],
     allowDrawingArrows: false,
     boardOrientation: perspective ? 'white' : 'black',
     position: positionFEN,
@@ -113,6 +115,16 @@ function App() {
       return true;
     }
   };
+  const arrowSource = (text?: string, move?: string) => <a
+    onMouseLeave={() => setQuickArrows([])}
+    onMouseEnter={() => setQuickArrows(text ? [{
+      startSquare: (move ?? text).substring(0, 2),
+      endSquare: (move ?? text).substring(2, 4),
+      color: '#fff'
+    }] : [])}
+  >
+    {text}
+  </a>;
   const panels = {
     main: <>
       <fieldset className='pv-field'>
@@ -121,7 +133,13 @@ function App() {
           Depth: {engineInfo.depth}, time: {engineInfo.time} ms,
           nodes: {engineInfo.nodes}
         </p>
-        {principalVariations.map((x) => <p className='text'>{x.pgn}</p>)}
+        {engineInfo.bestMove && <p className='text'>
+          Best move: {arrowSource(engineInfo.bestMove)},
+          ponder move: {arrowSource(engineInfo.ponderMove)}
+        </p>}
+        {principalVariations.map((x) => <p className='text'>
+          {arrowSource(x.pgn, x.variation)}
+        </p>)}
       </fieldset>
     </>,
     promotion: <fieldset>
