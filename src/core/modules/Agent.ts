@@ -27,6 +27,7 @@ export interface AgentGame {
   putPieces(pieces: [Piece, number, number][]): void;
   putPieceEdit(droppedPiece: DroppedPiece): boolean;
   skipMove(): Color | null;
+  findMovesForPieces(pieces: [Piece, number, number][]): string[] | null;
 }
 
 export interface AgentRecognizer<T> {
@@ -48,7 +49,7 @@ export class Agent<T> {
   private recognizer: AgentRecognizer<T>;
   private promotionMove: string = '';
   private stopBestMove: (() => void) | null = null;
-  private afterMoveCallback: (value: string) => void = () => {};
+  private moveCallback: (value: string[]) => void = () => {};
   private promotionCallback: (move: string) => void = () => {};
   private statusCallback: (status: string) => void = console.log;
 
@@ -69,7 +70,7 @@ export class Agent<T> {
   processMove(move: string): boolean {
     if (move === 'undo') {
       this.undoMove();
-      this.afterMoveCallback(move);
+      this.moveCallback([move]);
       return true;
     }
     const piece = this.game.get(move.substring(0, 2));
@@ -102,7 +103,7 @@ export class Agent<T> {
       this.recognizer.stopWaitingMove();
       return true;
     }
-    this.afterMoveCallback(move);
+    this.moveCallback([move]);
     return true;
   }
 
@@ -151,6 +152,23 @@ export class Agent<T> {
     } catch (e) {
       console.log(e);
       this.statusCallback('Failed to recognize board');
+      return;
+    }
+    const moves = this.game.findMovesForPieces(pieces);
+    if (moves) {
+      let gameOver = false;
+      for (let i = 0; i < moves.length; i++) {
+        this.game.move(moves[i]);
+        gameOver = this.game.isGameOver();
+        this.engine.sendMove(moves[i], i < moves.length-1 || gameOver);
+      }
+      if (gameOver) {
+        this.statusCallback('Game is over');
+        this.recognizer.stopWaitingMove();
+      } else {
+        this.statusCallback('Ready');
+      }
+      this.moveCallback(moves);
       return;
     }
     this.game.putPieces(pieces);
@@ -248,8 +266,8 @@ export class Agent<T> {
     }
   }
 
-  onMove(callback: (value: string) => void) {
-    this.afterMoveCallback = callback;
+  onMoves(callback: (value: string[]) => void) {
+    this.moveCallback = callback;
   }
 
   onPromotion(callback: (move: string) => void) {

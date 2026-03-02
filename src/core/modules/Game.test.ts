@@ -1,5 +1,20 @@
+import type { Piece } from 'chess.js';
 import { describe, expect, it, vi } from 'vitest';
 import Game from './Game.ts';
+
+function getPieces(game: Game): [Piece, number, number][] {
+  const board = game.board();
+  const pieces: [Piece, number, number][] = [];
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      const piece = board[i][j];
+      if (piece) {
+        pieces.push([piece, i, j]);
+      }
+    }
+  }
+  return pieces;
+}
 
 describe('Game', () => {
   describe('UCI formatting', () => {
@@ -156,6 +171,42 @@ describe('Game', () => {
       const result = game.skipMove();
       expect(result).toBe(null);
       expect(callback).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Move finding', () => {
+    it('should return empty moves if position is the same', () => {
+      const game = new Game();
+      game.load('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+      const moves = game.findMovesForPieces(getPieces(game));
+      expect(moves).toStrictEqual([]);
+    });
+
+    it('should return null if position is unreachable', () => {
+      const game = new Game();
+      game.load('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/rNBQKBNR w KQkq - 0 1');
+      const pieces = getPieces(game);
+      game.load('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+      const moves = game.findMovesForPieces(pieces);
+      expect(moves).toBe(null);
+    });
+
+    it('should return one move', () => {
+      const game = new Game();
+      game.load('rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R w KQkq - 0 1');
+      const pieces = getPieces(game);
+      game.load('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+      const moves = game.findMovesForPieces(pieces);
+      expect(moves).toStrictEqual(['g1f3']);
+    });
+
+    it('should return two moves', () => {
+      const game = new Game();
+      game.load('rnbqkb1r/pppppppp/5n2/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 1');
+      const pieces = getPieces(game);
+      game.load('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+      const moves = game.findMovesForPieces(pieces);
+      expect(moves).toStrictEqual(['d2d4', 'g8f6']);
     });
   });
 });

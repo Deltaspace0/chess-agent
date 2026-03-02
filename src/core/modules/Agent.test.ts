@@ -40,16 +40,16 @@ describe('Agent', () => {
     it('should process a legal move', () => {
       const agent = getAgent(getEngineMock(), getRecognizerMock());
       const callback = vi.fn();
-      agent.onMove(callback);
+      agent.onMoves(callback);
       const result = agent.processMove('e2e4');
       expect(result).toBe(true);
-      expect(callback).toHaveBeenCalledWith('e2e4');
+      expect(callback).toHaveBeenCalledWith(['e2e4']);
     });
 
     it('should process an illegal move', () => {
       const agent = getAgent(getEngineMock(), getRecognizerMock());
       const callback = vi.fn();
-      agent.onMove(callback);
+      agent.onMoves(callback);
       const result = agent.processMove('e2e5');
       expect(result).toBe(false);
       expect(callback).not.toHaveBeenCalled();
@@ -61,7 +61,7 @@ describe('Agent', () => {
       agent.processMove('f2f3');
       agent.processMove('e7e5');
       agent.processMove('g2g4');
-      agent.onMove(callback);
+      agent.onMoves(callback);
       const result = agent.processMove('d8h4');
       expect(result).toBe(true);
       expect(callback).not.toHaveBeenCalled();

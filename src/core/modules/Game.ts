@@ -151,6 +151,69 @@ class Game implements AgentGame {
     return { ...pv, pgn: evalText+' '+chess.pgn({ newline: ' ' }) };
   }
 
+  findMovesForPieces(pieces: [Piece, number, number][]): string[] | null {
+    const targetBoard: (Piece | null)[][] = [];
+    for (let i = 0; i < 8; i++) {
+      targetBoard.push(Array(8).fill(null));
+    }
+    for (const [piece, row, col] of pieces) {
+      targetBoard[row][col] = piece;
+    }
+    const moves: string[] = [];
+    const moveStack: string[][] = [];
+    while (true) {
+      const boardState = this.board();
+      let targetReached = true;
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+          const type1 = boardState[i][j]?.type;
+          const color1 = boardState[i][j]?.color;
+          const type2 = targetBoard[i][j]?.type;
+          const color2 = targetBoard[i][j]?.color;
+          if (type1 !== type2 || color1 !== color2) {
+            targetReached = false;
+            break;
+          }
+        }
+        if (!targetReached) {
+          break;
+        }
+      }
+      if (targetReached) {
+        for (let i = 0; i < moves.length; i++) {
+          this.chess.undo();
+        }
+        return moves;
+      }
+      const possibleMoves = this.chess.moves({ verbose: true });
+      const lanMoves = possibleMoves.map((x) => x.lan);
+      const nextMove = lanMoves.pop();
+      if (moveStack.length > 1 || !nextMove) {
+        let finishSearch = true;
+        while (moveStack.length) {
+          moves.pop();
+          this.chess.undo();
+          const move = moveStack[moveStack.length-1].pop();
+          if (!move) {
+            moveStack.pop();
+            continue;
+          }
+          moves.push(move);
+          this.chess.move(move);
+          finishSearch = false;
+          break;
+        }
+        if (finishSearch) {
+          return null;
+        }
+        continue;
+      }
+      moveStack.push(lanMoves);
+      moves.push(nextMove);
+      this.chess.move(nextMove);
+    }
+  }
+
   putPieces(pieces: [Piece, number, number][]) {
     this.chess.clear();
     for (const [piece, row, col] of pieces) {

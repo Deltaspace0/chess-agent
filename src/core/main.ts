@@ -257,7 +257,7 @@ function debounce<T>(callback: (x: T) => void) {
     }
   };
   agent.onUpdateStatus(updateStatus);
-  agent.onMove(async () => {
+  agent.onMoves(async () => {
     if (!preferenceManager.getPreference('region')) {
       return;
     }
