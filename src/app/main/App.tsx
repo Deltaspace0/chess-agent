@@ -125,11 +125,26 @@ function App() {
   };
   const arrowSource = (text?: string, move?: string) => <a
     onMouseLeave={() => setQuickArrows([])}
-    onMouseEnter={() => setQuickArrows(text ? [{
-      startSquare: (move ?? text).substring(0, 2),
-      endSquare: (move ?? text).substring(2, 4),
-      color: '#fff'
-    }] : [])}
+    onMouseEnter={() => {
+      if (!text) {
+        setQuickArrows([]);
+        return;
+      }
+      const quickStart = (move ?? text).substring(0, 2);
+      const quickEnd = (move ?? text).substring(2, 4);
+      for (const principalArrow of principalArrows) {
+        const { startSquare, endSquare } = principalArrow;
+        if (quickStart === startSquare && quickEnd === endSquare) {
+          setQuickArrows([principalArrow]);
+          return;
+        }
+      }
+      setQuickArrows([{
+        startSquare: quickStart,
+        endSquare: quickEnd,
+        color: '#fff'
+      }]);
+    }}
   >
     {text}
   </a>;
