@@ -22,8 +22,10 @@ function App() {
   const [region] = usePreference('region');
   const [recognizerModel] = usePreference('recognizerModel');
   const statusText = useSignal('status');
-  const engineInfo = useSignal('engineInfo') || {};
-  const principalVariations = useSignal('principalVariations');
+  const engineInfo = useSignal('engineInfo') ?? {
+    principalVariations: []
+  };
+  const principalVariations = engineInfo.principalVariations;
   const [positionFEN, setPositionFEN] = useState('');
   const positionInfo = useSignal('positionInfo') || {
     whiteCastlingRights: { 'k': true, 'q': true },
@@ -119,7 +121,7 @@ function App() {
           Depth: {engineInfo.depth}, time: {engineInfo.time} ms,
           nodes: {engineInfo.nodes}
         </p>
-        {(principalVariations ?? []).map((x) => <p className='text'>{x.pgn}</p>)}
+        {principalVariations.map((x) => <p className='text'>{x.pgn}</p>)}
       </fieldset>
     </>,
     promotion: <fieldset>

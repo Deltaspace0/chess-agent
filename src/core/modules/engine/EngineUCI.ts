@@ -26,15 +26,13 @@ class EngineUCI implements AgentEngine {
   private moves: string[] = [];
   private whiteFirst: boolean = true;
   private fen: string | null = null;
-  private engineInfo: EngineInfo = {};
+  private engineInfo: EngineInfo = { principalVariations: [] };
   private options: EngineOptions = {
     duration: preferenceConfig.analysisDuration.defaultValue,
     multiPV: preferenceConfig.multiPV.defaultValue,
     threads: preferenceConfig.engineThreads.defaultValue,
     skillLevel: preferenceConfig.engineLevel.defaultValue
   };
-  private principalVariations: PrincipalVariation[] = [];
-  private principalCallback: (value: PrincipalVariation[]) => void = () => {};
   private bestMoveCallback: (value: string) => void = () => {};
   private engineInfoCallback: (value: EngineInfo) => void = () => {};
   private processListener = this.processData.bind(this);
@@ -104,18 +102,17 @@ class EngineUCI implements AgentEngine {
   }
 
   private sendEngineInfo() {
-    this.principalCallback(this.principalVariations);
     this.engineInfoCallback(this.engineInfo);
   }
 
   private setPrincipalVariation(pv: number, move: PrincipalVariation) {
-    this.principalVariations[pv] = move;
+    this.engineInfo.principalVariations[pv] = move;
     this.sendEngineInfo();
   }
 
   private resetAnalysis() {
-    this.principalVariations = [];
     this.engineInfo = {
+      principalVariations: [],
       name: this.engineInfo.name,
       author: this.engineInfo.author
     };
@@ -143,7 +140,7 @@ class EngineUCI implements AgentEngine {
       return;
     }
     this.loadingProcess = process;
-    this.engineInfo = {};
+    this.engineInfo = { principalVariations: [] };
     this.process?.removeListener('stdout', this.processListener);
     process.addListener('stdout', this.processListener);
     const uciSupported = await process.expect('uciok', 2000, 'uci');
@@ -178,10 +175,6 @@ class EngineUCI implements AgentEngine {
     if (option !== 'threads') {
       this.analyzePosition();
     }
-  }
-
-  onPrincipalVariations(callback: (value: PrincipalVariation[]) => void) {
-    this.principalCallback = callback;
   }
 
   onBestMove(callback: (value: string) => void) {

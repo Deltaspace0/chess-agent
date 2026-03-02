@@ -4,13 +4,13 @@ import { Agent } from './Agent.ts';
 import Game from './Game.ts';
 import type { AgentEngine, AgentRecognizer } from './Agent.ts';
 
-function getEngineMock(): AgentEngine {
+function getEngineMock(bestMove?: string): AgentEngine {
   return {
     reset: vi.fn(),
     clear: vi.fn(),
     undo: vi.fn(),
     sendMove: vi.fn(),
-    getEngineInfo: vi.fn(),
+    getEngineInfo: vi.fn(() => ({ bestMove, principalVariations: [] })),
     onBestMove: vi.fn()
   };
 }
@@ -77,9 +77,8 @@ describe('Agent', () => {
 
   describe('Best move', () => {
     it('should return the best move immediately', async () => {
-      const engine = getEngineMock();
+      const engine = getEngineMock('e2e4');
       const agent = getAgent(engine, getRecognizerMock());
-      engine.getEngineInfo = vi.fn(() => ({ bestMove: 'e2e4' }));
       const move = await agent.findBestMove();
       expect(move).toBe('e2e4');
       expect(engine.getEngineInfo).toHaveBeenCalled();
@@ -88,7 +87,6 @@ describe('Agent', () => {
     it('should return the best move after waiting', async () => {
       const engine = getEngineMock();
       const agent = getAgent(engine, getRecognizerMock());
-      engine.getEngineInfo = vi.fn(() => ({}));
       engine.onBestMove = vi.fn((f) => f('e2e4'));
       const move = await agent.findBestMove();
       expect(move).toBe('e2e4');
@@ -98,7 +96,6 @@ describe('Agent', () => {
     it('should stop waiting for the best move', async () => {
       const engine = getEngineMock();
       const agent = getAgent(engine, getRecognizerMock());
-      engine.getEngineInfo = vi.fn(() => ({}));
       const movePromise = agent.findBestMove();
       agent.findBestMove();
       await expect(movePromise).resolves.toBe(null);
@@ -186,8 +183,7 @@ describe('Agent', () => {
     });
 
     it('should automatically promote to the best move', async () => {
-      const engine = getEngineMock();
-      engine.getEngineInfo = vi.fn(() => ({ bestMove: 'b7b8r' }));
+      const engine = getEngineMock('b7b8r');
       const agent = getAgent(engine, getRecognizerMock());
       agent.loadPosition('6k1/1P6/8/8/8/8/8/6K1 w - - 0 1');
       await agent.findBestMove();

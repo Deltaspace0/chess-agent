@@ -73,9 +73,16 @@ declare global {
     grid: (Piece | null)[][];
   }
 
+  interface PrincipalVariation {
+    evaluation: string;
+    variation: string;
+    pgn?: string;
+  }
+
   interface EngineInfo {
     bestMove?: string;
     ponderMove?: string;
+    principalVariations: PrincipalVariation[];
     depth?: number;
     evaluation?: string;
     nodes?: number;
@@ -97,12 +104,6 @@ declare global {
     piece: string;
   }
 
-  interface PrincipalVariation {
-    evaluation: string;
-    variation: string;
-    pgn?: string;
-  }
-
   type Signal = keyof Signals;
   type SignalListeners = { [T in Signal]: (value: Signals[T]) => void };
 
@@ -112,7 +113,6 @@ declare global {
     positionInfo: PositionInfo;
     engineData: { name: string, data: string };
     engineInfo?: EngineInfo;
-    principalVariations?: PrincipalVariation[];
     mousePosition?: Point;
     hoveredAction?: string;
     promotion: void;

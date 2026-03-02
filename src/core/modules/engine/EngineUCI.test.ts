@@ -124,7 +124,8 @@ describe('EngineUCI', () => {
       process.output('id author <test author>');
       await expect.poll(() => callback).toHaveBeenCalledWith({
         name: '<test name>',
-        author: '<test author>'
+        author: '<test author>',
+        principalVariations: []
       });
     });
 
@@ -141,7 +142,8 @@ describe('EngineUCI', () => {
         evaluation: 'cp -96',
         nodes: 322797,
         nodesPerSecond: 321831,
-        time: 1003
+        time: 1003,
+        principalVariations: [{ evaluation: 'cp -96', variation: 'e7e5' }]
       });
     });
 
@@ -151,18 +153,20 @@ describe('EngineUCI', () => {
       engine.setOption('multiPV', 3);
       await waitMessageMatch(process, /^go /);
       const callback = vi.fn();
-      engine.onPrincipalVariations(callback);
+      engine.onEngineInfo(callback);
       process.output('info depth 13 seldepth 19 multipv 1 score cp 80 nodes '+
         '252001 nps 251498 hashfull 102 tbhits 0 time 1002 pv e2e4');
       process.output('info depth 12 seldepth 17 multipv 2 score cp 52 nodes '+
         '252001 nps 251498 hashfull 102 tbhits 0 time 1002 pv c2c4 e7e6');
       process.output('info depth 12 seldepth 12 multipv 3 score cp 52 nodes '+
         '252001 nps 251498 hashfull 102 tbhits 0 time 1002 pv d2d4 d7d5');
-      await expect.poll(() => callback).toHaveBeenCalledWith([
-        { evaluation: 'cp 80', variation: 'e2e4' },
-        { evaluation: 'cp 52', variation: 'c2c4 e7e6' },
-        { evaluation: 'cp 52', variation: 'd2d4 d7d5' }
-      ]);
+      await expect.poll(() => callback).toHaveBeenCalledWith(
+        expect.objectContaining({ principalVariations: [
+          { evaluation: 'cp 80', variation: 'e2e4' },
+          { evaluation: 'cp 52', variation: 'c2c4 e7e6' },
+          { evaluation: 'cp 52', variation: 'd2d4 d7d5' }
+        ] })
+      );
     });
 
     it('should send best and ponder moves', async () => {
