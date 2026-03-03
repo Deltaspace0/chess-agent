@@ -181,6 +181,7 @@ export class Agent<T> {
       this.statusCallback('Failed to set turn');
     }
     this.syncEngine();
+    this.moveCallback([]);
   }
 
   async recognizeBoardAfterMove(opponentToMove?: boolean) {
