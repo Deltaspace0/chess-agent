@@ -99,7 +99,7 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     label: 'Analysis duration',
     description: 'Time allotted for the engine to find the best move (in milliseconds)',
     defaultValue: 1000,
-    sliderValues: [100, 300, 1000, 3000, 5000, 10000]
+    sliderValues: [1, 300, 1000, 3000, 5000, 10000]
   },
   multiPV: {
     label: 'Multiple lines',
