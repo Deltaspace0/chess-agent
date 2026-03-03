@@ -1,28 +1,14 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { readdir } from 'fs/promises';
-import { loadImage, sleep } from '@nut-tree-fork/nut-js';
+import { loadImage } from '@nut-tree-fork/nut-js';
 import path from 'path';
 import Game from './Game.ts';
 import PixelGrid from './PixelGrid.ts';
 import Recognizer from './Recognizer.ts';
 import { Screen } from './device/Screen.ts';
 
-async function testImages(images: Record<string, PixelGrid>) {
-  for (const file in images) {
-    const [positionString, perspective, startFile] = file.split('_');
-    const recognizer = recognizers[startFile];
-    screen.setPixelGrid(images[file]);
-    const pieces = await recognizer.recognizeBoard();
-    game.setPerspective(perspective === 'w');
-    game.putPieces(pieces);
-    const position = game.fen().split(' ')[0];
-    expect(position, startFile).toBe(positionString.replaceAll('-', '/'));
-  }
-}
-
 class ScreenStub extends Screen {
   private pixelGrid: PixelGrid | null = null;
-  private gridSequence: PixelGrid[] = [];
 
   grabRegion(): Promise<PixelGrid> {
     if (!this.pixelGrid) {
@@ -31,22 +17,10 @@ class ScreenStub extends Screen {
     return Promise.resolve(this.pixelGrid);
   }
 
-  async sleep(): Promise<void> {
-    if (this.gridSequence.length === 1) {
-      this.pixelGrid = this.gridSequence[0];
-    } else {
-      this.pixelGrid = this.gridSequence.shift() || null;
-    }
-    await sleep(5);
-  }
+  async sleep(): Promise<void> {}
 
   setPixelGrid(pixelGrid: PixelGrid | null) {
     this.pixelGrid = pixelGrid;
-  }
-
-  setGridSequence(gridSequence: PixelGrid[]) {
-    this.gridSequence = gridSequence;
-    this.pixelGrid = gridSequence[0] || null;
   }
 }
 
@@ -54,21 +28,13 @@ const screen = new ScreenStub();
 const game = new Game();
 
 const startPosition = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
-const startImages: Record<string, PixelGrid> = {};
-const flippedImages: Record<string, PixelGrid> = {};
-const emptyImages: Record<string, PixelGrid> = {};
-const randomImages: Record<string, PixelGrid> = {};
-const highlightedImages: Record<string, PixelGrid> = {};
-const backgroundImages: Record<string, PixelGrid> = {};
-const moveImageSequences: Record<string, PixelGrid[]> = {};
-const coveredImageSequences: Record<string, PixelGrid[]> = {};
+const imageTable: Record<string, Record<string, PixelGrid>> = {};
+const otherImageTable: Record<string, Record<string, PixelGrid>> = {};
 const recognizers: Record<string, Recognizer> = {};
 
-async function loadImages(
-  directory: string,
-  images: Record<string, PixelGrid>
-) {
+async function loadImages(directory: string): Promise<Record<string, PixelGrid>> {
   try {
+    const images: Record<string, PixelGrid> = {};
     const files = await readdir(directory);
     const promises: Promise<void>[] = [];
     for (const file of files) {
@@ -79,117 +45,91 @@ async function loadImages(
         images[file] = new PixelGrid(image.data, image.byteWidth);
       }));
     }
-    return Promise.all(promises);
+    await Promise.all(promises);
+    return images;
   } catch (e) {
     console.error(e);
+    return {};
   }
 }
 
-async function loadImageSequences(
-  directory: string,
-  imageSequences: Record<string, PixelGrid[]>
-) {
-  try {
-    const subdirectories = await readdir(directory);
-    const promises: Promise<void>[] = [];
-    for (const subdirectory of subdirectories) {
-      if (subdirectory.slice(-4) !== '.png') {
-        continue;
-      }
-      promises.push((async () => {
-        const images: Record<string, PixelGrid> = {};
-        await loadImages(path.join(directory, subdirectory), images);
-        const imageSequence: PixelGrid[] = [];
-        const f = (x: string) => Number(x.split('_')[1].slice(0, -4));
-        const files = Object.keys(images).sort((a, b) => f(a)-f(b));
-        for (const file of files) {
-          const amount = Number(file.split('_')[0]);
-          for (let i = 0; i < amount; i++) {
-            imageSequence.push(images[file]);
-          }
-        }
-        imageSequences[subdirectory] = imageSequence;
-      })());
+try {
+  const dirents = await readdir('test_images', { withFileTypes: true });
+  for (const dirent of dirents) {
+    const name = dirent.name;
+    if (!dirent.isDirectory() || name.slice(-5) === '.skip') {
+      continue;
     }
-    return Promise.all(promises);
-  } catch (e) {
-    console.error(e);
+    const images = await loadImages(path.join('test_images', name));
+    if (['start', 'flipped', 'empty'].includes(name)) {
+      imageTable[name] = images;
+    } else {
+      otherImageTable[name] = images;
+    }
   }
+} catch (e) {
+  console.error(e);
+}
+for (const file in imageTable['start']) {
+  const recognizer = new Recognizer(screen);
+  screen.setPixelGrid(imageTable['start'][file]);
+  await recognizer.load(true);
+  recognizers[file] = recognizer;
 }
 
-beforeAll(async () => {
-  await Promise.all([
-    loadImages(path.join('test_images', 'start'), startImages),
-    loadImages(path.join('test_images', 'flipped'), flippedImages),
-    loadImages(path.join('test_images', 'empty'), emptyImages),
-    loadImages(path.join('test_images', 'random'), randomImages),
-    loadImages(path.join('test_images', 'highlighted'), highlightedImages),
-    loadImages(path.join('test_images', 'background'), backgroundImages),
-    loadImageSequences(
-      path.join('test_images', 'scan', 'move'),
-      moveImageSequences
-    ),
-    loadImageSequences(
-      path.join('test_images', 'scan', 'covered'),
-      coveredImageSequences
-    )
-  ]);
-  for (const file in startImages) {
+describe.skipIf(!imageTable['start'])('Recognizer', () => {
+  it('should recognize starting position', async () => {
+    for (const file in imageTable['start']) {
+      const recognizer = recognizers[file];
+      screen.setPixelGrid(imageTable['start'][file]);
+      const pieces = await recognizer.recognizeBoard();
+      game.setPerspective(true);
+      game.putPieces(pieces);
+      const position = game.fen().split(' ')[0];
+      expect(position, file).toBe(startPosition);
+    }
+  });
+
+  it('should recognize flipped position', async () => {
+    if (!imageTable['flipped']) {
+      return;
+    }
     const recognizer = new Recognizer(screen);
-    screen.setPixelGrid(startImages[file]);
-    await recognizer.load(true);
-    recognizers[file] = recognizer;
-  }
-});
+    for (const file in imageTable['flipped']) {
+      screen.setPixelGrid(imageTable['flipped'][file]);
+      await recognizer.load(false);
+      const pieces = await recognizer.recognizeBoard();
+      game.setPerspective(false);
+      game.putPieces(pieces);
+      const position = game.fen().split(' ')[0];
+      expect(position, file).toBe(startPosition);
+    }
+  });
 
-describe('Recognizer', () => {
-  describe('Position', () => {
-    it('should recognize starting position', async () => {
-      for (const file in startImages) {
-        const recognizer = recognizers[file];
-        screen.setPixelGrid(startImages[file]);
-        const pieces = await recognizer.recognizeBoard();
-        game.setPerspective(true);
-        game.putPieces(pieces);
-        const position = game.fen().split(' ')[0];
-        expect(position, file).toBe(startPosition);
-      }
-    });
+  it('should recognize empty position', async () => {
+    if (!imageTable['empty']) {
+      return;
+    }
+    const recognizer = new Recognizer(screen, { putKings: false });
+    for (const file in imageTable['empty']) {
+      screen.setPixelGrid(imageTable['start'][file]);
+      await recognizer.load(true);
+      screen.setPixelGrid(imageTable['empty'][file]);
+      const pieces = await recognizer.recognizeBoard();
+      expect(pieces, file).toEqual([]);
+    }
+  });
 
-    it('should recognize flipped position', async () => {
-      const recognizer = new Recognizer(screen);
-      for (const file in flippedImages) {
-        screen.setPixelGrid(flippedImages[file]);
-        await recognizer.load(false);
-        const pieces = await recognizer.recognizeBoard();
-        game.setPerspective(false);
-        game.putPieces(pieces);
-        const position = game.fen().split(' ')[0];
-        expect(position, file).toBe(startPosition);
-      }
-    });
-
-    it('should recognize empty position', async () => {
-      const recognizer = new Recognizer(screen, { putKings: false });
-      for (const file in emptyImages) {
-        screen.setPixelGrid(startImages[file]);
-        await recognizer.load(true);
-        screen.setPixelGrid(emptyImages[file]);
-        const pieces = await recognizer.recognizeBoard();
-        expect(pieces, file).toEqual([]);
-      }
-    });
-
-    it('should recognize random position', async () => {
-      await testImages(randomImages);
-    });
-
-    it('should recognize position with highlighted squares', async () => {
-      await testImages(highlightedImages);
-    });
-
-    it.skip('should recognize position with a different background', async () => {
-      await testImages(backgroundImages);
-    });
+  it.each(Object.keys(otherImageTable))('should recognize %s', async (name) => {
+    for (const file in otherImageTable[name]) {
+      const [positionString, perspective, startFile] = file.split('_');
+      const recognizer = recognizers[startFile];
+      screen.setPixelGrid(otherImageTable[name][file]);
+      const pieces = await recognizer.recognizeBoard();
+      game.setPerspective(perspective === 'w');
+      game.putPieces(pieces);
+      const position = game.fen().split(' ')[0];
+      expect(position, startFile).toBe(positionString.replaceAll('-', '/'));
+    }
   });
 });
