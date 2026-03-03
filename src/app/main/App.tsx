@@ -236,6 +236,10 @@ function App() {
               name='resetPosition'
               svgPath='M1 5a4 4 0 1 0 0.5-2m0-3v3h3'
             />
+            <ActionIcon
+              name='skipMove'
+              svgPath='M1 3h7m-2-2l2 2l-2 2M9 7H2m2 2l-2-2l2-2'
+            />
             {panelType === 'edit' ? <>
               <ActionIcon
                 name='clearPosition'
