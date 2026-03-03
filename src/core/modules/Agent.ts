@@ -67,6 +67,34 @@ export class Agent<T> {
     }
   }
 
+  private async recognizeDirect(hashes?: T): Promise<[Piece, number, number][]> {
+    this.statusCallback('Recognizing board...');
+    try {
+      const pieces = await this.recognizer.recognizeBoard(hashes);
+      return pieces;
+    } catch (e) {
+      console.error(e);
+      this.statusCallback('Failed to recognize board');
+      throw e;
+    }
+  }
+
+  private processMoves(moves: string[]) {
+    let gameOver = false;
+    for (let i = 0; i < moves.length; i++) {
+      this.game.move(moves[i]);
+      gameOver = this.game.isGameOver();
+      this.engine.sendMove(moves[i], i < moves.length-1 || gameOver);
+    }
+    if (gameOver) {
+      this.statusCallback('Game is over');
+      this.recognizer.stopWaitingMove();
+    } else {
+      this.statusCallback('Ready');
+    }
+    this.moveCallback(moves);
+  }
+
   processMove(move: string): boolean {
     if (move === 'undo') {
       this.undoMove();
@@ -145,30 +173,10 @@ export class Agent<T> {
   }
 
   async recognizeBoard(opponentToMove?: boolean, hashes?: T) {
-    this.statusCallback('Recognizing board...');
-    let pieces;
-    try {
-      pieces = await this.recognizer.recognizeBoard(hashes);
-    } catch (e) {
-      console.log(e);
-      this.statusCallback('Failed to recognize board');
-      return;
-    }
+    const pieces = await this.recognizeDirect(hashes);
     const moves = this.game.findMovesForPieces(pieces);
     if (moves) {
-      let gameOver = false;
-      for (let i = 0; i < moves.length; i++) {
-        this.game.move(moves[i]);
-        gameOver = this.game.isGameOver();
-        this.engine.sendMove(moves[i], i < moves.length-1 || gameOver);
-      }
-      if (gameOver) {
-        this.statusCallback('Game is over');
-        this.recognizer.stopWaitingMove();
-      } else {
-        this.statusCallback('Ready');
-      }
-      this.moveCallback(moves);
+      this.processMoves(moves);
       return;
     }
     this.game.putPieces(pieces);
@@ -189,9 +197,16 @@ export class Agent<T> {
       this.recognizer.stopWaitingMove();
       return;
     }
+    const waitPromise = this.recognizer.waitMove();
+    const pieces = await this.recognizeDirect();
+    const moves = this.game.findMovesForPieces(pieces);
+    if (moves && moves.length) {
+      this.processMoves(moves);
+      return;
+    }
     this.statusCallback('Waiting for move...');
     try {
-      const hashes = await this.recognizer.waitMove();
+      const hashes = await waitPromise;
       return this.recognizeBoard(opponentToMove, hashes);
     } catch (e) {
       if (e instanceof Error && e.message === 'stop') {
