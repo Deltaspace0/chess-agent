@@ -159,7 +159,8 @@ class Game implements AgentGame {
     for (const [piece, row, col] of pieces) {
       targetBoard[row][col] = piece;
     }
-    const changedSquares: string[] = [];
+    const changedSquares = new Set<Square>();
+    const sourceSquares = new Set<Square>();
     const startBoardState = this.board();
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
@@ -168,11 +169,13 @@ class Game implements AgentGame {
         const type2 = targetBoard[i][j]?.type;
         const color2 = targetBoard[i][j]?.color;
         if (type1 !== type2 || color1 !== color2) {
-          changedSquares.push(coordsToSquare([i, j], this.perspective));
+          const square = coordsToSquare([i, j], this.perspective) as Square;
+          changedSquares.add(square);
+          sourceSquares.add(square);
         }
       }
     }
-    if (changedSquares.length > 6) {
+    if (changedSquares.size > 6) {
       return null;
     }
     const moves: string[] = [];
@@ -201,18 +204,19 @@ class Game implements AgentGame {
         }
         return moves;
       }
-      const possibleMoves = this.chess.moves({ verbose: true });
-      const lanMoves = possibleMoves.map((x) => x.lan).filter((x) => {
-        const s1 = x.substring(0, 2);
-        const s2 = x.substring(2, 4);
-        return changedSquares.includes(s1) || changedSquares.includes(s2);
-      });
-      const nextMove = lanMoves.pop();
+      const possibleMoves: string[] = [];
+      for (const square of sourceSquares) {
+        for (const move of this.chess.moves({ square, verbose: true })) {
+          possibleMoves.push(move.lan);
+        }
+      }
+      const nextMove = possibleMoves.pop();
       if (moveStack.length > 1 || !nextMove) {
         let finishSearch = true;
         while (moveStack.length) {
-          moves.pop();
+          const prevMove = moves.pop();
           this.chess.undo();
+          sourceSquares.add(prevMove!.substring(2, 4) as Square);
           const move = moveStack[moveStack.length-1].pop();
           if (!move) {
             moveStack.pop();
@@ -220,6 +224,7 @@ class Game implements AgentGame {
           }
           moves.push(move);
           this.chess.move(move);
+          sourceSquares.add(move.substring(2, 4) as Square);
           finishSearch = false;
           break;
         }
@@ -228,9 +233,10 @@ class Game implements AgentGame {
         }
         continue;
       }
-      moveStack.push(lanMoves);
+      moveStack.push(possibleMoves);
       moves.push(nextMove);
       this.chess.move(nextMove);
+      sourceSquares.add(nextMove.substring(2, 4) as Square);
     }
   }
 
