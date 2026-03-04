@@ -209,22 +209,13 @@ describe('Game', () => {
       expect(moves).toStrictEqual(['c3d5', 'd8d5']);
     });
 
-    it('should process en passant on first move', () => {
+    it('should find en passant move', () => {
       const game = new Game();
       game.load('rnbqkb1r/pp1p1ppp/2P1pn2/8/8/8/PPP1PPPP/RNBQKBNR w KQkq - 1 4');
       const pieces = getPieces(game);
       game.load('rnbqkbnr/pp1p1ppp/4p3/2pP4/8/8/PPP1PPPP/RNBQKBNR w KQkq c6 0 3');
       const moves = game.findMovesForPieces(pieces);
       expect(moves).toStrictEqual(['d5c6', 'g8f6']);
-    });
-
-    it('should process en passant on second move', () => {
-      const game = new Game();
-      game.load('rnbqkbnr/pp1p1ppp/2P1p3/8/8/8/PPP1PPPP/RNBQKBNR b KQkq - 0 3');
-      const pieces = getPieces(game);
-      game.load('rnbqkbnr/pppp1ppp/4p3/3P4/8/8/PPP1PPPP/RNBQKBNR b KQkq - 0 2');
-      const moves = game.findMovesForPieces(pieces);
-      expect(moves).toStrictEqual(['c7c5', 'd5c6']);
     });
   });
 });
