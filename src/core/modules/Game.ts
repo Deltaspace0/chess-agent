@@ -246,6 +246,9 @@ class Game implements AgentGame {
       this.chess.move(nextMove);
       sourceSquares.add(nextMove.substring(2, 4) as Square);
     }
+    for (let i = 0; i < moves.length; i++) {
+      this.chess.undo();
+    }
     return null;
   }
 
