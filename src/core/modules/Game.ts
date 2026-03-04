@@ -175,13 +175,20 @@ class Game implements AgentGame {
         }
       }
     }
-    if (changedSquares.size > 6) {
+    if (changedSquares.size > 10) {
       return null;
     }
+    const getPriority = (move: string) => {
+      const hasSource = changedSquares.has(move.substring(0, 2) as Square);
+      const hasTarget = changedSquares.has(move.substring(2, 4) as Square);
+      return Number(hasSource)+Number(hasTarget);
+    };
     const moves: string[] = [];
     const moveStack: string[][] = [];
-    while (true) {
+    let iterations = 0;
+    while (iterations < 50) {
       const boardState = this.board();
+      iterations++;
       let targetReached = true;
       for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
@@ -210,8 +217,9 @@ class Game implements AgentGame {
           possibleMoves.push(move.lan);
         }
       }
+      possibleMoves.sort((a, b) => getPriority(a)-getPriority(b));
       const nextMove = possibleMoves.pop();
-      if (moveStack.length > 1 || !nextMove) {
+      if (moveStack.length > 2 || !nextMove) {
         let finishSearch = true;
         while (moveStack.length) {
           const prevMove = moves.pop();
@@ -238,6 +246,7 @@ class Game implements AgentGame {
       this.chess.move(nextMove);
       sourceSquares.add(nextMove.substring(2, 4) as Square);
     }
+    return null;
   }
 
   putPieces(pieces: [Piece, number, number][]) {

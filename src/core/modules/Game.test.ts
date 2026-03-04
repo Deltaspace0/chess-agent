@@ -191,6 +191,15 @@ describe('Game', () => {
       expect(moves).toBe(null);
     });
 
+    it('should return null if position is unreachable (2)', () => {
+      const game = new Game();
+      game.load('rn2kbnr/p1pp1ppp/1p2p1q1/4P2P/3P4/2NB1Q2/PPP2PP1/R1B1K1NR b KQkq - 2 7');
+      const pieces = getPieces(game);
+      game.load('rn2kbnr/p1pp1ppp/1p2p1q1/4P2P/3P4/2NB1b2/PPP2PP1/R1BQK1NR b KQkq - 2 7');
+      const moves = game.findMovesForPieces(pieces);
+      expect(moves).toBe(null);
+    });
+
     it('should return one move', () => {
       const game = new Game();
       game.load('rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R w KQkq - 0 1');
@@ -207,6 +216,24 @@ describe('Game', () => {
       game.load('r1bqk2r/ppp1bppp/2n5/3np3/8/2NP1NP1/PP2PP1P/R1BQKB1R w KQkq - 1 7');
       const moves = game.findMovesForPieces(pieces);
       expect(moves).toStrictEqual(['c3d5', 'd8d5']);
+    });
+
+    it('should return three moves', () => {
+      const game = new Game();
+      game.load('rn2kbnr/p1pp1ppp/1p2p1q1/4P2P/3P4/2N2b2/PPP2PP1/R1BQKBNR w KQkq - 1 7');
+      const pieces = getPieces(game);
+      game.load('rnb1kbnr/p1pp1ppp/1p2p1q1/4P3/3P3P/2N5/PPP2PP1/R1BQKBNR b KQkq - 0 5');
+      const moves = game.findMovesForPieces(pieces);
+      expect(moves).toStrictEqual(['c8b7', 'h4h5', 'b7f3']);
+    });
+
+    it('should return three moves (2)', () => {
+      const game = new Game();
+      game.load('rn1k1bnr/p1pp1ppp/1p2p1q1/4P2P/3P4/2NB1Q2/PPP2PP1/R1B1K1NR b KQ - 0 8');
+      const pieces = getPieces(game);
+      game.load('rn2kbnr/p1pp1ppp/1p2p1q1/4P2P/3P4/2N2b2/PPP2PP1/R1BQKBNR w KQkq - 1 7');
+      const moves = game.findMovesForPieces(pieces);
+      expect(moves).toStrictEqual(['f1d3', 'e8d8', 'd1f3']);
     });
 
     it('should find en passant move', () => {
