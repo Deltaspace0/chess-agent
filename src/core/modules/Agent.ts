@@ -175,10 +175,12 @@ export class Agent<T> {
 
   async recognizeBoard(opponentToMove?: boolean, hashes?: T) {
     const pieces = await this.recognizeDirect(hashes);
-    const moves = this.game.findMovesForPieces(pieces);
-    if (moves) {
-      this.processMoves(moves);
-      return;
+    if (!opponentToMove) {
+      const moves = this.game.findMovesForPieces(pieces);
+      if (moves) {
+        this.processMoves(moves);
+        return;
+      }
     }
     this.game.putPieces(pieces);
     const result = opponentToMove
@@ -198,12 +200,14 @@ export class Agent<T> {
       return;
     }
     const waitPromise = this.recognizer.waitMove();
-    await sleep(50);
-    const pieces = await this.recognizeDirect();
-    const moves = this.game.findMovesForPieces(pieces);
-    if (moves && moves.length) {
-      this.processMoves(moves);
-      return;
+    if (!opponentToMove) {
+      await sleep(50);
+      const pieces = await this.recognizeDirect();
+      const moves = this.game.findMovesForPieces(pieces);
+      if (moves && moves.length) {
+        this.processMoves(moves);
+        return;
+      }
     }
     this.statusCallback('Waiting for move...');
     try {
