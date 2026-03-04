@@ -28,6 +28,7 @@ function App() {
   const booleanPreferences: Record<string, boolean> = {
     autoResponse: usePreference('autoResponse')[0],
     autoRecognition: usePreference('autoRecognition')[0],
+    autoPremove: usePreference('autoPremove')[0],
     autoQueen: usePreference('autoQueen')[0],
     autoPromotion: usePreference('autoPromotion')[0],
     perspective: usePreference('perspective')[0],

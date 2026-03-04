@@ -38,6 +38,10 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
     label: 'Automatically recognize position on the board',
     defaultValue: false
   },
+  autoPremove: {
+    label: 'Automatically premove on every move',
+    defaultValue: false
+  },
   autoQueen: {
     label: 'Auto queen',
     description: 'Pawns are always assumed to be promoted to Queen',
@@ -177,6 +181,7 @@ export const actionDescriptions: Partial<Record<Action, string>> = {
   promoteKnight: 'Promote the pawn to Knight',
   autoResponse: 'Toggle auto response',
   autoRecognition: 'Toggle auto recognition',
+  autoPremove: 'Toggle auto premove',
   autoQueen: 'Toggle auto queen',
   perspective: 'Flip board',
   draggingMode: 'Toggle dragging/clicking mode',

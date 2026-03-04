@@ -140,15 +140,6 @@ describe('Agent', () => {
       expect(recognizer.waitMove).toHaveBeenCalled();
       expect(recognizer.recognizeBoard).toHaveBeenCalled();
     });
-
-    it('should stop waiting move', async () => {
-      const recognizer = getRecognizerMock();
-      const agent = getAgent(getEngineMock(), recognizer);
-      agent.recognizeBoardAfterMove();
-      agent.recognizeBoardAfterMove();
-      expect(recognizer.isWaitingMove).toHaveBeenCalled();
-      expect(recognizer.stopWaitingMove).toHaveBeenCalled();
-    });
   });
 
   describe('Promotion', () => {

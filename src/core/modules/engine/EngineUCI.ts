@@ -119,19 +119,20 @@ class EngineUCI implements AgentEngine {
     this.sendToProcess('stop');
   }
 
-  private analyzePosition() {
-    this.resetAnalysis();
-    const pos = this.fen === null ? 'startpos' : `fen ${this.fen}`;
-    this.sendToProcess([
-      `position ${pos} moves ${this.moves.join(' ')}`,
-      `go movetime ${this.options.duration}`
-    ]);
-  }
-
   private sendOption(option: keyof EngineOptions) {
     return this.sendToProcess([
       'stop',
       `setoption name ${optionNames[option]} value ${this.options[option]}`
+    ]);
+  }
+
+  analyzePosition(nextMoves?: string[], duration?: number) {
+    this.resetAnalysis();
+    const pos = this.fen === null ? 'startpos' : `fen ${this.fen}`;
+    const moves = nextMoves ? [...this.moves, ...nextMoves] : this.moves;
+    this.sendToProcess([
+      `position ${pos} moves ${moves.join(' ')}`,
+      `go movetime ${duration ?? this.options.duration}`
     ]);
   }
 

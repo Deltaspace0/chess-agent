@@ -35,6 +35,7 @@ declare global {
     alwaysOnTop: boolean;
     autoResponse: boolean;
     autoRecognition: boolean;
+    autoPremove: boolean;
     autoQueen: boolean;
     autoPromotion: boolean;
     perspective: boolean;
@@ -120,6 +121,7 @@ declare global {
   type ToggleablePreference = keyof Pick<Preferences
     , 'autoResponse'
     | 'autoRecognition'
+    | 'autoPremove'
     | 'autoQueen'
     | 'autoPromotion'
     | 'perspective'

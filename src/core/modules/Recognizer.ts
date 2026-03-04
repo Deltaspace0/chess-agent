@@ -308,8 +308,8 @@ class Recognizer implements AgentRecognizer<Hashes> {
     if (this.waitingMove) {
       throw new Error('already waiting');
     }
-    await this.screen.sleep(50);
     this.waitingMove = true;
+    await this.screen.sleep(50);
     let prevBoardHashes = await this.getBoardHashes();
     let waitingForMovement = true;
     while (this.waitingMove) {

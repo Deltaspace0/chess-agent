@@ -249,11 +249,24 @@ function debounce<T>(callback: (x: T) => void) {
   const recognizer = new Recognizer(screen);
   const agent = new Agent({ engine: engineUCI, game, recognizer });
   const playBestMove = async () => {
-    if (preferenceManager.getPreference('region')) {
-      const move = await agent.findBestMove();
-      if (move) {
-        board.playMove(move);
-      }
+    if (!preferenceManager.getPreference('region')) {
+      return;
+    }
+    const move = await agent.findBestMove();
+    if (move) {
+      await board.playMove(move);
+      agent.processMove(move);
+    }
+  };
+  const playPremove = async () => {
+    const move = await agent.findBestMove();
+    if (!move) {
+      return;
+    }
+    engineUCI.analyzePosition([move], 1);
+    const nextMove = await agent.findBestMove();
+    if (nextMove) {
+      return board.playMove(nextMove);
     }
   };
   agent.onUpdateStatus(updateStatus);
@@ -261,9 +274,18 @@ function debounce<T>(callback: (x: T) => void) {
     if (!preferenceManager.getPreference('region')) {
       return;
     }
-    if (preferenceManager.getPreference('autoResponse') && game.isMyTurn()) {
-      playBestMove();
-    } else if (preferenceManager.getPreference('autoRecognition')) {
+    const isMyTurn = game.isMyTurn();
+    if (preferenceManager.getPreference('autoResponse')) {
+      if (isMyTurn) {
+        updateStatus('Playing best move...');
+        await playBestMove();
+      } else if (preferenceManager.getPreference('autoPremove')) {
+        updateStatus('Playing premove...');
+        await playPremove();
+      }
+    }
+    if (preferenceManager.getPreference('autoRecognition') && !isMyTurn) {
+      updateStatus('Recognizing after move...');
       agent.recognizeBoardAfterMove();
     }
   });
@@ -404,6 +426,7 @@ function debounce<T>(callback: (x: T) => void) {
     promoteKnight: () => agent.promoteTo('n'),
     autoResponse: () => toggleBooleanPreference('autoResponse'),
     autoRecognition: () => toggleBooleanPreference('autoRecognition'),
+    autoPremove: () => toggleBooleanPreference('autoPremove'),
     autoQueen: () => toggleBooleanPreference('autoQueen'),
     autoPromotion: () => toggleBooleanPreference('autoPromotion'),
     perspective: () => {

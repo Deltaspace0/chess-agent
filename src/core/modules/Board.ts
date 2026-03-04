@@ -82,11 +82,6 @@ class Board {
     };
   }
 
-  private reportPlayedMove(move: string) {
-    this.moveListener(move);
-    this.playingMove = false;
-  }
-
   async playMove(move: string) {
     this.playingMove = true;
     await this.mouse.move(this.getPoint(move.substring(0, 2)));
@@ -94,7 +89,7 @@ class Board {
     await this.mouse.move(this.getPoint(move.substring(2, 4)));
     await (this.draggingMode ? this.mouse.release(0) : this.mouse.click(0));
     if (!this.autoPromotion || move.length < 5) {
-      this.reportPlayedMove(move);
+      this.playingMove = false;
       return;
     }
     const promotionSquares: Record<string, string> = {
@@ -104,12 +99,12 @@ class Board {
       'b': `${move[2]}${move[3] === '8' ? 5 : 4}`
     };
     if (!(move[4] in promotionSquares)) {
-      this.reportPlayedMove(move);
+      this.playingMove = false;
       return;
     }
     await this.mouse.move(this.getPoint(promotionSquares[move[4]]));
     await this.mouse.click(0);
-    this.reportPlayedMove(move);
+    this.playingMove = false;
   }
 
   onMove(listener: (move: string) => boolean) {

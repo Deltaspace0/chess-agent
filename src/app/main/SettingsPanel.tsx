@@ -9,6 +9,7 @@ function SettingsPanel() {
       <SliderPref name='mouseSpeed'/>
       <CheckboxPref name='autoResponse'/>
       <CheckboxPref name='autoRecognition'/>
+      <CheckboxPref name='autoPremove'/>
       <CheckboxPref name='draggingMode'/>
       <CheckboxPref name='autoPromotion'/>
       <div className='section-line'>Engine</div>

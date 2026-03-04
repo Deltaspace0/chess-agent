@@ -1,4 +1,5 @@
 import type { Color, Piece } from 'chess.js';
+import { sleep } from '@nut-tree-fork/nut-js';
 
 export interface AgentEngine {
   reset(fen?: string): void;
@@ -86,9 +87,9 @@ export class Agent<T> {
       gameOver = this.game.isGameOver();
       this.engine.sendMove(moves[i], i < moves.length-1 || gameOver);
     }
+    this.recognizer.stopWaitingMove();
     if (gameOver) {
       this.statusCallback('Game is over');
-      this.recognizer.stopWaitingMove();
     } else {
       this.statusCallback('Ready');
     }
@@ -126,9 +127,9 @@ export class Agent<T> {
     const gameOver = this.game.isGameOver();
     const moves = this.engine.sendMove(move, gameOver);
     console.log(`Moves: ${moves}`);
+    this.recognizer.stopWaitingMove();
     if (gameOver) {
       this.statusCallback('Game is over');
-      this.recognizer.stopWaitingMove();
       return true;
     }
     this.moveCallback([move]);
@@ -194,10 +195,10 @@ export class Agent<T> {
 
   async recognizeBoardAfterMove(opponentToMove?: boolean) {
     if (this.recognizer.isWaitingMove()) {
-      this.recognizer.stopWaitingMove();
       return;
     }
     const waitPromise = this.recognizer.waitMove();
+    await sleep(50);
     const pieces = await this.recognizeDirect();
     const moves = this.game.findMovesForPieces(pieces);
     if (moves && moves.length) {
