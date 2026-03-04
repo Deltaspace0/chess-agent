@@ -1,8 +1,8 @@
 import { Chess } from 'chess.js';
 import type { Color, Piece, PieceSymbol, Square } from 'chess.js';
-import type { AgentGame } from './Agent.ts';
-import { coordsToSquare } from '../../util.ts';
-import { preferenceConfig } from '../../config.ts';
+import type { AgentGame } from '../Agent.ts';
+import { coordsToSquare } from '../../../util.ts';
+import { preferenceConfig } from '../../../config.ts';
 
 class Game implements AgentGame {
   private chess: Chess;

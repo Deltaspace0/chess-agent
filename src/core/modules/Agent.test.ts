@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Piece } from 'chess.js';
 import { Agent } from './Agent.ts';
-import Game from './Game.ts';
+import Game from './game/Game.ts';
 import type { AgentEngine, AgentRecognizer } from './Agent.ts';
 
 function getEngineMock(bestMove?: string): AgentEngine {

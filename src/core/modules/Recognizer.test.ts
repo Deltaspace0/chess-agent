@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readdir } from 'fs/promises';
 import { loadImage } from '@nut-tree-fork/nut-js';
 import path from 'path';
-import Game from './Game.ts';
+import Game from './game/Game.ts';
 import PixelGrid from './PixelGrid.ts';
 import Recognizer from './Recognizer.ts';
 import { Screen } from './device/Screen.ts';

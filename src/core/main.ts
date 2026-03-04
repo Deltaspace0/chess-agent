@@ -7,7 +7,7 @@ import Board from './modules/Board.ts';
 import EngineUCI from './modules/engine/EngineUCI.ts';
 import EngineExternal from './modules/engine/EngineExternal.ts';
 import EngineInternal from './modules/engine/EngineInternal.ts';
-import Game from './modules/Game.ts';
+import Game from './modules/game/Game.ts';
 import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
 import { ConcreteMouse } from './modules/device/Mouse.ts';
