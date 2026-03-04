@@ -24,6 +24,7 @@ class EngineUCI implements AgentEngine {
   private loadingProcess: EngineProcess | null = null;
   private processLock: Promise<void> = Promise.resolve();
   private moves: string[] = [];
+  private analyzedMoves: string[] = [];
   private whiteFirst: boolean = true;
   private fen: string | null = null;
   private engineInfo: EngineInfo = { principalVariations: [] };
@@ -92,7 +93,7 @@ class EngineUCI implements AgentEngine {
   }
 
   private signEvaluation(evaluation: string) {
-    if ((this.moves.length+Number(this.whiteFirst)) % 2 === 0) {
+    if ((this.analyzedMoves.length+Number(this.whiteFirst)) % 2 === 0) {
       const [type, n] = evaluation.split(' ');
       return type+' '+(-Number(n));
     }
@@ -126,12 +127,12 @@ class EngineUCI implements AgentEngine {
     ]);
   }
 
-  analyzePosition(nextMoves?: string[], duration?: number) {
+  analyzePosition(moves?: string[], duration?: number) {
     this.resetAnalysis();
     const pos = this.fen === null ? 'startpos' : `fen ${this.fen}`;
-    const moves = nextMoves ? [...this.moves, ...nextMoves] : this.moves;
+    this.analyzedMoves = moves ? [...this.moves, ...moves] : this.moves;
     this.sendToProcess([
-      `position ${pos} moves ${moves.join(' ')}`,
+      `position ${pos} moves ${this.analyzedMoves.join(' ')}`,
       `go movetime ${duration ?? this.options.duration}`
     ]);
   }
