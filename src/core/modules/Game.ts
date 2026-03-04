@@ -186,7 +186,7 @@ class Game implements AgentGame {
     const moves: string[] = [];
     const moveStack: string[][] = [];
     let iterations = 0;
-    while (iterations < 50) {
+    while (iterations < 1000) {
       const boardState = this.board();
       iterations++;
       let targetReached = true;
@@ -212,19 +212,29 @@ class Game implements AgentGame {
         return moves;
       }
       const possibleMoves: string[] = [];
-      for (const square of sourceSquares) {
-        for (const move of this.chess.moves({ square, verbose: true })) {
-          possibleMoves.push(move.lan);
+      let nextMove;
+      if (moveStack.length < 3) {
+        for (const move of this.chess.moves({ verbose: true })) {
+          const square1 = move.lan.substring(0, 2) as Square;
+          const square2 = move.lan.substring(2, 4) as Square;
+          if (sourceSquares.has(square1) || sourceSquares.has(square2)) {
+            possibleMoves.push(move.lan);
+          }
         }
+        possibleMoves.sort((a, b) => getPriority(a)-getPriority(b));
+        nextMove = possibleMoves.pop();
       }
-      possibleMoves.sort((a, b) => getPriority(a)-getPriority(b));
-      const nextMove = possibleMoves.pop();
-      if (moveStack.length > 2 || !nextMove) {
+      if (!nextMove) {
         let finishSearch = true;
         while (moveStack.length) {
           const prevMove = moves.pop();
           this.chess.undo();
-          sourceSquares.add(prevMove!.substring(2, 4) as Square);
+          if (prevMove) {
+            const square = prevMove.substring(2, 4) as Square;
+            if (!changedSquares.has(square)) {
+              sourceSquares.delete(square);
+            }
+          }
           const move = moveStack[moveStack.length-1].pop();
           if (!move) {
             moveStack.pop();

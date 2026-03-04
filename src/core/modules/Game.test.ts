@@ -250,6 +250,17 @@ describe('Game', () => {
       expect(fen).toBe(game.fen());
     });
 
+    it('should return three moves (3)', () => {
+      const game = new Game();
+      game.load('5R2/p2k1R2/1p6/8/4P3/5P2/P5B1/6K1 b - - 2 37');
+      const pieces = getPieces(game);
+      game.load('4kr2/p4R2/1p6/8/4PR2/5P2/P5B1/6K1 w - - 1 36');
+      const fen = game.fen();
+      const moves = game.findMovesForPieces(pieces);
+      expect(moves).toStrictEqual(['f7f8', 'e8d7', 'f4f7']);
+      expect(fen).toBe(game.fen());
+    });
+
     it('should find en passant move', () => {
       const game = new Game();
       game.load('rnbqkb1r/pp1p1ppp/2P1pn2/8/8/8/PPP1PPPP/RNBQKBNR w KQkq - 1 4');
