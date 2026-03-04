@@ -320,6 +320,7 @@ function debounce<T>(callback: (x: T) => void) {
           console.log(e);
         });
     },
+    resetHashes: () => preferenceManager.setPreference('recognizerModel', null),
     skipMove: () => agent.skipMove(),
     undoMove: () => agent.undoMove(),
     bestMove: () => playBestMove(),

@@ -137,6 +137,7 @@ declare global {
     | 'selectRegion'
     | 'hideRegion'
     | 'loadHashes'
+    | 'resetHashes'
     | 'skipMove'
     | 'undoMove'
     | 'bestMove'

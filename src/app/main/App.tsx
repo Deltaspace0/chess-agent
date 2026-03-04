@@ -263,6 +263,11 @@ function App() {
                 disabledTitle='Please select region'
                 svgPath='M3.5 1v8M6.5 1v8M1 3.5h8M1 6.5h8'
               />
+              <ActionIcon
+                name='resetHashes'
+                disabled={!recognizerModel}
+                svgPath='M3.5 1v8M6.5 1v8M1 3.5h8M1 6.5h8M9 1l-8 8'
+              />
             </>}
           </div>
         </div>

@@ -163,6 +163,7 @@ export const preferenceNames = Object.keys(preferenceConfig) as Preference[];
 export const actionDescriptions: Partial<Record<Action, string>> = {
   selectRegion: 'Go to region selection mode',
   loadHashes: 'Load piece image hashes',
+  resetHashes: 'Reset piece image hashes',
   skipMove: 'Skip current move',
   undoMove: 'Undo last move',
   bestMove: 'Play the best move',
