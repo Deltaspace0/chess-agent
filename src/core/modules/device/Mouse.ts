@@ -39,10 +39,16 @@ export class ConcreteMouse extends Mouse {
   constructor() {
     super();
     this.actionWorker = utilityProcess.fork(actionWorkerPath);
-    uIOhook.on('mousedown', () => this.emit('mousedown'));
-    uIOhook.on('mouseup', () => this.emit('mouseup'));
-    uIOhook.on('mousemove', () => this.emit('mousemove'));
-    uIOhook.on('wheel', () => this.emit('mousewheel'));
+    uIOhook.on('mousedown', () => this.emitMouseEvent('mousedown'));
+    uIOhook.on('mouseup', () => this.emitMouseEvent('mouseup'));
+    uIOhook.on('mousemove', () => this.emitMouseEvent('mousemove'));
+    uIOhook.on('wheel', () => this.emitMouseEvent('mousewheel'));
+  }
+
+  private emitMouseEvent(event: keyof MouseEventMap) {
+    if (this.isActive) {
+      this.emit(event);
+    }
   }
 
   private async performAction(action: string, arg: unknown) {
