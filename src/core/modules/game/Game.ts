@@ -160,7 +160,6 @@ class Game implements AgentGame {
       targetBoard[row][col] = piece;
     }
     const changedSquares = new Set<Square>();
-    const sourceSquares = new Set<Square>();
     const startBoardState = this.board();
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
@@ -171,7 +170,6 @@ class Game implements AgentGame {
         if (type1 !== type2 || color1 !== color2) {
           const square = coordsToSquare([i, j], this.perspective) as Square;
           changedSquares.add(square);
-          sourceSquares.add(square);
         }
       }
     }
@@ -186,7 +184,7 @@ class Game implements AgentGame {
     const moves: string[] = [];
     const moveStack: string[][] = [];
     let iterations = 0;
-    while (iterations < 1000) {
+    while (iterations < 500) {
       const boardState = this.board();
       iterations++;
       let targetReached = true;
@@ -217,7 +215,7 @@ class Game implements AgentGame {
         for (const move of this.chess.moves({ verbose: true })) {
           const square1 = move.lan.substring(0, 2) as Square;
           const square2 = move.lan.substring(2, 4) as Square;
-          if (sourceSquares.has(square1) || sourceSquares.has(square2)) {
+          if (changedSquares.has(square1) || changedSquares.has(square2)) {
             possibleMoves.push(move.lan);
           }
         }
@@ -227,14 +225,8 @@ class Game implements AgentGame {
       if (!nextMove) {
         let finishSearch = true;
         while (moveStack.length) {
-          const prevMove = moves.pop();
+          moves.pop();
           this.chess.undo();
-          if (prevMove) {
-            const square = prevMove.substring(2, 4) as Square;
-            if (!changedSquares.has(square)) {
-              sourceSquares.delete(square);
-            }
-          }
           const move = moveStack[moveStack.length-1].pop();
           if (!move) {
             moveStack.pop();
@@ -242,7 +234,6 @@ class Game implements AgentGame {
           }
           moves.push(move);
           this.chess.move(move);
-          sourceSquares.add(move.substring(2, 4) as Square);
           finishSearch = false;
           break;
         }
@@ -254,7 +245,6 @@ class Game implements AgentGame {
       moveStack.push(possibleMoves);
       moves.push(nextMove);
       this.chess.move(nextMove);
-      sourceSquares.add(nextMove.substring(2, 4) as Square);
     }
     for (let i = 0; i < moves.length; i++) {
       this.chess.undo();
