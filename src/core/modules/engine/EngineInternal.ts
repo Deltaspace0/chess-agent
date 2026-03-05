@@ -12,7 +12,7 @@ class EngineInternal extends EngineProcess {
     this.worker = utilityProcess.fork(workerPath);
     this.worker.on('message', (e) => {
       const stream = e.type === 'error' ? 'stderr' : 'stdout';
-      this.sendToListeners(stream, e.message);
+      this.emit(stream, e.message);
     });
   }
 
@@ -27,7 +27,7 @@ class EngineInternal extends EngineProcess {
     if (message.includes('Threads')) {
       return;
     }
-    this.sendToListeners('stdin', message);
+    this.emit('stdin', message);
     const words = message.split(' ');
     if (words[0] === 'setoption') {
       this.options[words[2]] = words[4];

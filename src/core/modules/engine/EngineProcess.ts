@@ -1,20 +1,13 @@
-type ListenerType = 'stdin' | 'stdout' | 'stderr' | 'exit';
-type Listener = (data: string) => void;
+import EventEmitter from 'events';
 
-abstract class EngineProcess {
-  private listeners: Record<ListenerType, Set<Listener>> = {
-    stdin: new Set(),
-    stdout: new Set(),
-    stderr: new Set(),
-    exit: new Set()
-  };
+interface ProcessEventMap {
+  stdin: [data: string];
+  stdout: [data: string];
+  stderr: [data: string];
+  exit: [code: string];
+}
 
-  protected sendToListeners(type: ListenerType, data: string) {
-    for (const listener of this.listeners[type]) {
-      listener(data);
-    }
-  }
-
+abstract class EngineProcess extends EventEmitter<ProcessEventMap> {
   abstract send(message: string): void;
 
   async expect(
@@ -24,7 +17,7 @@ abstract class EngineProcess {
   ): Promise<boolean> {
     return new Promise((resolve) => {
       const res = (result: boolean) => {
-        this.listeners.stdout.delete(listener);
+        this.removeListener('stdout', listener);
         resolve(result);
       };
       const listener = (data: string) => {
@@ -32,20 +25,12 @@ abstract class EngineProcess {
           res(true);
         }
       };
-      this.listeners.stdout.add(listener);
+      this.addListener('stdout', listener);
       setTimeout(() => res(false), delay);
       if (message) {
         this.send(message);
       }
     });
-  }
-
-  addListener(type: ListenerType, listener: Listener) {
-    this.listeners[type].add(listener);
-  }
-
-  removeListener(type: ListenerType, listener: Listener) {
-    this.listeners[type].delete(listener);
   }
 }
 

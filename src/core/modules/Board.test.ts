@@ -37,34 +37,40 @@ describe('Board', () => {
     it('should detect a dragging move', async () => {
       const mouse = new MouseMock();
       const board = getBoard(mouse);
-      const callback = vi.fn(() => true);
-      board.onMove(callback);
+      const listener = vi.fn();
+      board.addListener('move', (move, sendResult) => {
+        listener(move);
+        sendResult(true);
+      });
       await mouse.move({ x: 3.5, y: 6.5 });
       await mouse.press();
       await mouse.move({ x: 3.5, y: 4.5 });
       await mouse.release();
-      await expect.poll(() => callback).toHaveBeenCalledWith('d2d4');
+      await expect.poll(() => listener).toHaveBeenCalledWith('d2d4');
     });
 
     it('should detect a clicking move', async () => {
       const mouse = new MouseMock();
       const board = getBoard(mouse);
-      const callback = vi.fn(() => true);
-      board.onMove(callback);
+      const listener = vi.fn();
+      board.addListener('move', (move, sendResult) => {
+        listener(move);
+        sendResult(true);
+      });
       await mouse.move({ x: 3.5, y: 6.5 });
       await mouse.click();
       await mouse.move({ x: 3.5, y: 4.5 });
       await mouse.click();
-      await expect.poll(() => callback).toHaveBeenCalledWith('d2d4');
+      await expect.poll(() => listener).toHaveBeenCalledWith('d2d4');
     });
 
     it('should detect a move on click after illegal move', async () => {
       const mouse = new MouseMock();
       const board = getBoard(mouse);
       const firstMove = new Promise<void>((resolve) => {
-        board.onMove(() => {
+        board.addListener('move', (_, sendResult) => {
+          sendResult(false);
           resolve();
-          return false;
         });
       });
       await mouse.move({ x: 3.5, y: 6.5 });
@@ -72,20 +78,23 @@ describe('Board', () => {
       await mouse.move({ x: 4.5, y: 6.5 });
       await mouse.click();
       await firstMove;
-      const callback = vi.fn(() => true);
-      board.onMove(callback);
+      const listener = vi.fn();
+      board.addListener('move', (move, sendResult) => {
+        listener(move);
+        sendResult(true);
+      });
       await mouse.move({ x: 4.5, y: 4.5 });
       await mouse.click();
-      await expect.poll(() => callback).toHaveBeenCalledWith('e2e4');
+      await expect.poll(() => listener).toHaveBeenCalledWith('e2e4');
     });
 
     it('should not detect a move on click after legal move', async () => {
       const mouse = new MouseMock();
       const board = getBoard(mouse);
       const firstMove = new Promise<void>((resolve) => {
-        board.onMove(() => {
+        board.addListener('move', (_, sendResult) => {
+          sendResult(true);
           resolve();
-          return true;
         });
       });
       await mouse.move({ x: 3.5, y: 6.5 });
@@ -93,105 +102,111 @@ describe('Board', () => {
       await mouse.move({ x: 3.5, y: 4.5 });
       await mouse.click();
       await firstMove;
-      const callback = vi.fn(() => false);
-      board.onMove(callback);
+      const listener = vi.fn();
+      board.addListener('move', (move, sendResult) => {
+        listener(move);
+        sendResult(false);
+      });
       await mouse.move({ x: 1.5, y: 1.5 });
       await mouse.click();
       await new Promise((resolve) => setTimeout(resolve, 10));
-      expect(callback).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
     });
 
     it('should detect a move on the flipped board', async () => {
       const mouse = new MouseMock();
       const board = getBoard(mouse);
       board.setPerspective(false);
-      const callback = vi.fn(() => true);
-      board.onMove(callback);
+      const listener = vi.fn();
+      board.addListener('move', (move, sendResult) => {
+        listener(move);
+        sendResult(true);
+      });
       await mouse.move({ x: 3.5, y: 6.5 });
       await mouse.press();
       await mouse.move({ x: 3.5, y: 4.5 });
       await mouse.release();
-      await expect.poll(() => callback).toHaveBeenCalledWith('e7e5');
+      await expect.poll(() => listener).toHaveBeenCalledWith('e7e5');
     });
 
     it('should detect a pressed square', async () => {
       const mouse = new MouseMock();
       const board = getBoard(mouse);
-      const callback = vi.fn();
-      board.onMouseDownSquare(callback);
+      const listener = vi.fn();
+      board.addListener('squarepressed', listener);
       await mouse.move({ x: 1.5, y: 3.5 });
       await mouse.press();
-      await expect.poll(() => callback).toHaveBeenCalledWith('b5');
+      await expect.poll(() => listener).toHaveBeenCalledWith('b5');
     });
   
     describe('Promotion', () => {
       it('should detect Queen promotion', async () => {
         const mouse = new MouseMock();
         const board = getBoard(mouse);
-        const callback = vi.fn();
-        board.onPromotion(callback);
+        const listener = vi.fn();
+        board.addListener('promotion', listener);
         board.setPromotionMove('a7a8');
         await mouse.move({ x: 0.5, y: 0.5 });
         await mouse.click();
-        await expect.poll(() => callback).toHaveBeenCalledWith('q');
+        await expect.poll(() => listener).toHaveBeenCalledWith('q');
       });
 
       it('should detect Knight promotion', async () => {
         const mouse = new MouseMock();
         const board = getBoard(mouse);
-        const callback = vi.fn();
-        board.onPromotion(callback);
+        const listener = vi.fn();
+        board.addListener('promotion', listener);
         board.setPromotionMove('b7b8');
         await mouse.move({ x: 1.5, y: 1.5 });
         await mouse.click();
-        await expect.poll(() => callback).toHaveBeenCalledWith('n');
+        await expect.poll(() => listener).toHaveBeenCalledWith('n');
       });
 
       it('should detect Rook promotion', async () => {
         const mouse = new MouseMock();
         const board = getBoard(mouse);
-        const callback = vi.fn();
-        board.onPromotion(callback);
+        const listener = vi.fn();
+        board.addListener('promotion', listener);
         board.setPromotionMove('c7c8');
         await mouse.move({ x: 2.5, y: 2.5 });
         await mouse.click();
-        await expect.poll(() => callback).toHaveBeenCalledWith('r');
+        await expect.poll(() => listener).toHaveBeenCalledWith('r');
       });
 
       it('should detect Bishop promotion', async () => {
         const mouse = new MouseMock();
         const board = getBoard(mouse);
-        const callback = vi.fn();
-        board.onPromotion(callback);
+        const listener = vi.fn();
+        board.addListener('promotion', listener);
         board.setPromotionMove('d7d8');
         await mouse.move({ x: 3.5, y: 3.5 });
         await mouse.click();
-        await expect.poll(() => callback).toHaveBeenCalledWith('b');
+        await expect.poll(() => listener).toHaveBeenCalledWith('b');
       });
 
       it('should detect Bishop promotion on the flipped board', async () => {
         const mouse = new MouseMock();
         const board = getBoard(mouse);
         board.setPerspective(false);
-        const callback = vi.fn();
-        board.onPromotion(callback);
+        const listener = vi.fn();
+        board.addListener('promotion', listener);
         board.setPromotionMove('d7d8');
         await mouse.move({ x: 4.5, y: 4.5 });
         await mouse.click();
-        await expect.poll(() => callback).toHaveBeenCalledWith('b');
+        await expect.poll(() => listener).toHaveBeenCalledWith('b');
       });
 
       it('should not detect promotion with disabled autoPromotion', async () => {
         const mouse = new MouseMock();
         const board = getBoard(mouse);
         board.setAutoPromotion(false);
-        const callback = vi.fn();
-        board.onPromotion(callback);
+        const listener = vi.fn();
+        board.addListener('promotion', listener);
         board.setPromotionMove('d7d8');
         await mouse.move({ x: 3.5, y: 3.5 });
         await mouse.click();
         await new Promise((resolve) => setTimeout(resolve, 10));
-        expect(callback).not.toHaveBeenCalled();
+        expect(listener).not.toHaveBeenCalled();
       });
     });
   });

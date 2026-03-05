@@ -1,23 +1,43 @@
+import EventEmitter from 'events';
 import fs from 'fs';
 import { preferenceConfig, preferenceNames } from '../../config.ts';
 
-class PreferenceManager {
+type PreferenceUpdateEvents = {
+  [K in Preference as `update:${K}`]: [value: Preferences[K]];
+};
+
+type PreferenceManagerEventMap = PreferenceUpdateEvents & {
+  update: [ { [K in Preference]: [name: K, value: Preferences[K]] }[Preference] ];
+};
+
+class PreferenceManager extends EventEmitter<PreferenceManagerEventMap> {
   private preferences: Preferences;
-  private generalListener: typeof this.setPreference = () => {};
-  private listeners: Partial<PreferenceListeners> = {};
 
   constructor() {
+    super();
     const preferences: Partial<Record<Preference, unknown>> = {};
     for (const name of preferenceNames) {
       preferences[name] = preferenceConfig[name].defaultValue;
     }
     this.preferences = preferences as Preferences;
+    this.addListener('newListener', (name, listener) => {
+      if (typeof name !== 'string' || !name.startsWith('update:')) {
+        return;
+      }
+      listener(this.preferences[name.replace('update:', '') as Preference]);
+    });
   }
 
   setPreference<T extends Preference>(name: T, value: Preferences[T]) {
     this.preferences[name] = value;
-    this.generalListener(name, value);
-    this.listeners[name]?.(value);
+    (this.emit as (key: 'update', args: [T, Preferences[T]]) => boolean)(
+      'update', 
+      [name, value]
+    );
+    (this.emit as (key: string, val: Preferences[T]) => boolean)(
+      `update:${name}`, 
+      value
+    );
   }
 
   getPreference<T extends Preference>(name: T): Preferences[T] {
@@ -28,22 +48,6 @@ class PreferenceManager {
     const value = !this.preferences[name];
     this.setPreference(name, value);
     return value;
-  }
-
-  onUpdate(listener: typeof this.generalListener) {
-    this.generalListener = listener;
-  }
-
-  onUpdatePreference<T extends Preference>(
-    name: T,
-    listener: PreferenceListeners[T]
-  ) {
-    this.listeners[name] = listener;
-    try {
-      listener(this.preferences[name]);
-    } catch (e) {
-      console.log(e);
-    }
   }
 
   saveToFile(path: string) {

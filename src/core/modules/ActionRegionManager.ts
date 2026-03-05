@@ -1,19 +1,24 @@
+import EventEmitter from 'events';
 import type { Mouse } from './device/Mouse.ts';
+
+interface ActionRegionManagerEventMap {
+  hover: [name?: string];
+}
 
 interface ActionRegion {
   name?: string;
-  callback: () => void;
+  listener: () => void;
   getRegion: () => Region | null;
 }
 
-class ActionRegionManager {
+class ActionRegionManager extends EventEmitter<ActionRegionManagerEventMap> {
   private mouse: Mouse;
   private isActive: boolean;
   private actionRegions: ActionRegion[] = [];
   private hoveredAction?: string;
-  private hoverCallback: (name?: string) => void = () => {};
 
   constructor(mouse: Mouse, isActive?: boolean) {
+    super();
     this.mouse = mouse;
     this.isActive = isActive || false;
     mouse.addListener('mouseup', () => this.performAction());
@@ -25,14 +30,14 @@ class ActionRegionManager {
       return;
     }
     const { x, y } = await this.mouse.getPosition();
-    for (const { callback, getRegion } of this.actionRegions) {
+    for (const { listener, getRegion } of this.actionRegions) {
       const region = getRegion();
       if (!region) {
         continue;
       }
       const { left, top, width, height } = region;
       if (x >= left && y >= top && x <= left+width && y <= top+height) {
-        callback();
+        listener();
         return;
       }
     }
@@ -52,23 +57,19 @@ class ActionRegionManager {
       if (x >= left && y >= top && x <= left+width && y <= top+height) {
         if (this.hoveredAction !== name) {
           this.hoveredAction = name;
-          this.hoverCallback(name);
+          this.emit('hover', name);
         }
         return;
       }
     }
     if (this.hoveredAction !== undefined) {
       this.hoveredAction = undefined;
-      this.hoverCallback();
+      this.emit('hover');
     }
   }
 
   getHoveredAction(): string | undefined {
     return this.hoveredAction;
-  }
-
-  onHover(callback: (name?: string) => void) {
-    this.hoverCallback = callback;
   }
 
   addActionRegion(actionRegion: ActionRegion) {

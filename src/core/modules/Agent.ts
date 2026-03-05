@@ -1,5 +1,12 @@
 import type { Color, Piece } from 'chess.js';
 import { sleep } from '@nut-tree-fork/nut-js';
+import EventEmitter from 'events';
+
+interface AgentEventMap {
+  moves: [moves: string[]];
+  promotion: [move: string];
+  status: [status: string];
+}
 
 export interface AgentEngine {
   reset(fen?: string): void;
@@ -7,8 +14,8 @@ export interface AgentEngine {
   undo(): string;
   sendMove(move: string, skipAnalysis?: boolean): string;
   getEngineInfo(): EngineInfo;
-  onEngineInfo(callback: (value: EngineInfo) => void): void;
-  offEngineInfo(callback: (value: EngineInfo) => void): void;
+  addListener(event: 'info', listener: (value: EngineInfo) => void): void;
+  removeListener(event: 'info', listener: (value: EngineInfo) => void): void;
 }
 
 export interface AgentGame {
@@ -44,17 +51,15 @@ interface AgentModules<T> {
   recognizer: AgentRecognizer<T>;
 }
 
-export class Agent<T> {
+export class Agent<T> extends EventEmitter<AgentEventMap> {
   private engine: AgentEngine;
   private game: AgentGame;
   private recognizer: AgentRecognizer<T>;
   private promotionMove: string = '';
   private stopBestMove: (() => void) | null = null;
-  private moveCallback: (value: string[]) => void = () => {};
-  private promotionCallback: (move: string) => void = () => {};
-  private statusCallback: (status: string) => void = console.log;
 
   constructor(modules: AgentModules<T>) {
+    super();
     this.engine = modules.engine;
     this.game = modules.game;
     this.recognizer = modules.recognizer;
@@ -69,13 +74,13 @@ export class Agent<T> {
   }
 
   private async recognizeDirect(hashes?: T): Promise<[Piece, number, number][]> {
-    this.statusCallback('Recognizing board...');
+    this.emit('status', 'Recognizing board...');
     try {
       const pieces = await this.recognizer.recognizeBoard(hashes);
       return pieces;
     } catch (e) {
       console.error(e);
-      this.statusCallback('Failed to recognize board');
+      this.emit('status', 'Failed to recognize board');
       throw e;
     }
   }
@@ -89,38 +94,38 @@ export class Agent<T> {
     }
     this.recognizer.stopWaitingMove();
     if (gameOver) {
-      this.statusCallback('Game is over');
+      this.emit('status', 'Game is over');
     } else {
-      this.statusCallback('Ready');
+      this.emit('status', 'Ready');
     }
-    this.moveCallback(moves);
+    this.emit('moves', moves);
   }
 
   processMove(move: string): boolean {
     if (move === 'undo') {
       this.undoMove();
-      this.moveCallback([move]);
+      this.emit('moves', [move]);
       return true;
     }
     const piece = this.game.get(move.substring(0, 2));
     const isPromotion = '18'.includes(move[3]) && piece?.type === 'p';
     if (isPromotion && move.length < 5) {
       if (!this.game.isLegalMove(move+'q')) {
-        this.statusCallback(`Illegal move: ${move}`);
+        this.emit('status', `Illegal move: ${move}`);
         return false;
       }
       if (this.promotionMove.length === 5) {
         move = this.promotionMove;
       } else {
         this.promotionMove = move;
-        this.promotionCallback(move);
+        this.emit('promotion', move);
         return true;
       }
     }
     this.promotionMove = '';
     if (!this.game.move(move)) {
       if (piece) {
-        this.statusCallback(`Illegal move: ${move}`);
+        this.emit('status', `Illegal move: ${move}`);
       }
       return false;
     }
@@ -129,10 +134,10 @@ export class Agent<T> {
     console.log(`Moves: ${moves}`);
     this.recognizer.stopWaitingMove();
     if (gameOver) {
-      this.statusCallback('Game is over');
+      this.emit('status', 'Game is over');
       return true;
     }
-    this.moveCallback([move]);
+    this.emit('moves', [move]);
     return true;
   }
 
@@ -146,10 +151,10 @@ export class Agent<T> {
     }
     let { bestMove, ponderMove } = this.engine.getEngineInfo();
     if (!bestMove) {
-      this.statusCallback('Waiting for best move...');
+      this.emit('status', 'Waiting for best move...');
       [bestMove, ponderMove] = await new Promise((resolve) => {
         const resolveInfo = (bestMove?: string, ponderMove?: string) => {
-          this.engine.offEngineInfo(listener);
+          this.engine.removeListener('info', listener);
           resolve([bestMove, ponderMove]);
         };
         this.stopBestMove = () => resolveInfo();
@@ -158,15 +163,15 @@ export class Agent<T> {
             resolveInfo(bestMove, ponderMove);
           }
         };
-        this.engine.onEngineInfo(listener);
+        this.engine.addListener('info', listener);
       });
     }
     this.stopBestMove = null;
     if (!bestMove) {
-      this.statusCallback('Canceled best move');
+      this.emit('status', 'Canceled best move');
       return null;
     }
-    this.statusCallback(`Best move: ${bestMove}, ponder: ${ponderMove}`);
+    this.emit('status', `Best move: ${bestMove}, ponder: ${ponderMove}`);
     if (bestMove !== null) {
       this.promotionMove = bestMove;
     }
@@ -187,12 +192,12 @@ export class Agent<T> {
       ? this.game.setOppTurn()
       : this.game.setMyTurn();
     if (result) {
-      this.statusCallback('Ready');
+      this.emit('status', 'Ready');
     } else {
-      this.statusCallback('Failed to set turn');
+      this.emit('status', 'Failed to set turn');
     }
     this.syncEngine();
-    this.moveCallback([]);
+    this.emit('moves', []);
   }
 
   async recognizeBoardAfterMove(opponentToMove?: boolean) {
@@ -209,16 +214,16 @@ export class Agent<T> {
         return;
       }
     }
-    this.statusCallback('Waiting for move...');
+    this.emit('status', 'Waiting for move...');
     try {
       const hashes = await waitPromise;
       return this.recognizeBoard(opponentToMove, hashes);
     } catch (e) {
       if (e instanceof Error && e.message === 'stop') {
-        this.statusCallback('Stopped waiting');
+        this.emit('status', 'Stopped waiting');
       } else {
         console.log(e);
-        this.statusCallback('Error during move waiting');
+        this.emit('status', 'Error during move waiting');
       }
     }
   }
@@ -227,11 +232,11 @@ export class Agent<T> {
     this.recognizer.stopWaitingMove();
     const result = this.game.skipMove();
     if (!result) {
-      this.statusCallback(`Failed to skip turn`);
+      this.emit('status', `Failed to skip turn`);
       return;
     }
     this.syncEngine();
-    this.statusCallback(`${result === 'w' ? 'White' : 'Black'} to move`);
+    this.emit('status', `${result === 'w' ? 'White' : 'Black'} to move`);
   }
 
   undoMove() {
@@ -245,14 +250,14 @@ export class Agent<T> {
     this.recognizer.stopWaitingMove();
     this.game.reset();
     this.engine.reset();
-    this.statusCallback('Reset');
+    this.emit('status', 'Reset');
   }
 
   clearPosition() {
     this.recognizer.stopWaitingMove();
     this.game.clear();
     this.syncEngine();
-    this.statusCallback('Clear');
+    this.emit('status', 'Clear');
   }
 
   loadPosition(fen: string) {
@@ -260,11 +265,11 @@ export class Agent<T> {
     try {
       this.game.load(fen);
     } catch {
-      this.statusCallback('Invalid FEN');
+      this.emit('status', 'Invalid FEN');
       return;
     }
     this.engine.reset(fen);
-    this.statusCallback('New position');
+    this.emit('status', 'New position');
   }
 
   loadPositionInfo(info: PositionInfo) {
@@ -285,17 +290,5 @@ export class Agent<T> {
     if (this.promotionMove) {
       this.processMove(this.promotionMove+piece);
     }
-  }
-
-  onMoves(callback: (value: string[]) => void) {
-    this.moveCallback = callback;
-  }
-
-  onPromotion(callback: (move: string) => void) {
-    this.promotionCallback = callback;
-  }
-
-  onUpdateStatus(callback: (status: string) => void) {
-    this.statusCallback = callback;
   }
 }

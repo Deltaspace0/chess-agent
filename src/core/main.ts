@@ -206,8 +206,10 @@ function debounce<T>(callback: (x: T) => void) {
     });
   });
   const board = new Board(mouse);
-  board.onMove((move) => agent.processMove(move));
-  board.onPromotion((piece) => agent.promoteTo(piece));
+  board.addListener('move', (move, sendResult) => {
+    sendResult(agent.processMove(move));
+  });
+  board.addListener('promotion', (piece) => agent.promoteTo(piece));
   const engineExternal = new EngineExternal();
   engineExternal.addListener('stdin', (data) => {
     sendEngineData('external', '<<< '+data);
@@ -251,13 +253,13 @@ function debounce<T>(callback: (x: T) => void) {
     sendEngineData('internal', '!>> '+data);
   });
   const engineUCI = new EngineUCI();
-  engineUCI.onEngineInfo(debounce((value) => {
+  engineUCI.addListener('info', debounce((value) => {
     const pv = value.principalVariations;
     const pv1 = pv.map((x) => game.formatPrincipalVariation(x));
     sendSignal('engineInfo', { ...value, principalVariations: pv1 });
   }));
   const game = new Game();
-  game.onUpdatePosition((value) => {
+  game.addListener('position', (value) => {
     sendSignal('positionInfo', game.getPositionInfo());
     sendSignal('positionFEN', value);
   });
@@ -288,8 +290,8 @@ function debounce<T>(callback: (x: T) => void) {
       return playMove(nextMove);
     }
   };
-  agent.onUpdateStatus(updateStatus);
-  agent.onMoves(async () => {
+  agent.addListener('status', updateStatus);
+  agent.addListener('moves', async () => {
     if (!preferenceManager.getPreference('region')) {
       return;
     }
@@ -308,7 +310,7 @@ function debounce<T>(callback: (x: T) => void) {
       agent.recognizeBoardAfterMove();
     }
   });
-  agent.onPromotion((move) => {
+  agent.addListener('promotion', (move) => {
     if (preferenceManager.getPreference('autoQueen')) {
       agent.promoteTo('q');
     } else {
@@ -337,7 +339,7 @@ function debounce<T>(callback: (x: T) => void) {
     const prefix = prefConfig.statusPrefix ?? (prefConfig.label+': ');
     updateStatus(`${prefix}${nextValue}${prefConfig.statusSuffix ?? ''}`);
   };
-  const actionCallbacks: Record<Action, () => void> = {
+  const actionListeners: Record<Action, () => void> = {
     selectRegion: () => selectRegion(),
     hideRegion: () => overlayWin.close(),
     loadHashes: () => {
@@ -473,21 +475,23 @@ function debounce<T>(callback: (x: T) => void) {
     autoCastling: () => toggleBooleanPreference('autoCastling')
   };
   const actionRegionManager = new ActionRegionManager(mouse);
-  actionRegionManager.onHover((name?: string) => sendSignal('hoveredAction', name));
+  actionRegionManager.addListener('hover', (name?: string) => {
+    sendSignal('hoveredAction', name);
+  });
   for (const location of possibleLocations) {
     actionRegionManager.addActionRegion({
       name: location,
-      callback: () => {
+      listener: () => {
         const locations = preferenceManager.getPreference('actionLocations');
         const action = locations[location];
         if (!action) {
           return;
         }
-        const callback = actionCallbacks[action];
-        if (!callback) {
-          throw new Error('No callback for action: '+action);
+        const listener = actionListeners[action];
+        if (!listener) {
+          throw new Error('No listener for action: '+action);
         }
-        callback();
+        listener();
       },
       getRegion: () => {
         const region = preferenceManager.getPreference('region');
@@ -498,7 +502,9 @@ function debounce<T>(callback: (x: T) => void) {
       }
     });
   }
-  preferenceManager.onUpdate((name, value) => sendPreference(name, value));
+  preferenceManager.addListener('update', ([name, value]) => {
+    sendPreference(name, value);
+  });
   const preferenceListeners: Partial<PreferenceListeners> = {
     alwaysOnTop: (value) => {
       mainWin.setAlwaysOnTop(value, 'normal');
@@ -536,7 +542,7 @@ function debounce<T>(callback: (x: T) => void) {
     autoCastling: (value) => game.setAutoCastling(value)
   };
   for (const [name, listener] of Object.entries(preferenceListeners)) {
-    preferenceManager.onUpdatePreference(name as Preference, listener);
+    preferenceManager.addListener(`update:${name}`, listener);
   }
   ipcMain.on('preference', (_, name, value) => {
     preferenceManager.setPreference(name, value);
@@ -565,7 +571,7 @@ function debounce<T>(callback: (x: T) => void) {
   });
   onSignal('positionFEN', (value) => agent.loadPosition(value));
   onSignal('positionInfo', (value) => agent.loadPositionInfo(value));
-  onSignal('action', (value) => actionCallbacks[value]());
+  onSignal('action', (value) => actionListeners[value]());
   onSignal('requestPreference', (name) => {
     const value = preferenceManager.getPreference(name);
     sendPreference(name, value);

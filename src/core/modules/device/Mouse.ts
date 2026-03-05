@@ -1,29 +1,20 @@
 import { utilityProcess, type UtilityProcess } from 'electron';
+import EventEmitter from 'events';
 import { mouse, sleep } from '@nut-tree-fork/nut-js';
 import path from 'path';
 import { uIOhook } from 'uiohook-napi';
 
 const actionWorkerPath = path.join(import.meta.dirname, 'mouse-actions.js');
 
-type ListenerType = 'mousedown' | 'mouseup' | 'mousemove' | 'mousewheel';
-type Listener = () => void;
+interface MouseEventMap {
+  mousedown: [];
+  mouseup: [];
+  mousemove: [];
+  mousewheel: [];
+}
 
-export abstract class Mouse {
-  private listeners: Record<ListenerType, Set<Listener>> = {
-    mousedown: new Set(),
-    mouseup: new Set(),
-    mousemove: new Set(),
-    mousewheel: new Set()
-  };
+export abstract class Mouse extends EventEmitter<MouseEventMap> {
   protected isActive: boolean = true;
-
-  protected notifyListeners(type: ListenerType) {
-    if (this.isActive) {
-      for (const listener of this.listeners[type]) {
-        listener();
-      }
-    }
-  }
 
   abstract getPosition(): Promise<Point>;
   abstract move(point: Point): Promise<void>;
@@ -39,14 +30,6 @@ export abstract class Mouse {
   setActive(value: boolean) {
     this.isActive = value;
   }
-
-  addListener(type: ListenerType, listener: Listener) {
-    this.listeners[type].add(listener);
-  }
-
-  removeListener(type: ListenerType, listener: Listener) {
-    this.listeners[type].delete(listener);
-  }
 }
 
 export class ConcreteMouse extends Mouse {
@@ -56,10 +39,10 @@ export class ConcreteMouse extends Mouse {
   constructor() {
     super();
     this.actionWorker = utilityProcess.fork(actionWorkerPath);
-    uIOhook.on('mousedown', () => this.notifyListeners('mousedown'));
-    uIOhook.on('mouseup', () => this.notifyListeners('mouseup'));
-    uIOhook.on('mousemove', () => this.notifyListeners('mousemove'));
-    uIOhook.on('wheel', () => this.notifyListeners('mousewheel'));
+    uIOhook.on('mousedown', () => this.emit('mousedown'));
+    uIOhook.on('mouseup', () => this.emit('mouseup'));
+    uIOhook.on('mousemove', () => this.emit('mousemove'));
+    uIOhook.on('wheel', () => this.emit('mousewheel'));
   }
 
   private async performAction(action: string, arg: unknown) {
@@ -155,20 +138,20 @@ export class MouseMock extends Mouse {
 
   async move(point: Point): Promise<void> {
     this.position = point;
-    this.notifyListeners('mousemove');
+    this.emit('mousemove');
   }
 
   async click(): Promise<void> {
-    this.notifyListeners('mousedown');
-    this.notifyListeners('mouseup');
+    this.emit('mousedown');
+    this.emit('mouseup');
   }
 
   async press(): Promise<void> {
-    this.notifyListeners('mousedown');
+    this.emit('mousedown');
   }
 
   async release(): Promise<void> {
-    this.notifyListeners('mouseup');
+    this.emit('mouseup');
   }
 
   async sleep(): Promise<void> {}

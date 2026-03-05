@@ -11,8 +11,8 @@ function getEngineMock(bestMove?: string): AgentEngine {
     undo: vi.fn(),
     sendMove: vi.fn(),
     getEngineInfo: vi.fn(() => ({ bestMove, principalVariations: [] })),
-    onEngineInfo: vi.fn(),
-    offEngineInfo: vi.fn()
+    addListener: vi.fn(),
+    removeListener: vi.fn()
   };
 }
 
@@ -39,32 +39,32 @@ describe('Agent', () => {
   describe('Move processing', () => {
     it('should process a legal move', () => {
       const agent = getAgent(getEngineMock(), getRecognizerMock());
-      const callback = vi.fn();
-      agent.onMoves(callback);
+      const listener = vi.fn();
+      agent.addListener('moves', listener);
       const result = agent.processMove('e2e4');
       expect(result).toBe(true);
-      expect(callback).toHaveBeenCalledWith(['e2e4']);
+      expect(listener).toHaveBeenCalledWith(['e2e4']);
     });
 
     it('should process an illegal move', () => {
       const agent = getAgent(getEngineMock(), getRecognizerMock());
-      const callback = vi.fn();
-      agent.onMoves(callback);
+      const listener = vi.fn();
+      agent.addListener('moves', listener);
       const result = agent.processMove('e2e5');
       expect(result).toBe(false);
-      expect(callback).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
     });
 
     it('should not call onMove after checkmate', () => {
       const agent = getAgent(getEngineMock(), getRecognizerMock());
-      const callback = vi.fn();
+      const listener = vi.fn();
       agent.processMove('f2f3');
       agent.processMove('e7e5');
       agent.processMove('g2g4');
-      agent.onMoves(callback);
+      agent.addListener('moves', listener);
       const result = agent.processMove('d8h4');
       expect(result).toBe(true);
-      expect(callback).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
     });
 
     it('should undo a move when undo keyword is sent', () => {
@@ -86,17 +86,17 @@ describe('Agent', () => {
       const move = await agent.findBestMove();
       expect(move).toBe('e2e4');
       expect(engine.getEngineInfo).toHaveBeenCalled();
-      expect(engine.offEngineInfo).not.toHaveBeenCalled();
+      expect(engine.removeListener).not.toHaveBeenCalled();
     });
 
     it('should return the best move after waiting', async () => {
       const engine = getEngineMock();
       const agent = getAgent(engine, getRecognizerMock());
-      engine.onEngineInfo = vi.fn((f) => f({ bestMove: 'e2e4' }));
+      engine.addListener = vi.fn((_, f) => f({ bestMove: 'e2e4' }));
       const move = await agent.findBestMove();
       expect(move).toBe('e2e4');
-      expect(engine.onEngineInfo).toHaveBeenCalled();
-      expect(engine.offEngineInfo).toHaveBeenCalled();
+      expect(engine.addListener).toHaveBeenCalled();
+      expect(engine.removeListener).toHaveBeenCalled();
     });
 
     it('should stop waiting for the best move', async () => {
@@ -105,7 +105,7 @@ describe('Agent', () => {
       const movePromise = agent.findBestMove();
       agent.findBestMove();
       await expect(movePromise).resolves.toBe(null);
-      expect(engine.offEngineInfo).toHaveBeenCalled();
+      expect(engine.removeListener).toHaveBeenCalled();
     });
   });
 
@@ -145,20 +145,20 @@ describe('Agent', () => {
   describe('Promotion', () => {
     it('should make a promotion request', () => {
       const agent = getAgent(getEngineMock(), getRecognizerMock());
-      const callback = vi.fn();
-      agent.onPromotion(callback);
+      const listener = vi.fn();
+      agent.addListener('promotion', listener);
       agent.loadPosition('6k1/1P6/8/8/8/8/8/6K1 w - - 0 1');
       agent.processMove('b7b8');
-      expect(callback).toHaveBeenCalled();
+      expect(listener).toHaveBeenCalled();
     });
 
     it('should not make a promotion request on illegal move', () => {
       const agent = getAgent(getEngineMock(), getRecognizerMock());
-      const callback = vi.fn();
-      agent.onPromotion(callback);
+      const listener = vi.fn();
+      agent.addListener('promotion', listener);
       agent.loadPosition('6k1/1P6/8/8/8/8/8/6K1 w - - 0 1');
       agent.processMove('b7a8');
-      expect(callback).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
     });
 
     it('should promote a pawn to the chosen piece', () => {

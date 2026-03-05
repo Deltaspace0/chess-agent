@@ -47,8 +47,8 @@ describe('Game', () => {
     it('should put new piece on the board', () => {
       const game = new Game();
       game.load('6k1/5p1p/6p1/8/8/7P/5PP1/6K1 w - - 0 1');
-      const callback = vi.fn();
-      game.onUpdatePosition(callback);
+      const listener = vi.fn();
+      game.addListener('position', listener);
       const result = game.putPieceEdit({
         sourceSquare: null,
         targetSquare: 'a2',
@@ -56,14 +56,14 @@ describe('Game', () => {
       });
       expect(result).toBe(true);
       const expectedFen = '6k1/5p1p/6p1/8/8/7P/P4PP1/6K1 w - - 0 1';
-      expect(callback).toHaveBeenCalledWith(expectedFen);
+      expect(listener).toHaveBeenCalledWith(expectedFen);
     });
 
     it('should remove a piece from the board', () => {
       const game = new Game();
       game.load('6k1/5p1p/6p1/8/8/7P/P4PP1/6K1 w - - 0 1');
-      const callback = vi.fn();
-      game.onUpdatePosition(callback);
+      const listener = vi.fn();
+      game.addListener('position', listener);
       const result = game.putPieceEdit({
         sourceSquare: 'a2',
         targetSquare: null,
@@ -71,14 +71,14 @@ describe('Game', () => {
       });
       expect(result).toBe(true);
       const expectedFen = '6k1/5p1p/6p1/8/8/7P/5PP1/6K1 w - - 0 1';
-      expect(callback).toHaveBeenCalledWith(expectedFen);
+      expect(listener).toHaveBeenCalledWith(expectedFen);
     });
 
     it('should move a piece to a new square', () => {
       const game = new Game();
       game.load('6k1/5p1p/6p1/8/8/7P/5PP1/6K1 w - - 0 1');
-      const callback = vi.fn();
-      game.onUpdatePosition(callback);
+      const listener = vi.fn();
+      game.addListener('position', listener);
       const result = game.putPieceEdit({
         sourceSquare: 'f2',
         targetSquare: 'a2',
@@ -86,14 +86,14 @@ describe('Game', () => {
       });
       expect(result).toBe(true);
       const expectedFen = '6k1/5p1p/6p1/8/8/7P/P5P1/6K1 w - - 0 1';
-      expect(callback).toHaveBeenCalledWith(expectedFen);
+      expect(listener).toHaveBeenCalledWith(expectedFen);
     });
 
     it('should change the turn when the enemy King is attacked', () => {
       const game = new Game();
       game.load('6k1/5p1p/6p1/8/8/7P/5PP1/6K1 w - - 0 1');
-      const callback = vi.fn();
-      game.onUpdatePosition(callback);
+      const listener = vi.fn();
+      game.addListener('position', listener);
       const result = game.putPieceEdit({
         sourceSquare: null,
         targetSquare: 'a8',
@@ -101,21 +101,21 @@ describe('Game', () => {
       });
       expect(result).toBe(true);
       const expectedFen = 'R5k1/5p1p/6p1/8/8/7P/5PP1/6K1 b - - 1 1';
-      expect(callback).toHaveBeenCalledWith(expectedFen);
+      expect(listener).toHaveBeenCalledWith(expectedFen);
     });
 
     it('should not put the second White (Black) King on the board', () => {
       const game = new Game();
       game.load('6k1/5p1p/6p1/8/8/7P/5PP1/6K1 w - - 0 1');
-      const callback = vi.fn();
-      game.onUpdatePosition(callback);
+      const listener = vi.fn();
+      game.addListener('position', listener);
       const result = game.putPieceEdit({
         sourceSquare: null,
         targetSquare: 'f1',
         piece: 'wk'
       });
       expect(result).toBe(false);
-      expect(callback).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
     });
   });
 
@@ -124,30 +124,30 @@ describe('Game', () => {
       const game = new Game();
       game.setAutoCastling(true);
       game.load('rnbqkbnr/pppppppp/8/8/8/3K4/PPPPPPPP/RNBQ1BNR w kq - 0 1');
-      const callback = vi.fn();
-      game.onUpdatePosition(callback);
+      const listener = vi.fn();
+      game.addListener('position', listener);
       game.putPieceEdit({
         sourceSquare: 'd3',
         targetSquare: 'e1',
         piece: 'wk'
       });
       const expectedFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-      expect(callback).toHaveBeenCalledWith(expectedFen);
+      expect(listener).toHaveBeenCalledWith(expectedFen);
     });
 
     it('should not set castling rights if auto castling is disabled', () => {
       const game = new Game();
       game.setAutoCastling(false);
       game.load('rnbqkbnr/pppppppp/8/8/8/3K4/PPPPPPPP/RNBQ1BNR w kq - 0 1');
-      const callback = vi.fn();
-      game.onUpdatePosition(callback);
+      const listener = vi.fn();
+      game.addListener('position', listener);
       game.putPieceEdit({
         sourceSquare: 'd3',
         targetSquare: 'e1',
         piece: 'wk'
       });
       const expectedFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w kq - 0 1';
-      expect(callback).toHaveBeenCalledWith(expectedFen);
+      expect(listener).toHaveBeenCalledWith(expectedFen);
     });
   });
 
@@ -155,22 +155,22 @@ describe('Game', () => {
     it('should skip a move if the position allows it', () => {
       const game = new Game();
       game.load('6k1/5p1p/6p1/8/8/7P/5PP1/6K1 w - - 0 1');
-      const callback = vi.fn();
-      game.onUpdatePosition(callback);
+      const listener = vi.fn();
+      game.addListener('position', listener);
       const result = game.skipMove();
       expect(result).toBe('b');
       const expectedFen = '6k1/5p1p/6p1/8/8/7P/5PP1/6K1 b - - 1 1';
-      expect(callback).toHaveBeenCalledWith(expectedFen);
+      expect(listener).toHaveBeenCalledWith(expectedFen);
     });
 
     it('should not skip a move if the position does not allow it', () => {
       const game = new Game();
       game.load('R5k1/5p1p/6p1/8/8/7P/5PP1/6K1 b - - 1 1');
-      const callback = vi.fn();
-      game.onUpdatePosition(callback);
+      const listener = vi.fn();
+      game.addListener('position', listener);
       const result = game.skipMove();
       expect(result).toBe(null);
-      expect(callback).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
     });
   });
 

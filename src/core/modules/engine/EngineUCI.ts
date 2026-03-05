@@ -1,6 +1,11 @@
+import EventEmitter from 'events';
 import type { AgentEngine } from '../Agent.ts';
 import EngineProcess from './EngineProcess.ts';
 import { preferenceConfig } from '../../../config.ts';
+
+interface EngineUCIEventMap {
+  info: [value: EngineInfo];
+}
 
 interface EngineOptions {
   duration: number;
@@ -19,7 +24,7 @@ function getNumberValue(words: string[], name: string): number {
   return Number(words[words.indexOf(name)+1]);
 }
 
-class EngineUCI implements AgentEngine {
+class EngineUCI extends EventEmitter<EngineUCIEventMap> implements AgentEngine {
   private process: EngineProcess | null = null;
   private loadingProcess: EngineProcess | null = null;
   private processLock: Promise<void> = Promise.resolve();
@@ -34,7 +39,6 @@ class EngineUCI implements AgentEngine {
     threads: preferenceConfig.engineThreads.defaultValue,
     skillLevel: preferenceConfig.engineLevel.defaultValue
   };
-  private infoListeners = new Set<(value: EngineInfo) => void>();
   private processListener = this.processData.bind(this);
 
   private async sendToProcess(data: string | string[]) {
@@ -101,9 +105,7 @@ class EngineUCI implements AgentEngine {
   }
 
   private sendEngineInfo() {
-    for (const listener of this.infoListeners) {
-      listener(this.engineInfo);
-    }
+    this.emit('info', this.engineInfo);
   }
 
   private setPrincipalVariation(pv: number, move: PrincipalVariation) {
@@ -211,14 +213,6 @@ class EngineUCI implements AgentEngine {
     this.moves.pop();
     this.analyzePosition();
     return this.getMoves();
-  }
-
-  onEngineInfo(listener: (value: EngineInfo) => void) {
-    this.infoListeners.add(listener);
-  }
-
-  offEngineInfo(listener: (value: EngineInfo) => void) {
-    this.infoListeners.delete(listener);
   }
 }
 

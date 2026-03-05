@@ -30,7 +30,7 @@ class ProcessMock extends EngineProcess {
   }
 
   output(data: string) {
-    this.sendToListeners('stdout', data);
+    this.emit('stdout', data);
   }
 }
 
@@ -118,11 +118,11 @@ describe('EngineUCI', () => {
     it('should receive uci name and author', async () => {
       const process = new ProcessMock();
       const engine = getEngine(process);
-      const callback = vi.fn();
-      engine.onEngineInfo(callback);
+      const listener = vi.fn();
+      engine.addListener('info', listener);
       process.output('id name <test name>');
       process.output('id author <test author>');
-      await expect.poll(() => callback).toHaveBeenCalledWith({
+      await expect.poll(() => listener).toHaveBeenCalledWith({
         name: '<test name>',
         author: '<test author>',
         principalVariations: []
@@ -132,12 +132,12 @@ describe('EngineUCI', () => {
     it('should send correct engine info', async () => {
       const process = new ProcessMock();
       const engine = await getInitializedEngine(process);
-      const callback = vi.fn();
-      engine.onEngineInfo(callback);
+      const listener = vi.fn();
+      engine.addListener('info', listener);
       engine.sendMove('f2f3');
       process.output('info depth 13 seldepth 20 multipv 1 score cp 96 nodes '+
         '322797 nps 321831 hashfull 148 tbhits 0 time 1003 pv e7e5');
-      await expect.poll(() => callback).toHaveBeenCalledWith({
+      await expect.poll(() => listener).toHaveBeenCalledWith({
         depth: 13,
         nodes: 322797,
         nodesPerSecond: 321831,
@@ -151,15 +151,15 @@ describe('EngineUCI', () => {
       const engine = await getInitializedEngine(process);
       engine.setOption('multiPV', 3);
       await waitMessageMatch(process, /^go /);
-      const callback = vi.fn();
-      engine.onEngineInfo(callback);
+      const listener = vi.fn();
+      engine.addListener('info', listener);
       process.output('info depth 13 seldepth 19 multipv 1 score cp 80 nodes '+
         '252001 nps 251498 hashfull 102 tbhits 0 time 1002 pv e2e4');
       process.output('info depth 12 seldepth 17 multipv 2 score cp 52 nodes '+
         '252001 nps 251498 hashfull 102 tbhits 0 time 1002 pv c2c4 e7e6');
       process.output('info depth 12 seldepth 12 multipv 3 score cp 52 nodes '+
         '252001 nps 251498 hashfull 102 tbhits 0 time 1002 pv d2d4 d7d5');
-      await expect.poll(() => callback).toHaveBeenCalledWith(
+      await expect.poll(() => listener).toHaveBeenCalledWith(
         expect.objectContaining({ principalVariations: [
           { evaluation: 'cp 80', variation: 'e2e4' },
           { evaluation: 'cp 52', variation: 'c2c4 e7e6' },
@@ -171,10 +171,10 @@ describe('EngineUCI', () => {
     it('should send best and ponder moves', async () => {
       const process = new ProcessMock();
       const engine = await getInitializedEngine(process);
-      const callback = vi.fn();
-      engine.onEngineInfo(callback);
+      const listener = vi.fn();
+      engine.addListener('info', listener);
       process.output('bestmove e2e4 ponder e7e5');
-      await expect.poll(() => callback).toHaveBeenCalledWith(
+      await expect.poll(() => listener).toHaveBeenCalledWith(
         expect.objectContaining({ bestMove: 'e2e4', ponderMove: 'e7e5' })
       );
     });
@@ -182,10 +182,10 @@ describe('EngineUCI', () => {
     it('should not send ponder move if it is not provided', async () => {
       const process = new ProcessMock();
       const engine = await getInitializedEngine(process);
-      const callback = vi.fn();
-      engine.onEngineInfo(callback);
+      const listener = vi.fn();
+      engine.addListener('info', listener);
       process.output('bestmove e2e4');
-      await expect.poll(() => callback).toHaveBeenCalledWith(
+      await expect.poll(() => listener).toHaveBeenCalledWith(
         expect.objectContaining({ bestMove: 'e2e4', ponderMove: undefined })
       );
     });

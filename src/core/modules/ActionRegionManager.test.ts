@@ -9,50 +9,50 @@ const getRegion2 = () => ({ left: 20, top: 40, width: 20, height: 20 });
 describe('Action region manager', () => {
   it('should do the action when its region is clicked', async () => {
     const actionRegionManager = new ActionRegionManager(mouse, true);
-    const callback = vi.fn();
-    actionRegionManager.addActionRegion({ callback, getRegion });
+    const listener = vi.fn();
+    actionRegionManager.addActionRegion({ listener, getRegion });
     await mouse.move({ x: 30, y: 30 });
     await mouse.click();
-    expect(callback).toHaveBeenCalled();
+    expect(listener).toHaveBeenCalled();
   });
 
   it('should not do the action when clicking outside the region', async () => {
     const actionRegionManager = new ActionRegionManager(mouse, true);
-    const callback = vi.fn();
-    actionRegionManager.addActionRegion({ callback, getRegion });
+    const listener = vi.fn();
+    actionRegionManager.addActionRegion({ listener, getRegion });
     await mouse.move({ x: 50, y: 20 });
     await mouse.click();
-    expect(callback).not.toHaveBeenCalled();
+    expect(listener).not.toHaveBeenCalled();
   });
 
   it('should not do the action when not active', async () => {
     const actionRegionManager = new ActionRegionManager(mouse, false);
-    const callback = vi.fn();
-    actionRegionManager.addActionRegion({ callback, getRegion });
+    const listener = vi.fn();
+    actionRegionManager.addActionRegion({ listener, getRegion });
     await mouse.move({ x: 30, y: 30 });
     await mouse.click();
-    expect(callback).not.toHaveBeenCalled();
+    expect(listener).not.toHaveBeenCalled();
   });
 
-  it('should call hover callback when hovering over the region', async () => {
+  it('should call hover listener when hovering over the region', async () => {
     const actionRegionManager = new ActionRegionManager(mouse, true);
-    const callback = vi.fn();
-    actionRegionManager.onHover(callback);
+    const listener = vi.fn();
+    actionRegionManager.addListener('hover', listener);
     actionRegionManager.addActionRegion({
       name: 'action1',
-      callback: () => {},
+      listener: () => {},
       getRegion
     });
     actionRegionManager.addActionRegion({
       name: 'action2',
-      callback: () => {},
+      listener: () => {},
       getRegion: getRegion2
     });
     await mouse.move({ x: 30, y: 30 });
-    expect(callback).toHaveBeenCalledWith('action1');
+    expect(listener).toHaveBeenCalledWith('action1');
     await mouse.move({ x: 30, y: 50 });
-    expect(callback).toHaveBeenCalledWith('action2');
+    expect(listener).toHaveBeenCalledWith('action2');
     await mouse.move({ x: 30, y: 80 });
-    expect(callback).toHaveBeenCalledWith();
+    expect(listener).toHaveBeenCalledWith();
   });
 });

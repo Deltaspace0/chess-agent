@@ -1,17 +1,26 @@
 import { Chess } from 'chess.js';
 import type { Color, Piece, PieceSymbol, Square } from 'chess.js';
+import EventEmitter from 'events';
 import type { AgentGame } from '../Agent.ts';
 import { coordsToSquare } from '../../../util.ts';
 import { preferenceConfig } from '../../../config.ts';
 
-class Game implements AgentGame {
+interface GameEventMap {
+  position: [fen: string];
+}
+
+class Game extends EventEmitter<GameEventMap> implements AgentGame {
   private chess: Chess;
   private perspective = preferenceConfig.perspective.defaultValue;
   private autoCastling = preferenceConfig.autoCastling.defaultValue;
-  private positionCallback = () => {};
 
   constructor() {
+    super();
     this.chess = new Chess();
+  }
+
+  private emitPosition() {
+    this.emit('position', this.chess.fen());
   }
 
   private getPerspectiveColor(): Color {
@@ -28,7 +37,7 @@ class Game implements AgentGame {
     } catch {
       return false;
     }
-    this.positionCallback();
+    this.emitPosition();
     return true;
   }
 
@@ -54,23 +63,23 @@ class Game implements AgentGame {
 
   reset() {
     this.chess.reset();
-    this.positionCallback();
+    this.emitPosition();
   }
 
   clear() {
     this.chess.clear();
-    this.positionCallback();
+    this.emitPosition();
   }
 
   undo() {
     this.chess.undo();
-    this.positionCallback();
+    this.emitPosition();
   }
 
   move(move: string): boolean {
     try {
       this.chess.move(move);
-      this.positionCallback();
+      this.emitPosition();
       return true;
     } catch {
       return false;
@@ -79,7 +88,7 @@ class Game implements AgentGame {
 
   load(fen: string) {
     this.chess.load(fen);
-    this.positionCallback();
+    this.emitPosition();
   }
 
   isLegalMove(move: string): boolean {
@@ -266,7 +275,7 @@ class Game implements AgentGame {
       this.chess.setCastlingRights('w', { 'k': true, 'q': true });
       this.chess.setCastlingRights('b', { 'k': true, 'q': true });
     }
-    this.positionCallback();
+    this.emitPosition();
   }
 
   putPieceEdit({ sourceSquare, targetSquare, piece }: DroppedPiece): boolean {
@@ -305,7 +314,7 @@ class Game implements AgentGame {
       this.chess.setCastlingRights('w', { 'k': true, 'q': true });
       this.chess.setCastlingRights('b', { 'k': true, 'q': true });
     }
-    this.positionCallback();
+    this.emitPosition();
     return true;
   }
 
@@ -313,10 +322,6 @@ class Game implements AgentGame {
     const newColor = this.chess.turn() === 'w' ? 'b' : 'w' as Color;
     const result = this.setTurn(newColor);
     return result ? newColor : null;
-  }
-
-  onUpdatePosition(callback: (fen: string) => void) {
-    this.positionCallback = () => callback(this.chess.fen());
   }
 
   setPerspective(perspective: boolean) {

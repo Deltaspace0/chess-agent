@@ -12,17 +12,17 @@ class EngineExternal extends EngineProcess {
       return false;
     }
     this.process.on('error', (e) => {
-      this.sendToListeners('stderr', e.message);
+      this.emit('stderr', e.message);
     });
     this.process.on('exit', (code) => {
-      this.sendToListeners('exit', JSON.stringify(code));
+      this.emit('exit', JSON.stringify(code));
       this.kill();
     });
     for (const stream of ['stdout', 'stderr'] as const) {
       this.process[stream].on('data', (data) => {
         const dataLines = data.toString().split('\n').slice(0, -1);
         for (const line of dataLines) {
-          this.sendToListeners(stream, line);
+          this.emit(stream, line);
         }
       });
     }
@@ -44,7 +44,7 @@ class EngineExternal extends EngineProcess {
   send(message: string) {
     if (this.process) {
       this.process.stdin.write(message+'\n');
-      this.sendToListeners('stdin', message);
+      this.emit('stdin', message);
     }
   }
 }

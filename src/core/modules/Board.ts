@@ -1,8 +1,15 @@
+import EventEmitter from 'events';
 import type { Mouse } from './device/Mouse.ts';
 import { coordsToSquare, squareToCoords } from '../../util.ts';
 import { preferenceConfig } from '../../config.ts';
 
-class Board {
+interface BoardEventMap {
+  move: [move: string, sendResult: (isLegal: boolean) => void];
+  squarepressed: [square: string];
+  promotion: [piece: string];
+}
+
+class Board extends EventEmitter<BoardEventMap> {
   private mouse: Mouse;
   private draggingMode = preferenceConfig.draggingMode.defaultValue;
   private region = preferenceConfig.region.defaultValue;
@@ -11,34 +18,34 @@ class Board {
   private startSquare: string | null = null;
   private promotionMove: string | null = null;
   private playingMove = false;
-  private moveListener: (move: string) => boolean = () => false;
-  private downListener: ((square: string) => void) | null = null;
-  private promotionListener: ((piece: string) => void) | null = null;
 
   constructor(mouse: Mouse) {
+    super();
     this.mouse = mouse;
     mouse.addListener('mousedown', async () => {
       const square = await this.getSquare();
-      if (square && this.downListener) {
-        this.downListener(square);
+      if (square) {
+        this.emit('squarepressed', square);
       }
       if (this.playingMove) {
         return;
       }
-      if (square && this.autoPromotion && this.promotionListener) {
+      if (square && this.autoPromotion) {
         if (this.promotionMove && this.promotionMove.length >= 4) {
           if (square[0] === this.promotionMove[2]) {
             const rank = Number(square[1]);
             const n = this.promotionMove[3] === '8' ? 8-rank : rank-1;
             if (n >= 0 && n <= 3) {
-              this.promotionListener('qnrb'[n]);
+              this.emit('promotion', 'qnrb'[n]);
               this.promotionMove = null;
             }
           }
         }
       }
       if (this.startSquare && square && this.startSquare !== square) {
-        const result = this.moveListener(this.startSquare+square);
+        const result = await new Promise((resolve) => {
+          this.emit('move', this.startSquare+square, resolve);
+        });
         if (result) {
           this.startSquare = null;
           return;
@@ -52,7 +59,7 @@ class Board {
       }
       const square = await this.getSquare();
       if (this.startSquare && square && this.startSquare !== square) {
-        this.moveListener(this.startSquare+square);
+        this.emit('move', this.startSquare+square, () => {});
         this.startSquare = null;
       }
     });
@@ -105,18 +112,6 @@ class Board {
     await this.mouse.move(this.getPoint(promotionSquares[move[4]]));
     await this.mouse.click(0);
     this.playingMove = false;
-  }
-
-  onMove(listener: (move: string) => boolean) {
-    this.moveListener = listener;
-  }
-
-  onMouseDownSquare(listener: (square: string) => void) {
-    this.downListener = listener;
-  }
-
-  onPromotion(listener: (piece: string) => void) {
-    this.promotionListener = listener;
   }
 
   setDraggingMode(draggingMode: boolean) {
