@@ -9,6 +9,7 @@ import SettingsPanel from './SettingsPanel.tsx';
 import VirtualCursor from './VirtualCursor.tsx';
 import { usePreference, useSignal } from '../hooks.ts';
 import ActionIcon from '../components/ActionIcon.tsx';
+import SignalIcon from '../components/SignalIcon.tsx';
 
 type Panel = 'main' | 'promotion' | 'edit' | 'settings';
 
@@ -268,6 +269,14 @@ function App() {
                 disabled={!recognizerModel}
                 svgPath='M3.5 1v8M6.5 1v8M1 3.5h8M1 6.5h8M9 1l-8 8'
               />
+              <SignalIcon
+                name='mouseActive'
+                title={(value) => value
+                  ? 'Mouse is controlled by the app'
+                  : 'Mouse is not controlled by the app'}
+                svgPath='M1 1l2 8l1.5-4l4-1z'
+                style={{marginTop: 'auto'}}
+              />
             </>}
           </div>
         </div>
@@ -303,7 +312,8 @@ function App() {
             />
             <ActionIcon
               name='selectRegion'
-              svgPath='M1 1l2 8l1.5-4l4-1z'
+              viewBox='0 0 15 15'
+              svgPath='M6 6l2 8l1.5-4l4-1zM1 1h10v3h-10z'
             />
           </>}
           <p className='status'>Status: {statusText}</p>

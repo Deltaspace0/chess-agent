@@ -32,6 +32,10 @@ export abstract class Mouse {
   abstract release(button: number): Promise<void>;
   abstract sleep(duration: number): Promise<void>;
 
+  getActive(): boolean {
+    return this.isActive;
+  }
+
   setActive(value: boolean) {
     this.isActive = value;
   }
@@ -78,15 +82,14 @@ export class ConcreteMouse extends Mouse {
   }
 
   setActive(value: boolean) {
+    if (this.isActive && !value) {
+      this.actionWorker.kill();
+      this.actionWorker = utilityProcess.fork(actionWorkerPath);
+      for (const listener of this.stopListeners) {
+        listener();
+      }
+    }
     this.isActive = value;
-    if (value) {
-      return;
-    }
-    this.actionWorker.kill();
-    this.actionWorker = utilityProcess.fork(actionWorkerPath);
-    for (const listener of this.stopListeners) {
-      listener();
-    }
   }
 
   getPosition(): Promise<Point> {

@@ -104,6 +104,11 @@ declare global {
   }
 
   type Signal = keyof Signals;
+
+  type BooleanSignal = {
+    [T in Signal]: Signals[T] extends boolean ? T : never;
+  }[Signal];
+
   type SignalListeners = { [T in Signal]: (value: Signals[T]) => void };
 
   interface Signals {
@@ -112,6 +117,7 @@ declare global {
     positionInfo: PositionInfo;
     engineData: { name: string, data: string };
     engineInfo?: EngineInfo;
+    mouseActive: boolean;
     mousePosition?: Point;
     hoveredAction?: string;
     promotion: void;

@@ -111,10 +111,20 @@ function debounce<T>(callback: (x: T) => void) {
   uIOhook.start();
   uIOhook.on('keyup', async (e) => {
     if (e.keycode === UiohookKey.CapsLock) {
-      mouse.setActive(false);
+      setMouseActive(false);
     }
   });
   const mouse = new ConcreteMouse();
+  let wasMouseActive = true;
+  const setMouseActive = (value: boolean) => {
+    mouse.setActive(value);
+    sendSignal('mouseActive', value);
+  };
+  const suppressMouse = () => {
+    wasMouseActive = mouse.getActive();
+    setMouseActive(false);
+  };
+  const unsuppressMouse = () => setMouseActive(wasMouseActive);
   const screen = new ConcreteScreen();
   const preferenceManager = new PreferenceManager();
   const mainWin = await createMainWindow();
@@ -150,7 +160,7 @@ function debounce<T>(callback: (x: T) => void) {
     }
     mainWin.show();
     overlayWin.setIgnoreMouseEvents(true);
-    mouse.setActive(true);
+    unsuppressMouse();
     setSelectingRegion(false);
     e.preventDefault();
   });
@@ -170,7 +180,7 @@ function debounce<T>(callback: (x: T) => void) {
   const selectRegion = () => {
     overlayWin.setIgnoreMouseEvents(false);
     overlayWin.show();
-    mouse.setActive(false);
+    suppressMouse();
     setSelectingRegion(true);
   };
   const updateStatus = (status: string) => {
@@ -369,11 +379,11 @@ function debounce<T>(callback: (x: T) => void) {
     recognizeBoardSkipMove: () => agent.recognizeBoard(true),
     recognizeBoardAfterMove: () => agent.recognizeBoardAfterMove(),
     dialogEngine: async () => {
-      mouse.setActive(false);
+      suppressMouse();
       const result = await dialog.showOpenDialog(engineWin, {
         properties: ['openFile']
       });
-      mouse.setActive(true);
+      unsuppressMouse();
       if (result.filePaths.length > 0) {
         preferenceManager.setPreference('enginePath', result.filePaths[0]);
       }
@@ -381,26 +391,26 @@ function debounce<T>(callback: (x: T) => void) {
     reloadEngine: () => reloadExternalEngine(),
     showEngine: () => engineWin.show(),
     loadConfig: async () => {
-      mouse.setActive(false);
+      suppressMouse();
       const result = await dialog.showOpenDialog(mainWin, {
         properties: ['openFile'],
         filters: [{ name: 'Configuration file', extensions: ['json'] }]
       });
       overlayWin.moveTop();
-      mouse.setActive(true);
+      unsuppressMouse();
       if (result.filePaths.length > 0) {
         preferenceManager.loadFromFile(result.filePaths[0]);
         updateStatus('Loaded configuration file');
       }
     },
     saveConfig: async () => {
-      mouse.setActive(false);
+      suppressMouse();
       const result = await dialog.showSaveDialog(mainWin, {
         properties: ['createDirectory'],
         filters: [{ name: 'Configuration file', extensions: ['json'] }]
       });
       overlayWin.moveTop();
-      mouse.setActive(true);
+      unsuppressMouse();
       if (result.filePath) {
         preferenceManager.saveToFile(result.filePath);
         updateStatus('Saved configuration file');
@@ -412,7 +422,7 @@ function debounce<T>(callback: (x: T) => void) {
       preferenceManager.setPreference('region', adjustedRegion);
     },
     savePicture: async () => {
-      mouse.setActive(false);
+      suppressMouse();
       const amount = preferenceManager.getPreference('screenshotLength');
       if (amount > 1) {
         const images: Image[] = [];
@@ -444,7 +454,7 @@ function debounce<T>(callback: (x: T) => void) {
           updateStatus('Saved screenshot');
         }
       }
-      mouse.setActive(true);
+      unsuppressMouse();
     },
     promoteQueen: () => agent.promoteTo('q'),
     promoteRook: () => agent.promoteTo('r'),
@@ -561,5 +571,6 @@ function debounce<T>(callback: (x: T) => void) {
     sendPreference(name, value);
   });
   onSignal('registerMove', (move) => agent.processMove(move));
+  onSignal('mouseActive', setMouseActive);
   updateStatus('Ready');
 })();
