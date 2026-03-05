@@ -1,6 +1,9 @@
-import { utilityProcess } from 'electron';
-import { mouse, sleep, straightTo } from '@nut-tree-fork/nut-js';
+import { utilityProcess, type UtilityProcess } from 'electron';
+import { mouse, sleep } from '@nut-tree-fork/nut-js';
 import path from 'path';
+import { uIOhook } from 'uiohook-napi';
+
+const actionWorkerPath = path.join(import.meta.dirname, 'mouse-actions.js');
 
 type ListenerType = 'mousedown' | 'mouseup' | 'mousemove' | 'mousewheel';
 type Listener = () => void;
@@ -43,14 +46,47 @@ export abstract class Mouse {
 }
 
 export class ConcreteMouse extends Mouse {
+  private actionWorker: UtilityProcess;
+  private stopListeners = new Set<() => void>();
+
   constructor() {
     super();
+    this.actionWorker = utilityProcess.fork(actionWorkerPath);
+    uIOhook.on('mousedown', () => this.notifyListeners('mousedown'));
+    uIOhook.on('mouseup', () => this.notifyListeners('mouseup'));
+    uIOhook.on('mousemove', () => this.notifyListeners('mousemove'));
+    uIOhook.on('wheel', () => this.notifyListeners('mousewheel'));
   }
 
-  start() {
-    const childPath = path.join(import.meta.dirname, 'mouse-events.js');
-    const child = utilityProcess.fork(childPath);
-    child.on('message', (e) => this.notifyListeners(e));
+  private async performAction(action: string, arg: unknown) {
+    if (!this.isActive) {
+      return;
+    }
+    const key = performance.now();
+    this.actionWorker.postMessage({ action, arg, key });
+    return new Promise<void>((resolve, reject) => {
+      const listen = (data: { action: string, key: number }) => {
+        if (data.action === action && data.key === key) {
+          this.actionWorker.off('message', listen);
+          this.stopListeners.delete(reject);
+          resolve();
+        }
+      };
+      this.actionWorker.on('message', listen);
+      this.stopListeners.add(reject);
+    });
+  }
+
+  setActive(value: boolean) {
+    this.isActive = value;
+    if (value) {
+      return;
+    }
+    this.actionWorker.kill();
+    this.actionWorker = utilityProcess.fork(actionWorkerPath);
+    for (const listener of this.stopListeners) {
+      listener();
+    }
   }
 
   getPosition(): Promise<Point> {
@@ -63,22 +99,21 @@ export class ConcreteMouse extends Mouse {
 
   async move(point: Point): Promise<void> {
     if (mouse.config.mouseSpeed > 10000) {
-      await mouse.move([point]);
-      return;
+      return this.performAction('move', point);
     }
-    await mouse.move(straightTo(point));
+    return this.performAction('move-straight', point);
   }
 
   async click(button: number): Promise<void> {
-    await mouse.click(button);
+    return this.performAction('click', button);
   }
 
   async press(button: number): Promise<void> {
-    await mouse.pressButton(button);
+    return this.performAction('press', button);
   }
 
   async release(button: number): Promise<void> {
-    await mouse.releaseButton(button);
+    return this.performAction('release', button);
   }
 
   async sleep(duration: number): Promise<void> {

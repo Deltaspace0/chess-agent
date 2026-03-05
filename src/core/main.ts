@@ -1,6 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, screen } from 'electron';
 import { saveImage, type Image } from '@nut-tree-fork/nut-js';
 import path from 'path';
+import { uIOhook, UiohookKey } from 'uiohook-napi';
 import ActionRegionManager from './modules/ActionRegionManager.ts';
 import { Agent } from './modules/Agent.ts';
 import Board from './modules/Board.ts';
@@ -106,11 +107,16 @@ function debounce<T>(callback: (x: T) => void) {
 
 (async () => {
   Menu.setApplicationMenu(null);
+  await app.whenReady();
+  uIOhook.start();
+  uIOhook.on('keyup', async (e) => {
+    if (e.keycode === UiohookKey.CapsLock) {
+      mouse.setActive(false);
+    }
+  });
   const mouse = new ConcreteMouse();
   const screen = new ConcreteScreen();
   const preferenceManager = new PreferenceManager();
-  await app.whenReady();
-  mouse.start();
   const mainWin = await createMainWindow();
   let appRunning = true;
   let selectingRegion = false;
@@ -248,13 +254,16 @@ function debounce<T>(callback: (x: T) => void) {
   game.reset();
   const recognizer = new Recognizer(screen);
   const agent = new Agent({ engine: engineUCI, game, recognizer });
+  const playMove = (move: string) => board.playMove(move).catch(() => {
+    updateStatus('Stopped mouse');
+  });
   const playBestMove = async () => {
     if (!preferenceManager.getPreference('region')) {
       return;
     }
     const move = await agent.findBestMove();
     if (move) {
-      await board.playMove(move);
+      await playMove(move);
       agent.processMove(move);
     }
   };
@@ -266,7 +275,7 @@ function debounce<T>(callback: (x: T) => void) {
     engineUCI.analyzePosition([move], 1);
     const nextMove = await agent.findBestMove();
     if (nextMove) {
-      return board.playMove(nextMove);
+      return playMove(nextMove);
     }
   };
   agent.onUpdateStatus(updateStatus);
