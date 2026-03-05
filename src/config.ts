@@ -32,14 +32,17 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
   },
   autoResponse: {
     label: 'Automatically play the best move',
+    statusPrefix: 'Auto response: ',
     defaultValue: false
   },
   autoRecognition: {
     label: 'Automatically recognize position on the board',
+    statusPrefix: 'Auto recognition: ',
     defaultValue: false
   },
   autoPremove: {
     label: 'Automatically premove on every move',
+    statusPrefix: 'Auto premove: ',
     defaultValue: false
   },
   autoQueen: {
@@ -55,16 +58,25 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
   perspective: {
     label: 'Is White\'s perspective',
     description: 'Board orientation',
+    statusOnTrue: 'White',
+    statusOnFalse: 'Black',
+    statusPrefix: '',
+    statusSuffix: ' perspective',
     defaultValue: true
   },
   draggingMode: {
     label: 'Perform dragging motion',
     description: 'Perform dragging motion (clicking if unchecked)',
+    statusOnTrue: 'Dragging',
+    statusOnFalse: 'Clicking',
+    statusPrefix: '',
+    statusSuffix: ' mode',
     defaultValue: true
   },
   actionRegion: {
     label: 'Actions',
     description: 'Enable action regions',
+    statusPrefix: 'Action regions: ',
     defaultValue: false
   },
   actionLocations: {
@@ -102,8 +114,10 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
   analysisDuration: {
     label: 'Analysis duration',
     description: 'Time allotted for the engine to find the best move (in milliseconds)',
+    statusSuffix: ' ms',
     defaultValue: 1000,
-    sliderValues: [1, 300, 1000, 3000, 5000, 10000]
+    sliderValues: [1, 300, 1000, 3000, 5000, 10000],
+    switchValues: [1, 300, 1000, 5000]
   },
   multiPV: {
     label: 'Multiple lines',
@@ -126,7 +140,8 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
   mouseSpeed: {
     label: 'Mouse speed',
     defaultValue: 50000,
-    sliderValues: [500, 1000, 2000, 10000, 50000]
+    sliderValues: [500, 1000, 2000, 10000, 50000],
+    switchValues: [1000, 10000, 50000]
   },
   region: {
     label: 'Region',
@@ -154,6 +169,7 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
   },
   autoCastling: {
     label: 'Enable castling rights when possible',
+    statusPrefix: 'Auto castling: ',
     defaultValue: true
   }
 };

@@ -299,8 +299,24 @@ function debounce<T>(callback: (x: T) => void) {
   });
   const toggleBooleanPreference = (name: BooleanPreference) => {
     const value = preferenceManager.togglePreference(name);
-    const label = preferenceConfig[name].label;
-    updateStatus(`${label} is ${value ? 'enabled' : 'disabled'}`);
+    const prefConfig = preferenceConfig[name];
+    const prefix = prefConfig.statusPrefix ?? (prefConfig.label+': ');
+    const valueText = value
+      ? (prefConfig.statusOnTrue ?? 'enabled')
+      : (prefConfig.statusOnFalse ?? 'disabled');
+    updateStatus(`${prefix}${valueText}${prefConfig.statusSuffix ?? ''}`);
+  };
+  const switchPreference = <T extends Preference>(name: T) => {
+    const prefConfig = preferenceConfig[name];
+    const values = prefConfig.switchValues;
+    if (!values) {
+      return;
+    }
+    const value = preferenceManager.getPreference(name);
+    const nextValue = values[(values.indexOf(value)+1)%values.length];
+    preferenceManager.setPreference(name, nextValue);
+    const prefix = prefConfig.statusPrefix ?? (prefConfig.label+': ');
+    updateStatus(`${prefix}${nextValue}${prefConfig.statusSuffix ?? ''}`);
   };
   const actionCallbacks: Record<Action, () => void> = {
     selectRegion: () => selectRegion(),
@@ -430,30 +446,11 @@ function debounce<T>(callback: (x: T) => void) {
     autoPremove: () => toggleBooleanPreference('autoPremove'),
     autoQueen: () => toggleBooleanPreference('autoQueen'),
     autoPromotion: () => toggleBooleanPreference('autoPromotion'),
-    perspective: () => {
-      const value = preferenceManager.togglePreference('perspective');
-      updateStatus(`${value ? 'White' : 'Black'} perspective`);
-    },
-    draggingMode: () => {
-      const value = preferenceManager.togglePreference('draggingMode');
-      updateStatus(`${value ? 'Dragging' : 'Clicking'} mode`);
-    },
-    actionRegion: () => {
-      const value = preferenceManager.togglePreference('actionRegion');
-      updateStatus(`Action regions are ${value ? 'enabled' : 'disabled'}`);
-    },
-    analysisDuration: () => {
-      const value = preferenceManager.getPreference('analysisDuration');
-      const newValue = value > 300 ? 300 : 5000;
-      preferenceManager.setPreference('analysisDuration', newValue);
-      updateStatus(`Analysis duration: ${newValue} ms`);
-    },
-    mouseSpeed: () => {
-      const value = preferenceManager.getPreference('mouseSpeed');
-      const newValue = value > 500 ? 500 : 10000;
-      preferenceManager.setPreference('mouseSpeed', newValue);
-      updateStatus(`Mouse speed: ${newValue}`);
-    },
+    perspective: () => toggleBooleanPreference('perspective'),
+    draggingMode: () => toggleBooleanPreference('draggingMode'),
+    actionRegion: () => toggleBooleanPreference('actionRegion'),
+    analysisDuration: () => switchPreference('analysisDuration'),
+    mouseSpeed: () => switchPreference('mouseSpeed'),
     autoCastling: () => toggleBooleanPreference('autoCastling')
   };
   const actionRegionManager = new ActionRegionManager(mouse);

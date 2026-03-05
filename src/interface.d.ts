@@ -64,8 +64,13 @@ declare global {
   interface PreferenceConfig<T extends Preference> {
     label: string;
     description?: string;
+    statusOnTrue?: Preferences[T] extends boolean ? string : never;
+    statusOnFalse?: Preferences[T] extends boolean ? string : never;
+    statusPrefix?: string;
+    statusSuffix?: string;
     defaultValue: Preferences[T];
     sliderValues?: Preferences[T] extends number ? number[] : never;
+    switchValues?: Preferences[T][];
   }
 
   interface PrincipalVariation {
