@@ -127,6 +127,23 @@ function debounce<T>(callback: (x: T) => void) {
   const unsuppressMouse = () => setMouseActive(wasMouseActive);
   const screen = new ConcreteScreen();
   const preferenceManager = new PreferenceManager();
+  const getPreference = <T extends Preference>(name: T) => {
+    return preferenceManager.getPreference(name);
+  };
+  const syncPreference = <T extends Preference>(name: T, value: Preferences[T]) => {
+    sendToApp('preference', name, value);
+    preferenceListeners[name]?.(value);
+  };
+  const syncPreferences = () => {
+    const preferences = preferenceManager.getPreferences();
+    for (const [name, value] of Object.entries(preferences)) {
+      syncPreference(name as Preference, value);
+    }
+  };
+  const setPreference = <T extends Preference>(name: T, value: Preferences[T]) => {
+    preferenceManager.setPreference(name, value);
+    syncPreference(name, value);
+  };
   const mainWin = await createMainWindow();
   let appRunning = true;
   let selectingRegion = false;
@@ -171,9 +188,6 @@ function debounce<T>(callback: (x: T) => void) {
       overlayWin.webContents.send(channel, ...args);
     }
   };
-  const sendPreference = <T extends Preference>(name: T, value: Preferences[T]) => {
-    sendToApp('preference', name, value);
-  };
   const sendSignal = <T extends Signal>(name: T, value?: Signals[T]) => {
     sendToApp('signal', name, value);
   };
@@ -191,12 +205,12 @@ function debounce<T>(callback: (x: T) => void) {
     sendSignal('engineData', { name, data });
   };
   mouse.addListener('mousemove', async () => {
-    const region = preferenceManager.getPreference('region');
+    const region = getPreference('region');
     if (!region) {
       sendSignal('mousePosition');
       return;
     }
-    if (!preferenceManager.getPreference('showCursor')) {
+    if (!getPreference('showCursor')) {
       return;
     }
     const coordinates = await mouse.getPosition();
@@ -237,7 +251,7 @@ function debounce<T>(callback: (x: T) => void) {
     }
   };
   const reloadExternalEngine = () => {
-    const path = preferenceManager.getPreference('enginePath');
+    const path = getPreference('enginePath');
     if (path) {
       spawnExternalEngine(path);
     }
@@ -270,7 +284,7 @@ function debounce<T>(callback: (x: T) => void) {
     updateStatus('Stopped mouse');
   });
   const playBestMove = async () => {
-    if (!preferenceManager.getPreference('region')) {
+    if (!getPreference('region')) {
       return;
     }
     const move = await agent.findBestMove();
@@ -292,26 +306,26 @@ function debounce<T>(callback: (x: T) => void) {
   };
   agent.addListener('status', updateStatus);
   agent.addListener('moves', async () => {
-    if (!preferenceManager.getPreference('region')) {
+    if (!getPreference('region')) {
       return;
     }
     const isMyTurn = game.isMyTurn();
-    if (preferenceManager.getPreference('autoResponse')) {
+    if (getPreference('autoResponse')) {
       if (isMyTurn) {
         updateStatus('Playing best move...');
         await playBestMove();
-      } else if (preferenceManager.getPreference('autoPremove')) {
+      } else if (getPreference('autoPremove')) {
         updateStatus('Playing premove...');
         await playPremove();
       }
     }
-    if (preferenceManager.getPreference('autoRecognition') && !isMyTurn) {
+    if (getPreference('autoRecognition') && !isMyTurn) {
       updateStatus('Recognizing after move...');
       agent.recognizeBoardAfterMove();
     }
   });
   agent.addListener('promotion', (move) => {
-    if (preferenceManager.getPreference('autoQueen')) {
+    if (getPreference('autoQueen')) {
       agent.promoteTo('q');
     } else {
       sendSignal('promotion');
@@ -319,7 +333,8 @@ function debounce<T>(callback: (x: T) => void) {
     }
   });
   const toggleBooleanPreference = (name: BooleanPreference) => {
-    const value = preferenceManager.togglePreference(name);
+    const value = !getPreference(name);
+    setPreference(name, value);
     const prefConfig = preferenceConfig[name];
     const prefix = prefConfig.statusPrefix ?? (prefConfig.label+': ');
     const valueText = value
@@ -333,9 +348,9 @@ function debounce<T>(callback: (x: T) => void) {
     if (!values) {
       return;
     }
-    const value = preferenceManager.getPreference(name);
+    const value = getPreference(name);
     const nextValue = values[(values.indexOf(value)+1)%values.length];
-    preferenceManager.setPreference(name, nextValue);
+    setPreference(name, nextValue);
     const prefix = prefConfig.statusPrefix ?? (prefConfig.label+': ');
     updateStatus(`${prefix}${nextValue}${prefConfig.statusSuffix ?? ''}`);
   };
@@ -343,13 +358,13 @@ function debounce<T>(callback: (x: T) => void) {
     selectRegion: () => selectRegion(),
     hideRegion: () => overlayWin.close(),
     loadHashes: () => {
-      if (!preferenceManager.getPreference('region')) {
+      if (!getPreference('region')) {
         return;
       }
-      const perspective = preferenceManager.getPreference('perspective');
+      const perspective = getPreference('perspective');
       recognizer.load(perspective)
         .then((model) => {
-          preferenceManager.setPreference('recognizerModel', model);
+          setPreference('recognizerModel', model);
           updateStatus('Loaded piece hashes');
         })
         .catch((e) => {
@@ -357,7 +372,7 @@ function debounce<T>(callback: (x: T) => void) {
           console.log(e);
         });
     },
-    resetHashes: () => preferenceManager.setPreference('recognizerModel', null),
+    resetHashes: () => setPreference('recognizerModel', null),
     skipMove: () => agent.skipMove(),
     undoMove: () => agent.undoMove(),
     bestMove: () => playBestMove(),
@@ -369,10 +384,10 @@ function debounce<T>(callback: (x: T) => void) {
     },
     clearPosition: () => agent.clearPosition(),
     recognizeBoard: () => {
-      if (!preferenceManager.getPreference('region')) {
+      if (!getPreference('region')) {
         return;
       }
-      if (!preferenceManager.getPreference('recognizerModel')) {
+      if (!getPreference('recognizerModel')) {
         updateStatus('Load hashes first');
         return;
       }
@@ -387,7 +402,7 @@ function debounce<T>(callback: (x: T) => void) {
       });
       unsuppressMouse();
       if (result.filePaths.length > 0) {
-        preferenceManager.setPreference('enginePath', result.filePaths[0]);
+        setPreference('enginePath', result.filePaths[0]);
       }
     },
     reloadEngine: () => reloadExternalEngine(),
@@ -400,9 +415,16 @@ function debounce<T>(callback: (x: T) => void) {
       });
       overlayWin.moveTop();
       unsuppressMouse();
-      if (result.filePaths.length > 0) {
+      if (!result.filePaths.length) {
+        return;
+      }
+      try {
         preferenceManager.loadFromFile(result.filePaths[0]);
+        syncPreferences();
         updateStatus('Loaded configuration file');
+      } catch (e) {
+        console.error(e);
+        updateStatus('Failed to load configuration');
       }
     },
     saveConfig: async () => {
@@ -418,14 +440,17 @@ function debounce<T>(callback: (x: T) => void) {
         updateStatus('Saved configuration file');
       }
     },
-    resetConfig: () => preferenceManager.reset(),
+    resetConfig: () => {
+      preferenceManager.reset();
+      syncPreferences();
+    },
     adjustRegion: async () => {
       const adjustedRegion = await getAdjustedRegion(screen);
-      preferenceManager.setPreference('region', adjustedRegion);
+      setPreference('region', adjustedRegion);
     },
     savePicture: async () => {
       suppressMouse();
-      const amount = preferenceManager.getPreference('screenshotLength');
+      const amount = getPreference('screenshotLength');
       if (amount > 1) {
         const images: Image[] = [];
         for (let i = 0; i < amount; i++) {
@@ -482,7 +507,7 @@ function debounce<T>(callback: (x: T) => void) {
     actionRegionManager.addActionRegion({
       name: location,
       listener: () => {
-        const locations = preferenceManager.getPreference('actionLocations');
+        const locations = getPreference('actionLocations');
         const action = locations[location];
         if (!action) {
           return;
@@ -494,7 +519,7 @@ function debounce<T>(callback: (x: T) => void) {
         listener();
       },
       getRegion: () => {
-        const region = preferenceManager.getPreference('region');
+        const region = getPreference('region');
         if (!region) {
           return null;
         }
@@ -502,9 +527,6 @@ function debounce<T>(callback: (x: T) => void) {
       }
     });
   }
-  preferenceManager.addListener('update', ([name, value]) => {
-    sendPreference(name, value);
-  });
   const preferenceListeners: Partial<PreferenceListeners> = {
     alwaysOnTop: (value) => {
       mainWin.setAlwaysOnTop(value, 'normal');
@@ -541,11 +563,9 @@ function debounce<T>(callback: (x: T) => void) {
     recognizerPutKings: (value) => recognizer.setPutKings(value),
     autoCastling: (value) => game.setAutoCastling(value)
   };
-  for (const [name, listener] of Object.entries(preferenceListeners)) {
-    preferenceManager.addListener(`update:${name}`, listener);
-  }
+  syncPreferences();
   ipcMain.on('preference', (_, name, value) => {
-    preferenceManager.setPreference(name, value);
+    setPreference(name, value);
   });
   const signalListeners: Partial<SignalListeners> = {};
   ipcMain.on('signal', <T extends Signal>(_: unknown, name: T, value: Signals[T]) => {
@@ -573,8 +593,7 @@ function debounce<T>(callback: (x: T) => void) {
   onSignal('positionInfo', (value) => agent.loadPositionInfo(value));
   onSignal('action', (value) => actionListeners[value]());
   onSignal('requestPreference', (name) => {
-    const value = preferenceManager.getPreference(name);
-    sendPreference(name, value);
+    sendToApp('preference', name, getPreference(name));
   });
   onSignal('registerMove', (move) => agent.processMove(move));
   onSignal('mouseActive', setMouseActive);
