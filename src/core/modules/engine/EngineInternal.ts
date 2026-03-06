@@ -1,15 +1,15 @@
-import { utilityProcess, type UtilityProcess } from 'electron';
 import path from 'path';
+import { Worker } from 'worker_threads';
 import EngineProcess from './EngineProcess.ts';
 
 class EngineInternal extends EngineProcess {
-  private worker: UtilityProcess;
+  private worker: Worker;
   private options: Record<string, string> = {};
 
   constructor() {
     super();
     const workerPath = path.join(import.meta.dirname, 'stockfish.js');
-    this.worker = utilityProcess.fork(workerPath);
+    this.worker = new Worker(workerPath);
     this.worker.on('message', (e) => {
       const stream = e.type === 'error' ? 'stderr' : 'stdout';
       this.emit(stream, e.message);

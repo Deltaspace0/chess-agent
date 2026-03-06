@@ -1,10 +1,10 @@
-import { utilityProcess, type UtilityProcess } from 'electron';
 import EventEmitter from 'events';
 import { mouse, sleep } from '@nut-tree-fork/nut-js';
 import path from 'path';
 import { uIOhook } from 'uiohook-napi';
+import { Worker } from 'worker_threads';
 
-const actionWorkerPath = path.join(import.meta.dirname, 'mouse-actions.js');
+const workerPath = path.join(import.meta.dirname, 'mouse-actions.js');
 
 interface MouseEventMap {
   mousedown: [];
@@ -33,12 +33,12 @@ export abstract class Mouse extends EventEmitter<MouseEventMap> {
 }
 
 export class ConcreteMouse extends Mouse {
-  private actionWorker: UtilityProcess;
+  private worker: Worker;
   private stopListeners = new Set<() => void>();
 
   constructor() {
     super();
-    this.actionWorker = utilityProcess.fork(actionWorkerPath);
+    this.worker = new Worker(workerPath);
     uIOhook.on('mousedown', () => this.emitMouseEvent('mousedown'));
     uIOhook.on('mouseup', () => this.emitMouseEvent('mouseup'));
     uIOhook.on('mousemove', () => this.emitMouseEvent('mousemove'));
@@ -56,24 +56,24 @@ export class ConcreteMouse extends Mouse {
       return;
     }
     const key = performance.now();
-    this.actionWorker.postMessage({ action, arg, key });
+    this.worker.postMessage({ action, arg, key });
     return new Promise<void>((resolve, reject) => {
       const listen = (data: { action: string, key: number }) => {
         if (data.action === action && data.key === key) {
-          this.actionWorker.off('message', listen);
+          this.worker.off('message', listen);
           this.stopListeners.delete(reject);
           resolve();
         }
       };
-      this.actionWorker.on('message', listen);
+      this.worker.on('message', listen);
       this.stopListeners.add(reject);
     });
   }
 
   setActive(value: boolean) {
     if (this.isActive && !value) {
-      this.actionWorker.kill();
-      this.actionWorker = utilityProcess.fork(actionWorkerPath);
+      this.worker.terminate();
+      this.worker = new Worker(workerPath);
       for (const listener of this.stopListeners) {
         listener();
       }

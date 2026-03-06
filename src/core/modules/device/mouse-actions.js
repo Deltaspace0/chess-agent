@@ -1,7 +1,8 @@
 import { mouse, straightTo } from '@nut-tree-fork/nut-js';
+import { parentPort } from 'worker_threads';
 
-process.parentPort.on('message', async (data) => {
-  const { action, arg, key } = data.data;
+parentPort.on('message', async (data) => {
+  const { action, arg, key } = data;
   if (action === 'move') {
     await mouse.move(arg);
   } else if (action === 'move-straight') {
@@ -13,5 +14,5 @@ process.parentPort.on('message', async (data) => {
   } else if (action === 'release') {
     await mouse.releaseButton(arg);
   }
-  process.parentPort.postMessage({ action, key });
+  parentPort.postMessage({ action, key });
 });
