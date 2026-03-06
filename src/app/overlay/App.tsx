@@ -6,8 +6,12 @@ import ActionButton from '../components/ActionButton.tsx';
 import ToggleButton from '../components/ToggleButton.tsx';
 import ToggleButtonPref from '../components/ToggleButtonPref.tsx';
 import RegionSelection from './RegionSelection.tsx';
-import { usePreference, useSignal } from '../hooks.ts';
-import { actionDescriptions, possibleLocations } from '../../config.ts';
+import { usePreference, usePreferences, useSignal } from '../hooks.ts';
+import {
+  actionDescriptions,
+  booleanPreferenceNames,
+  possibleLocations
+} from '../../config.ts';
 import { findRegion } from '../../util.ts';
 
 function multiplyRegion(region: Region | null, factor: number): Region | null {
@@ -25,16 +29,7 @@ function multiplyRegion(region: Region | null, factor: number): Region | null {
 function App() {
   const electron = window.electronAPI;
   const dpr = window.devicePixelRatio;
-  const booleanPreferences: Record<string, boolean> = {
-    autoResponse: usePreference('autoResponse')[0],
-    autoRecognition: usePreference('autoRecognition')[0],
-    autoPremove: usePreference('autoPremove')[0],
-    autoQueen: usePreference('autoQueen')[0],
-    autoPromotion: usePreference('autoPromotion')[0],
-    perspective: usePreference('perspective')[0],
-    draggingMode: usePreference('draggingMode')[0],
-    autoCastling: usePreference('autoCastling')[0]
-  };
+  const boolPrefs = usePreferences(booleanPreferenceNames);
   const [prefRegion, sendPrefRegion] = usePreference('region');
   const [actionLocations, sendActionLocations] = usePreference('actionLocations');
   const [actionRegion] = usePreference('actionRegion');
@@ -96,7 +91,7 @@ function App() {
       if (!action) {
         continue;
       }
-      const preferenceValue = booleanPreferences[action];
+      const preferenceValue = boolPrefs[action as BooleanPreference];
       const overlayColor = preferenceValue !== undefined
         ? (preferenceValue ? 'rgba(0, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)')
         : 'rgba(255, 255, 255, 0.5)';

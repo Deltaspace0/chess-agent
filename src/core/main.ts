@@ -13,7 +13,11 @@ import PreferenceManager from './modules/PreferenceManager.ts';
 import Recognizer from './modules/Recognizer.ts';
 import { ConcreteMouse } from './modules/device/Mouse.ts';
 import { ConcreteScreen, getAdjustedRegion } from './modules/device/Screen.ts';
-import { possibleLocations, preferenceConfig } from '../config.ts';
+import {
+  booleanPreferenceNames,
+  possibleLocations,
+  preferenceConfig
+} from '../config.ts';
 import { findRegion } from '../util.ts';
 
 const preloadPath = path.join(import.meta.dirname, 'preload.js');
@@ -191,12 +195,6 @@ function debounce<T>(callback: (x: T) => void) {
   const sendSignal = <T extends Signal>(name: T, value?: Signals[T]) => {
     sendToApp('signal', name, value);
   };
-  const selectRegion = () => {
-    overlayWin.setIgnoreMouseEvents(false);
-    overlayWin.show();
-    suppressMouse();
-    setSelectingRegion(true);
-  };
   const updateStatus = (status: string) => {
     console.log(status);
     sendSignal('status', status);
@@ -332,16 +330,6 @@ function debounce<T>(callback: (x: T) => void) {
       board.setPromotionMove(move);
     }
   });
-  const toggleBooleanPreference = (name: BooleanPreference) => {
-    const value = !getPreference(name);
-    setPreference(name, value);
-    const prefConfig = preferenceConfig[name];
-    const prefix = prefConfig.statusPrefix ?? (prefConfig.label+': ');
-    const valueText = value
-      ? (prefConfig.statusOnTrue ?? 'enabled')
-      : (prefConfig.statusOnFalse ?? 'disabled');
-    updateStatus(`${prefix}${valueText}${prefConfig.statusSuffix ?? ''}`);
-  };
   const switchPreference = <T extends Preference>(name: T) => {
     const prefConfig = preferenceConfig[name];
     const values = prefConfig.switchValues;
@@ -354,8 +342,13 @@ function debounce<T>(callback: (x: T) => void) {
     const prefix = prefConfig.statusPrefix ?? (prefConfig.label+': ');
     updateStatus(`${prefix}${nextValue}${prefConfig.statusSuffix ?? ''}`);
   };
-  const actionListeners: Record<Action, () => void> = {
-    selectRegion: () => selectRegion(),
+  const actionListeners: Partial<Record<Action, () => void>> = {
+    selectRegion: () => {
+      overlayWin.setIgnoreMouseEvents(false);
+      overlayWin.show();
+      suppressMouse();
+      setSelectingRegion(true);
+    },
     hideRegion: () => overlayWin.close(),
     loadHashes: () => {
       if (!getPreference('region')) {
@@ -487,18 +480,21 @@ function debounce<T>(callback: (x: T) => void) {
     promoteRook: () => agent.promoteTo('r'),
     promoteBishop: () => agent.promoteTo('b'),
     promoteKnight: () => agent.promoteTo('n'),
-    autoResponse: () => toggleBooleanPreference('autoResponse'),
-    autoRecognition: () => toggleBooleanPreference('autoRecognition'),
-    autoPremove: () => toggleBooleanPreference('autoPremove'),
-    autoQueen: () => toggleBooleanPreference('autoQueen'),
-    autoPromotion: () => toggleBooleanPreference('autoPromotion'),
-    perspective: () => toggleBooleanPreference('perspective'),
-    draggingMode: () => toggleBooleanPreference('draggingMode'),
-    actionRegion: () => toggleBooleanPreference('actionRegion'),
     analysisDuration: () => switchPreference('analysisDuration'),
-    mouseSpeed: () => switchPreference('mouseSpeed'),
-    autoCastling: () => toggleBooleanPreference('autoCastling')
+    mouseSpeed: () => switchPreference('mouseSpeed')
   };
+  for (const name of booleanPreferenceNames) {
+    actionListeners[name as Action] = () => {
+      const value = !getPreference(name);
+      setPreference(name, value);
+      const prefConfig = preferenceConfig[name];
+      const prefix = prefConfig.statusPrefix ?? (prefConfig.label+': ');
+      const valueText = value
+        ? (prefConfig.statusOnTrue ?? 'enabled')
+        : (prefConfig.statusOnFalse ?? 'disabled');
+      updateStatus(`${prefix}${valueText}${prefConfig.statusSuffix ?? ''}`);
+    };
+  }
   const actionRegionManager = new ActionRegionManager(mouse);
   actionRegionManager.addListener('hover', (name?: string) => {
     sendSignal('hoveredAction', name);
@@ -514,7 +510,8 @@ function debounce<T>(callback: (x: T) => void) {
         }
         const listener = actionListeners[action];
         if (!listener) {
-          throw new Error('No listener for action: '+action);
+          updateStatus('No listener for action: '+action);
+          return;
         }
         listener();
       },
@@ -591,7 +588,7 @@ function debounce<T>(callback: (x: T) => void) {
   });
   onSignal('positionFEN', (value) => agent.loadPosition(value));
   onSignal('positionInfo', (value) => agent.loadPositionInfo(value));
-  onSignal('action', (value) => actionListeners[value]());
+  onSignal('action', (value) => actionListeners[value]?.());
   onSignal('requestPreference', (name) => {
     sendToApp('preference', name, getPreference(name));
   });

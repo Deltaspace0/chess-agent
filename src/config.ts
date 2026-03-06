@@ -176,6 +176,13 @@ export const preferenceConfig: { [T in Preference]: PreferenceConfig<T> } = {
 
 export const preferenceNames = Object.keys(preferenceConfig) as Preference[];
 
+export const booleanPreferenceNames: BooleanPreference[] = [];
+for (const name of preferenceNames as BooleanPreference[]) {
+  if (typeof preferenceConfig[name].defaultValue === 'boolean') {
+    booleanPreferenceNames.push(name);
+  }
+}
+
 export const actionDescriptions: Partial<Record<Action, string>> = {
   selectRegion: 'Go to region selection mode',
   loadHashes: 'Load piece image hashes',

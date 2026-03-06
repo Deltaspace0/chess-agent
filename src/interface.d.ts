@@ -129,18 +129,9 @@ declare global {
     registerMove: string;
   }
 
-  type ToggleablePreference = keyof Pick<Preferences
-    , 'autoResponse'
-    | 'autoRecognition'
-    | 'autoPremove'
-    | 'autoQueen'
-    | 'autoPromotion'
-    | 'perspective'
-    | 'draggingMode'
-    | 'actionRegion'
-    | 'analysisDuration'
+  type ToggleablePreference = BooleanPreference | keyof Pick<Preferences
+    , 'analysisDuration'
     | 'mouseSpeed'
-    | 'autoCastling'
   >;
 
   type Action
