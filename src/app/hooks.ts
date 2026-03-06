@@ -12,7 +12,7 @@ export function usePreferences(names: Preference[]) {
   useEffect(() => {
     const cleanups = names.map(<T extends Preference>(name: T) => {
       const listener = ((value: Preferences[T]) => {
-        setValues(prev => ({ ...prev, [name]: value }));
+        setValues((prev) => ({ ...prev, [name]: value }));
       }) as PreferenceListeners[T];
       const offPreference = window.electronAPI.onPreference(name, listener);
       window.electronAPI.sendSignal('requestPreference', name);

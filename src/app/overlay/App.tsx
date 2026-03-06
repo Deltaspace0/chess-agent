@@ -14,7 +14,7 @@ import {
 } from '../../config.ts';
 import { findRegion } from '../../util.ts';
 
-function multiplyRegion(region: Region | null, factor: number): Region | null {
+function mulRegion(region: Region | null, factor: number): Region | null {
   if (!region) {
     return null;
   }
@@ -35,9 +35,7 @@ function App() {
   const [actionRegion] = usePreference('actionRegion');
   const [showRegion] = usePreference('showRegion');
   const [showActionRegion] = usePreference('showActionRegion');
-  const region = useMemo(() => {
-    return multiplyRegion(prefRegion, 1/dpr);
-  }, [prefRegion, dpr]);
+  const region = useMemo(() => mulRegion(prefRegion, 1/dpr), [prefRegion, dpr]);
   const selectingRegion = useSignal('selectingRegion');
   const [autoAdjust, setAutoAdjust] = useState(true);
   const [hideAll, setHideAll] = useState(false);
@@ -49,7 +47,7 @@ function App() {
     setTimeout(() => setHideAll(false), 20);
   };
   const handleRegionChange = (changedRegion: Region) => {
-    const newRegion = multiplyRegion(changedRegion, dpr);
+    const newRegion = mulRegion(changedRegion, dpr);
     sendPrefRegion(newRegion);
     if (autoAdjust) {
       adjustRegion();

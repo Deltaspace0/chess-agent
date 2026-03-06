@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['dist']
+    ignores: ['dist', '**/stockfish.js']
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -31,6 +31,9 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+      'curly': ['error'],
+      'arrow-body-style': ['error', 'as-needed'],
+      '@stylistic/arrow-parens': ['error', 'always'],
       '@stylistic/semi': ['error', 'always'],
       "@typescript-eslint/no-require-imports": "off"
     },

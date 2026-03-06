@@ -1,4 +1,12 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, screen } from 'electron';
+import {
+  app,
+  dialog,
+  ipcMain,
+  screen as electronScreen,
+  BrowserWindow,
+  Menu,
+  type BrowserWindowConstructorOptions
+} from 'electron';
 import { saveImage, type Image } from '@nut-tree-fork/nut-js';
 import path from 'path';
 import { uIOhook, UiohookKey } from 'uiohook-napi';
@@ -20,13 +28,41 @@ import {
 } from '../config.ts';
 import { findRegion } from '../util.ts';
 
-const preloadPath = path.join(import.meta.dirname, 'preload.js');
-const iconPath = path.join(import.meta.dirname,
-  '..', '..', 'images', 'chess-icon.png');
-const appPath = app.isPackaged ? 'dist/src/app' : 'http://localhost:5173/src/app';
+const PATHS = {
+  PRELOAD: path.join(import.meta.dirname, 'preload.js'),
+  ICON: path.join(import.meta.dirname, '..', '..', 'images', 'chess-icon.png'),
+  APP: app.isPackaged ? 'dist/src/app' : 'http://localhost:5173/src/app'
+} as const;
 
-async function createMainWindow(): Promise<BrowserWindow> {
+const debounce = <T>(callback: (x: T) => void, delay = 50) => {
+  let timeoutId: NodeJS.Timeout;
+  let lastValue: T;
+  return (value: T) => {
+    lastValue = value;
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => callback(lastValue), delay);
+  };
+};
+
+const createWindow = async (
+  pageName: string,
+  config: BrowserWindowConstructorOptions
+): Promise<BrowserWindow> => {
   const win = new BrowserWindow({
+    ...config,
+    icon: PATHS.ICON,
+    webPreferences: { preload: PATHS.PRELOAD }
+  });
+  const pagePath = `${PATHS.APP}/${pageName}/index.html`;
+  await (app.isPackaged ? win.loadFile(pagePath) : win.loadURL(pagePath));
+  return win;
+};
+
+(async () => {
+  Menu.setApplicationMenu(null);
+  await app.whenReady();
+
+  const mainWin = await createWindow('main', {
     alwaysOnTop: true,
     maximizable: false,
     minWidth: 300,
@@ -34,138 +70,28 @@ async function createMainWindow(): Promise<BrowserWindow> {
     width: 380,
     height: 580,
     maxWidth: 480,
-    icon: iconPath,
-    useContentSize: true,
-    webPreferences: {
-      preload: preloadPath
-    }
+    useContentSize: true
   });
-  const pagePath = `${appPath}/main/index.html`;
-  if (app.isPackaged) {
-    await win.loadFile(pagePath);
-  } else {
-    await win.loadURL(pagePath);
-  }
-  return win;
-}
 
-async function createEngineWindow(): Promise<BrowserWindow> {
-  const win = new BrowserWindow({
-    minWidth: 320,
-    minHeight: 320,
-    show: false,
-    icon: iconPath,
-    useContentSize: true,
-    webPreferences: {
-      preload: preloadPath
-    }
-  });
-  const pagePath = `${appPath}/engine/index.html`;
-  if (app.isPackaged) {
-    await win.loadFile(pagePath);
-  } else {
-    await win.loadURL(pagePath);
-  }
-  return win;
-}
-
-async function createOverlayWindow(): Promise<BrowserWindow> {
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const win = new BrowserWindow({
-    alwaysOnTop: true,
-    center: true,
-    frame: false,
-    width: primaryDisplay.size.width-4,
-    height: primaryDisplay.size.height,
-    resizable: false,
-    skipTaskbar: true,
-    transparent: true,
-    webPreferences: {
-      preload: preloadPath
-    }
-  });
-  const pagePath = `${appPath}/overlay/index.html`;
-  if (app.isPackaged) {
-    await win.loadFile(pagePath);
-  } else {
-    await win.loadURL(pagePath);
-  }
-  win.setIgnoreMouseEvents(true);
-  return win;
-}
-
-function debounce<T>(callback: (x: T) => void) {
-  let value: T;
-  let sending = false;
-  return (x: T) => {
-    value = x;
-    if (!sending) {
-      sending = true;
-      setTimeout(() => {
-        callback(value);
-        sending = false;
-      }, 50);
-    }
-  };
-}
-
-(async () => {
-  Menu.setApplicationMenu(null);
-  await app.whenReady();
-  uIOhook.start();
-  uIOhook.on('keyup', async (e) => {
-    if (e.keycode === UiohookKey.CapsLock) {
-      setMouseActive(false);
-    }
-  });
-  const mouse = new ConcreteMouse();
-  let wasMouseActive = true;
-  const setMouseActive = (value: boolean) => {
-    mouse.setActive(value);
-    sendSignal('mouseActive', value);
-  };
-  const suppressMouse = () => {
-    wasMouseActive = mouse.getActive();
-    setMouseActive(false);
-  };
-  const unsuppressMouse = () => setMouseActive(wasMouseActive);
-  const screen = new ConcreteScreen();
-  const preferenceManager = new PreferenceManager();
-  const getPreference = <T extends Preference>(name: T) => {
-    return preferenceManager.getPreference(name);
-  };
-  const syncPreference = <T extends Preference>(name: T, value: Preferences[T]) => {
-    sendToApp('preference', name, value);
-    preferenceListeners[name]?.(value);
-  };
-  const syncPreferences = () => {
-    const preferences = preferenceManager.getPreferences();
-    for (const [name, value] of Object.entries(preferences)) {
-      syncPreference(name as Preference, value);
-    }
-  };
-  const setPreference = <T extends Preference>(name: T, value: Preferences[T]) => {
-    preferenceManager.setPreference(name, value);
-    syncPreference(name, value);
-  };
-  const mainWin = await createMainWindow();
-  let appRunning = true;
-  let selectingRegion = false;
-  const setSelectingRegion = (value: boolean) => {
-    selectingRegion = value;
-    sendSignal('selectingRegion', value);
-  };
   mainWin.addListener('focus', () => {
     if (selectingRegion) {
       overlayWin.focus();
     }
     overlayWin.moveTop();
   });
+
   mainWin.addListener('close', () => {
     appRunning = false;
     app.quit();
   });
-  const engineWin = await createEngineWindow();
+
+  const engineWin = await createWindow('engine', {
+    minWidth: 320,
+    minHeight: 320,
+    show: false,
+    useContentSize: true
+  });
+
   engineWin.addListener('close', (e) => {
     if (!appRunning) {
       return;
@@ -173,8 +99,18 @@ function debounce<T>(callback: (x: T) => void) {
     engineWin.hide();
     e.preventDefault();
   });
-  const overlayWin = await createOverlayWindow();
-  mainWin.show();
+
+  const overlayWin = await createWindow('overlay', {
+    alwaysOnTop: true,
+    center: true,
+    frame: false,
+    width: electronScreen.getPrimaryDisplay().size.width-4,
+    height: electronScreen.getPrimaryDisplay().size.height,
+    resizable: false,
+    skipTaskbar: true,
+    transparent: true
+  });
+
   overlayWin.addListener('close', (e) => {
     if (!appRunning) {
       return;
@@ -182,26 +118,85 @@ function debounce<T>(callback: (x: T) => void) {
     mainWin.show();
     overlayWin.setIgnoreMouseEvents(true);
     unsuppressMouse();
-    setSelectingRegion(false);
+    selectingRegion = false;
+    sendSignal('selectingRegion', false);
     e.preventDefault();
   });
+
+  overlayWin.setIgnoreMouseEvents(true);
+
+  uIOhook.start();
+  uIOhook.on('keyup', async (e) => {
+    if (e.keycode === UiohookKey.CapsLock) {
+      setMouseActive(false);
+    }
+  });
+
+  const mouse = new ConcreteMouse();
+  const screen = new ConcreteScreen();
+  const preferenceManager = new PreferenceManager();
+  const board = new Board(mouse);
+  const engineExternal = new EngineExternal();
+  const engineInternal = new EngineInternal();
+  const engineUCI = new EngineUCI();
+  const game = new Game();
+  const recognizer = new Recognizer(screen);
+  const agent = new Agent({ engine: engineUCI, game, recognizer });
+  let wasMouseActive = true;
+  let appRunning = true;
+  let selectingRegion = false;
+
   const sendToApp = (channel: string, ...args: unknown[]) => {
     if (appRunning) {
-      mainWin.webContents.send(channel, ...args);
-      engineWin.webContents.send(channel, ...args);
-      overlayWin.webContents.send(channel, ...args);
+      [mainWin, engineWin, overlayWin].forEach((win) => 
+        win.webContents.send(channel, ...args)
+      );
     }
   };
-  const sendSignal = <T extends Signal>(name: T, value?: Signals[T]) => {
+
+  const sendSignal = <T extends Signal>(name: T, value?: Signals[T]) => 
     sendToApp('signal', name, value);
-  };
+
   const updateStatus = (status: string) => {
     console.log(status);
     sendSignal('status', status);
   };
-  const sendEngineData = (name: string, data: string) => {
+
+  const sendEngineData = (name: string, data: string) => 
     sendSignal('engineData', { name, data });
+
+  const setMouseActive = (value: boolean) => {
+    mouse.setActive(value);
+    sendSignal('mouseActive', value);
   };
+
+  const suppressMouse = () => {
+    wasMouseActive = mouse.getActive();
+    setMouseActive(false);
+  };
+
+  const unsuppressMouse = () => setMouseActive(wasMouseActive);
+
+  const getPreference = <T extends Preference>(name: T) => 
+    preferenceManager.getPreference(name);
+
+  const syncPreference = <T extends Preference>(name: T, value: Preferences[T]) => {
+    sendToApp('preference', name, value);
+    preferenceListeners[name]?.(value);
+  };
+
+  const syncPreferences = () => {
+    const preferences = preferenceManager.getPreferences();
+    Object.entries(preferences).forEach(([name, value]) => {
+      syncPreference(name as Preference, value);
+    });
+  };
+
+  const setPreference = <T extends Preference>(name: T, value: Preferences[T]) => {
+    preferenceManager.setPreference(name, value);
+    syncPreference(name, value);
+  };
+
   mouse.addListener('mousemove', async () => {
     const region = getPreference('region');
     if (!region) {
@@ -213,95 +208,51 @@ function debounce<T>(callback: (x: T) => void) {
     }
     const coordinates = await mouse.getPosition();
     sendSignal('mousePosition', {
-      x: (coordinates.x-region.left)/region.width,
-      y: (coordinates.y-region.top)/region.height
+      x: (coordinates.x - region.left) / region.width,
+      y: (coordinates.y - region.top) / region.height
     });
   });
-  const board = new Board(mouse);
+
   board.addListener('move', (move, sendResult) => {
     sendResult(agent.processMove(move));
   });
   board.addListener('promotion', (piece) => agent.promoteTo(piece));
-  const engineExternal = new EngineExternal();
-  engineExternal.addListener('stdin', (data) => {
-    sendEngineData('external', '<<< '+data);
+
+  const handleEngineData = (source: string) => ({
+    stdin: (data: string) => sendEngineData(source, '<<< ' + data),
+    stdout: (data: string) => sendEngineData(source, '>>> ' + data),
+    stderr: (data: string) => sendEngineData(source, '!>> ' + data)
   });
-  engineExternal.addListener('stdout', (data) => {
-    sendEngineData('external', '>>> '+data);
-  });
-  engineExternal.addListener('stderr', (data) => {
-    sendEngineData('external', '!>> '+data);
-  });
+
+  const extHandlers = handleEngineData('external');
+  engineExternal.addListener('stdin', extHandlers.stdin);
+  engineExternal.addListener('stdout', extHandlers.stdout);
+  engineExternal.addListener('stderr', extHandlers.stderr);
   engineExternal.addListener('exit', (code) => {
     updateStatus('Engine has been closed');
     sendEngineData('external-event', 'exit');
     sendEngineData('external', `Exit code: ${code}`);
     sendSignal('engineInfo');
   });
-  const spawnExternalEngine = (path: string) => {
-    if (engineExternal.spawn(path)) {
-      engineUCI.setProcess(engineExternal);
-      sendEngineData('external-event', 'start');
-      updateStatus('Ready');
-    } else {
-      sendEngineData('external-event', 'exit');
-      updateStatus('Failed to load external engine');
-    }
-  };
-  const reloadExternalEngine = () => {
-    const path = getPreference('enginePath');
-    if (path) {
-      spawnExternalEngine(path);
-    }
-  };
-  const engineInternal = new EngineInternal();
-  engineInternal.addListener('stdin', (data) => {
-    sendEngineData('internal', '<<< '+data);
-  });
-  engineInternal.addListener('stdout', (data) => {
-    sendEngineData('internal', '>>> '+data);
-  });
-  engineInternal.addListener('stderr', (data) => {
-    sendEngineData('internal', '!>> '+data);
-  });
-  const engineUCI = new EngineUCI();
+
+  const intHandlers = handleEngineData('internal');
+  engineInternal.addListener('stdin', intHandlers.stdin);
+  engineInternal.addListener('stdout', intHandlers.stdout);
+  engineInternal.addListener('stderr', intHandlers.stderr);
+
   engineUCI.addListener('info', debounce((value) => {
-    const pv = value.principalVariations;
-    const pv1 = pv.map((x) => game.formatPrincipalVariation(x));
-    sendSignal('engineInfo', { ...value, principalVariations: pv1 });
+    const pv = value.principalVariations.map((x) => 
+      game.formatPrincipalVariation(x)
+    );
+    sendSignal('engineInfo', { ...value, principalVariations: pv });
   }));
-  const game = new Game();
+
   game.addListener('position', (value) => {
     sendSignal('positionInfo', game.getPositionInfo());
     sendSignal('positionFEN', value);
   });
   game.reset();
-  const recognizer = new Recognizer(screen);
-  const agent = new Agent({ engine: engineUCI, game, recognizer });
-  const playMove = (move: string) => board.playMove(move).catch(() => {
-    updateStatus('Stopped mouse');
-  });
-  const playBestMove = async () => {
-    if (!getPreference('region')) {
-      return;
-    }
-    const move = await agent.findBestMove();
-    if (move) {
-      await playMove(move);
-      agent.processMove(move);
-    }
-  };
-  const playPremove = async () => {
-    const move = await agent.findBestMove();
-    if (!move) {
-      return;
-    }
-    engineUCI.analyzePosition([move], 1);
-    const nextMove = await agent.findBestMove();
-    if (nextMove) {
-      return playMove(nextMove);
-    }
-  };
+
   agent.addListener('status', updateStatus);
   agent.addListener('moves', async () => {
     if (!getPreference('region')) {
@@ -322,6 +273,7 @@ function debounce<T>(callback: (x: T) => void) {
       agent.recognizeBoardAfterMove();
     }
   });
+
   agent.addListener('promotion', (move) => {
     if (getPreference('autoQueen')) {
       agent.promoteTo('q');
@@ -330,24 +282,63 @@ function debounce<T>(callback: (x: T) => void) {
       board.setPromotionMove(move);
     }
   });
-  const switchPreference = <T extends Preference>(name: T) => {
-    const prefConfig = preferenceConfig[name];
-    const values = prefConfig.switchValues;
-    if (!values) {
+
+  const playMove = async (move: string) => {
+    try {
+      await board.playMove(move);
+    } catch {
+      updateStatus('Stopped mouse');
+    }
+  };
+
+  const playBestMove = async () => {
+    if (!getPreference('region')) {
       return;
     }
-    const value = getPreference(name);
-    const nextValue = values[(values.indexOf(value)+1)%values.length];
-    setPreference(name, nextValue);
-    const prefix = prefConfig.statusPrefix ?? (prefConfig.label+': ');
-    updateStatus(`${prefix}${nextValue}${prefConfig.statusSuffix ?? ''}`);
+    const move = await agent.findBestMove();
+    if (move) {
+      await playMove(move);
+      agent.processMove(move);
+    }
   };
+
+  const playPremove = async () => {
+    const move = await agent.findBestMove();
+    if (!move) {
+      return;
+    }
+    engineUCI.analyzePosition([move], 1);
+    const nextMove = await agent.findBestMove();
+    if (nextMove) {
+      await playMove(nextMove);
+    }
+  };
+
+  const spawnExternalEngine = (path: string) => {
+    if (engineExternal.spawn(path)) {
+      engineUCI.setProcess(engineExternal);
+      sendEngineData('external-event', 'start');
+      updateStatus('Ready');
+    } else {
+      sendEngineData('external-event', 'exit');
+      updateStatus('Failed to load external engine');
+    }
+  };
+
+  const reloadExternalEngine = () => {
+    const path = getPreference('enginePath');
+    if (path) {
+      spawnExternalEngine(path);
+    }
+  };
+
   const actionListeners: Partial<Record<Action, () => void>> = {
     selectRegion: () => {
       overlayWin.setIgnoreMouseEvents(false);
       overlayWin.show();
       suppressMouse();
-      setSelectingRegion(true);
+      selectingRegion = true;
+      sendSignal('selectingRegion', true);
     },
     hideRegion: () => overlayWin.close(),
     loadHashes: () => {
@@ -368,7 +359,7 @@ function debounce<T>(callback: (x: T) => void) {
     resetHashes: () => setPreference('recognizerModel', null),
     skipMove: () => agent.skipMove(),
     undoMove: () => agent.undoMove(),
-    bestMove: () => playBestMove(),
+    bestMove: playBestMove,
     resetPosition: () => {
       agent.resetPosition();
       if (!engineExternal.isRunning()) {
@@ -378,6 +369,7 @@ function debounce<T>(callback: (x: T) => void) {
     clearPosition: () => agent.clearPosition(),
     recognizeBoard: () => {
       if (!getPreference('region')) {
+        updateStatus('No region selected');
         return;
       }
       if (!getPreference('recognizerModel')) {
@@ -394,11 +386,11 @@ function debounce<T>(callback: (x: T) => void) {
         properties: ['openFile']
       });
       unsuppressMouse();
-      if (result.filePaths.length > 0) {
+      if (result.filePaths[0]) {
         setPreference('enginePath', result.filePaths[0]);
       }
     },
-    reloadEngine: () => reloadExternalEngine(),
+    reloadEngine: reloadExternalEngine,
     showEngine: () => engineWin.show(),
     loadConfig: async () => {
       suppressMouse();
@@ -408,7 +400,7 @@ function debounce<T>(callback: (x: T) => void) {
       });
       overlayWin.moveTop();
       unsuppressMouse();
-      if (!result.filePaths.length) {
+      if (!result.filePaths[0]) {
         return;
       }
       try {
@@ -444,37 +436,37 @@ function debounce<T>(callback: (x: T) => void) {
     savePicture: async () => {
       suppressMouse();
       const amount = getPreference('screenshotLength');
-      if (amount > 1) {
-        const images: Image[] = [];
-        for (let i = 0; i < amount; i++) {
-          await screen.sleep(50);
-          const image = await screen.getImage();
-          images.push(image);
-        }
-        const result = await dialog.showOpenDialog(mainWin, {
-          properties: ['createDirectory', 'openDirectory']
-        });
-        if (result.filePaths.length > 0) {
-          const directory = result.filePaths[0];
-          for (let i = 0; i < images.length; i++) {
-            const image = images[i];
-            const imagePath = path.join(directory, `${i}.png`);
-            await saveImage({ image, path: imagePath});
+      try {
+        if (amount > 1) {
+          const images: Image[] = [];
+          for (let i = 0; i < amount; i++) {
+            await screen.sleep(50);
+            images.push(await screen.getImage());
           }
-          updateStatus('Saved screenshots');
+          const result = await dialog.showOpenDialog(mainWin, {
+            properties: ['createDirectory', 'openDirectory']
+          });
+          const directory = result.filePaths[0];
+          if (directory) {
+            await Promise.all(images.map((image, i) => 
+              saveImage({ image, path: path.join(directory, `${i}.png`) })
+            ));
+            updateStatus('Saved screenshots');
+          }
+        } else {
+          const image = await screen.getImage();
+          const result = await dialog.showSaveDialog(mainWin, {
+            properties: ['createDirectory'],
+            filters: [{ name: 'Picture', extensions: ['png'] }]
+          });
+          if (result.filePath) {
+            await saveImage({ image, path: result.filePath });
+            updateStatus('Saved screenshot');
+          }
         }
-      } else {
-        const image = await screen.getImage();
-        const result = await dialog.showSaveDialog(mainWin, {
-          properties: ['createDirectory'],
-          filters: [{ name: 'Picture', extensions: ['png'] }]
-        });
-        if (result.filePath) {
-          await saveImage({ image, path: result.filePath });
-          updateStatus('Saved screenshot');
-        }
+      } finally {
+        unsuppressMouse();
       }
-      unsuppressMouse();
     },
     promoteQueen: () => agent.promoteTo('q'),
     promoteRook: () => agent.promoteTo('r'),
@@ -483,28 +475,30 @@ function debounce<T>(callback: (x: T) => void) {
     analysisDuration: () => switchPreference('analysisDuration'),
     mouseSpeed: () => switchPreference('mouseSpeed')
   };
+
   for (const name of booleanPreferenceNames) {
     actionListeners[name as Action] = () => {
       const value = !getPreference(name);
       setPreference(name, value);
       const prefConfig = preferenceConfig[name];
-      const prefix = prefConfig.statusPrefix ?? (prefConfig.label+': ');
-      const valueText = value
+      const prefix = prefConfig.statusPrefix ?? (prefConfig.label + ': ');
+      const valueText = value 
         ? (prefConfig.statusOnTrue ?? 'enabled')
         : (prefConfig.statusOnFalse ?? 'disabled');
       updateStatus(`${prefix}${valueText}${prefConfig.statusSuffix ?? ''}`);
     };
   }
+
   const actionRegionManager = new ActionRegionManager(mouse);
-  actionRegionManager.addListener('hover', (name?: string) => {
-    sendSignal('hoveredAction', name);
-  });
+  actionRegionManager.addListener('hover', (name?: string) => 
+    sendSignal('hoveredAction', name)
+  );
+
   for (const location of possibleLocations) {
     actionRegionManager.addActionRegion({
       name: location,
       listener: () => {
-        const locations = getPreference('actionLocations');
-        const action = locations[location];
+        const action = getPreference('actionLocations')[location];
         if (!action) {
           return;
         }
@@ -517,13 +511,11 @@ function debounce<T>(callback: (x: T) => void) {
       },
       getRegion: () => {
         const region = getPreference('region');
-        if (!region) {
-          return null;
-        }
-        return findRegion(region, location);
+        return region ? findRegion(region, location) : null;
       }
     });
   }
+
   const preferenceListeners: Partial<PreferenceListeners> = {
     alwaysOnTop: (value) => {
       mainWin.setAlwaysOnTop(value, 'normal');
@@ -560,39 +552,51 @@ function debounce<T>(callback: (x: T) => void) {
     recognizerPutKings: (value) => recognizer.setPutKings(value),
     autoCastling: (value) => game.setAutoCastling(value)
   };
-  syncPreferences();
-  ipcMain.on('preference', (_, name, value) => {
-    setPreference(name, value);
-  });
-  const signalListeners: Partial<SignalListeners> = {};
-  ipcMain.on('signal', <T extends Signal>(_: unknown, name: T, value: Signals[T]) => {
-    if (signalListeners[name]) {
-      signalListeners[name](value);
-    } else {
-      throw new Error('No signal listener for '+name);
+
+  const switchPreference = <T extends Preference>(name: T) => {
+    const prefConfig = preferenceConfig[name];
+    const values = prefConfig.switchValues;
+    if (!values) {
+      return;
     }
-  });
-  const onSignal = <T extends Signal>(name: T, listener: SignalListeners[T]) => {
-    signalListeners[name] = listener;
+    const currentValue = getPreference(name);
+    const nextIndex = (values.indexOf(currentValue)+1)%values.length;
+    const nextValue = values[nextIndex];
+    setPreference(name, nextValue);
+    const prefix = prefConfig.statusPrefix ?? (prefConfig.label+': ');
+    updateStatus(`${prefix}${nextValue}${prefConfig.statusSuffix ?? ''}`);
   };
-  onSignal('pieceDropped', ({ sourceSquare, targetSquare }) => {
-    agent.processMove(`${sourceSquare}${targetSquare}`);
-  });
-  onSignal('pieceDroppedEdit', (value) => agent.putPiece(value));
-  onSignal('engineData', ({ name, data }) => {
-    if (name === 'internal') {
-      engineInternal.send(data);
-    } else if (name === 'external') {
-      engineExternal.send(data);
+
+  const signalListeners: Partial<SignalListeners> = {
+    pieceDropped: ({ sourceSquare, targetSquare }) =>
+      agent.processMove(`${sourceSquare}${targetSquare}`),
+    pieceDroppedEdit: (value) => agent.putPiece(value),
+    engineData: ({ name, data }) => {
+      if (name === 'internal') {
+        engineInternal.send(data);
+      } else if (name === 'external') {
+        engineExternal.send(data);
+      }
+    },
+    positionFEN: (value) => agent.loadPosition(value),
+    positionInfo: (value) => agent.loadPositionInfo(value),
+    action: (value) => actionListeners[value]?.(),
+    requestPreference: (name) =>
+      sendToApp('preference', name, getPreference(name)),
+    registerMove: (move) => agent.processMove(move),
+    mouseActive: setMouseActive
+  };
+
+  ipcMain.on('signal', <T extends Signal>(_: unknown, name: T, value: Signals[T]) => {
+    const listener = signalListeners[name];
+    if (!listener) {
+      throw new Error('No signal listener for ' + name);
     }
+    listener(value);
   });
-  onSignal('positionFEN', (value) => agent.loadPosition(value));
-  onSignal('positionInfo', (value) => agent.loadPositionInfo(value));
-  onSignal('action', (value) => actionListeners[value]?.());
-  onSignal('requestPreference', (name) => {
-    sendToApp('preference', name, getPreference(name));
-  });
-  onSignal('registerMove', (move) => agent.processMove(move));
-  onSignal('mouseActive', setMouseActive);
+  ipcMain.on('preference', (_, name, value) => setPreference(name, value));
+
+  mainWin.show();
+  syncPreferences();
   updateStatus('Ready');
 })();

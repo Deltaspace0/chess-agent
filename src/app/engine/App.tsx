@@ -26,9 +26,9 @@ function App() {
       color = '#fc9288ff';
     }
     const line = <span style={{color}}>{data}</span>;
-    (name === 'internal' ? setInternalLines : setExternalLines)((x) => {
-      return [...x, line].slice(-1000);
-    });
+    (name === 'internal' ? setInternalLines : setExternalLines)((x) =>
+      [...x, line].slice(-1000)
+    );
   }), [electron]);
   useEffect(() => {
     document.title = engineInfo?.name || 'Engine';
