@@ -13,6 +13,8 @@ parentPort.on('message', async (data) => {
     await mouse.pressButton(arg);
   } else if (action === 'release') {
     await mouse.releaseButton(arg);
+  } else if (action === 'speed') {
+    mouse.config.mouseSpeed = arg;
   }
   parentPort.postMessage({ action, key });
 });

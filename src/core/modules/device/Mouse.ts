@@ -3,6 +3,7 @@ import { mouse, sleep } from '@nut-tree-fork/nut-js';
 import path from 'path';
 import { uIOhook } from 'uiohook-napi';
 import { Worker } from 'worker_threads';
+import { preferenceConfig } from '../../../config.ts';
 
 const workerPath = path.join(import.meta.dirname, 'mouse-actions.js');
 
@@ -34,11 +35,13 @@ export abstract class Mouse extends EventEmitter<MouseEventMap> {
 
 export class ConcreteMouse extends Mouse {
   private worker: Worker;
+  private speed = preferenceConfig.mouseSpeed.defaultValue;
   private stopListeners = new Set<() => void>();
 
   constructor() {
     super();
     this.worker = new Worker(workerPath);
+    this.sendSpeedToWorker();
     uIOhook.on('mousedown', () => this.emitMouseEvent('mousedown'));
     uIOhook.on('mouseup', () => this.emitMouseEvent('mouseup'));
     uIOhook.on('mousemove', () => this.emitMouseEvent('mousemove'));
@@ -49,6 +52,10 @@ export class ConcreteMouse extends Mouse {
     if (this.isActive) {
       this.emit(event);
     }
+  }
+
+  private sendSpeedToWorker() {
+    this.worker.postMessage({ action: 'speed', arg: this.speed });
   }
 
   private async performAction(action: string, arg: unknown) {
@@ -74,9 +81,11 @@ export class ConcreteMouse extends Mouse {
     if (this.isActive && !value) {
       this.worker.terminate();
       this.worker = new Worker(workerPath);
+      this.sendSpeedToWorker();
       for (const listener of this.stopListeners) {
         listener();
       }
+      this.stopListeners.clear();
     }
     this.isActive = value;
   }
@@ -85,12 +94,13 @@ export class ConcreteMouse extends Mouse {
     return mouse.getPosition();
   }
 
-  setSpeed(speed: number): void {
-    mouse.config.mouseSpeed = speed;
+  setSpeed(speed: number) {
+    this.speed = speed;
+    this.sendSpeedToWorker();
   }
 
   async move(point: Point): Promise<void> {
-    if (mouse.config.mouseSpeed > 10000) {
+    if (this.speed > 10000) {
       return this.performAction('move', point);
     }
     return this.performAction('move-straight', point);
