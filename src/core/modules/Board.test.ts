@@ -266,6 +266,12 @@ describe('Board', () => {
         board.setRegion(null);
         await expect(board.playMove('e2e4')).rejects.toThrow();
       });
+
+      it('should throw an error on incorrect move', async () => {
+        const mouse = new MouseMock();
+        const board = getBoard(mouse);
+        await expect(board.playMove('(none)')).rejects.toThrow();
+      });
     });
 
     describe('Promotion', () => {

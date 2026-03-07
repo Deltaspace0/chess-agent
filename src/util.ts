@@ -3,6 +3,9 @@ export function coordsToSquare([row, col]: [number, number], isWhite: boolean): 
 }
 
 export function squareToCoords(square: string, isWhite: boolean): [number, number] {
+  if (!'abcdefgh'.includes(square[0]) || !'012345678'.includes(square[1])) {
+    throw new Error('Not a square: '+square);
+  }
   if (isWhite) {
     return [8-Number(square[1]), 'abcdefgh'.indexOf(square[0])];
   }
