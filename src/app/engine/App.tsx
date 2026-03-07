@@ -68,7 +68,12 @@ function App() {
       />
       <p className='text'>Name: {engineInfo?.name}</p>
       <p className='text'>Author: {engineInfo?.author}</p>
-      <div ref={containerRef} className='engine-uci-div'>
+      <div
+        ref={containerRef}
+        className='engine-uci-div'
+        onBeforeInput={(e) => e.preventDefault()}
+        contentEditable
+      >
         {isInternal ? internalLines : externalLines}
       </div>
       {(isInternal || externalActive) ? (<div className='uci-input-div'>
