@@ -37,6 +37,7 @@ function App() {
   const [showActionRegion] = usePreference('showActionRegion');
   const region = useMemo(() => mulRegion(prefRegion, 1/dpr), [prefRegion, dpr]);
   const selectingRegion = useSignal('selectingRegion');
+  const mouseActive = useSignal('mouseActive');
   const [autoAdjust, setAutoAdjust] = useState(true);
   const [hideAll, setHideAll] = useState(false);
   const actionSelectsRef = useRef<Record<string, HTMLSelectElement | null>>({});
@@ -131,7 +132,7 @@ function App() {
         delete tooltipInstances[location];
       }
     };
-  }, [actionLocations, selectingRegion, region]);
+  }, [actionLocations, selectingRegion, mouseActive, region]);
   useEffect(() => {
     const tooltipInstances = tooltipInstancesRef.current;
     return electron.onSignal('hoveredAction', (location) => {
@@ -182,7 +183,7 @@ function App() {
     {showActionRegion && actionRegion && actionOverlayDivs}
   </div>;
   return (<>
-    {selectingRegion ? regionModeDiv : overlayModeDiv}
+    {selectingRegion ? regionModeDiv : (mouseActive && overlayModeDiv)}
   </>);
 }
 
