@@ -64,8 +64,8 @@ function App() {
       const selectedRegion = findRegion(region, location);
       const action = actionLocations[location];
       const backgroundColor = action
-        ? 'rgba(255, 0, 0, 0.8)'
-        : 'rgba(255, 255, 255, 0.8)';
+        ? 'rgba(255, 255, 0, 0.5)'
+        : 'rgba(0, 0, 0, 0)';
       actionRegionDivs.push(<select
         ref={(e) => { actionSelectsRef.current[location] = e; }}
         className='select-action'

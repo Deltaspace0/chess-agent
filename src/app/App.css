@@ -1,3 +1,9 @@
+* {
+  outline: none;
+  scrollbar-color: #ddd #201f35;
+  scrollbar-width: thin;
+}
+
 a {
   cursor: pointer;
 }
@@ -29,7 +35,7 @@ input[type="checkbox"] {
   height: 16px;
   margin: 4px;
   background: #000000;
-  border: 2px solid #cccccc;
+  border: 2px solid #6a86cd;
   border-radius: 4px;
   cursor: pointer;
   outline: none;
@@ -70,7 +76,7 @@ input[type="radio"] {
   height: 16px;
   margin: 4px;
   background: #000000;
-  border: 2px solid #cccccc;
+  border: 2px solid #6a86cd;
   border-radius: 50%;
   cursor: pointer;
   outline: none;
@@ -110,7 +116,7 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-runnable-track {
   height: 16px;
   background: #000000;
-  border: 2px solid rgba(255, 255, 255, 0.87);
+  border: 2px solid #4f6497;
   border-radius: 4px;
   box-shadow: 0 0 4px rgba(255, 255, 255, 0.1);
 }
@@ -149,7 +155,10 @@ input[type="range"]:disabled::-webkit-slider-runnable-track {
 
 input[type="text"] {
   margin: 4px;
-  border-radius: 4px;
+  padding: 4px;
+  background: #201f35;
+  color: #ddd;
+  border: 1px solid #6a86cd;
 }
 
 button {
@@ -158,15 +167,13 @@ button {
   margin: 4px;
   padding: 2px;
   background: #0f0718;
-  color: rgba(255, 255, 255, 0.87);
-  border: 1px solid rgba(255, 255, 255, 0.87);
-  border-radius: 8px;
+  color: #ddd;
+  border: 1px solid #6a86cd;
   cursor: pointer;
   transition: all 0.3s;
   &:hover {
-    border-radius: 4px;
-    color: #0ec3c9;
     background: #28234e;
+    border: 1px solid #0ec3c9;
   }
   &:active {
     background: #16002e;
@@ -179,6 +186,25 @@ button {
     background: #0f0718;
   }
 }
+
+select {
+  background: #0f0718;
+  color: #ddd;
+}
+
+select::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+select::-webkit-scrollbar-track {
+  background-color: #201f35;
+}
+
+select::-webkit-scrollbar-thumb {
+  background-color: #ddd;
+}
+
 
 fieldset {
   min-width: 100px;
@@ -230,10 +256,11 @@ p {
 }
 
 .engine-uci-div {
+  border: 1px solid #6a86cd;
   background-color: #000000;
   font-family: 'Courier New', Courier, monospace;
   font-size: 11px;
-  margin: 6px;
+  margin: 4px;
   height: calc(100vh - 148px);
   overflow: auto;
   display: flex;
@@ -332,11 +359,11 @@ p {
   min-height: 100vh;
   display: flex;
   padding: 4px;
-  color: white;
+  color: #ddd;
 }
 
 .Region {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: #00000088;
   min-height: 100vh;
   overflow: hidden;
   display: flex;

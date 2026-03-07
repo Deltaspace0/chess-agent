@@ -19,7 +19,7 @@ function App() {
       setExternalActive(data !== 'exit');
       return;
     }
-    let color = '#ffffff';
+    let color = '#ddd';
     if (data.substring(0, 3) === '<<<') {
       color = '#f6ee11ff';
     } else if (data.substring(0, 3) === '!>>') {
@@ -52,6 +52,13 @@ function App() {
   };
   return (<div className='App'>
     <div className='flex-column'>
+      <p className='text'>Name: {engineInfo?.name}</p>
+      <p className='text'>Author: {engineInfo?.author}</p>
+      <input
+        type='text'
+        value={enginePath ?? '(Internal engine)'}
+        readOnly={true}
+      />
       <div className='flex-row'>
         <ActionButton name='dialogEngine' label='Load engine'/>
         <ActionButton name='reloadEngine' label='Reload' disabled={isInternal}/>
@@ -61,13 +68,6 @@ function App() {
             Disable
         </button>
       </div>
-      <input
-        type='text'
-        value={enginePath ?? '(Internal engine)'}
-        readOnly={true}
-      />
-      <p className='text'>Name: {engineInfo?.name}</p>
-      <p className='text'>Author: {engineInfo?.author}</p>
       <div
         ref={containerRef}
         className='engine-uci-div'
