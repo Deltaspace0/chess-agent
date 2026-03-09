@@ -46,3 +46,30 @@ export function findRegion(region: Region, location: string): Region {
     height: height/8
   };
 }
+
+export function getTurnFEN(fen: string): boolean {
+  return fen.split(' ')[1] === 'w';
+}
+
+export function setTurnFEN(fen: string, isWhite: boolean): string {
+  const parts = fen.split(' ');
+  parts[1] = isWhite ? 'w' : 'b';
+  return parts.join(' ');
+}
+
+export function getCastlingFEN(fen: string, castling: string): boolean {
+  return fen.split(' ')[2]?.includes(castling);
+}
+
+export function setCastlingFEN(
+  fen: string,
+  castling: string,
+  value: boolean
+): string {
+  const parts = fen.split(' ');
+  const rights = (parts[2] === '-' || !parts[2]) ? '' : parts[2];
+  parts[2] = value
+    ? Array.from(new Set(rights+castling)).sort().join('') || '-'
+    : rights.replace(castling, '') || '-';
+  return parts.join(' ');
+}

@@ -28,11 +28,6 @@ function App() {
   };
   const principalVariations = engineInfo.principalVariations;
   const [positionFEN, setPositionFEN] = useState('');
-  const positionInfo = useSignal('positionInfo') || {
-    whiteCastlingRights: { 'k': true, 'q': true },
-    blackCastlingRights: { 'k': true, 'q': true },
-    isWhiteTurn: true
-  };
   const [panelType, setPanelType] = useState<Panel>('main');
   const principalArrows = useMemo(() => {
     if (!principalVariations) {
@@ -185,7 +180,7 @@ function App() {
         <button onClick={() => setPanelType('main')}>Cancel</button>
       </div>
     </fieldset>,
-    edit: <EditPanel positionFEN={positionFEN} positionInfo={positionInfo}/>,
+    edit: <EditPanel fen={positionFEN}/>,
     settings: <SettingsPanel/>
   };
   const whiteSparePieces = <div className='spare-pieces-div'>

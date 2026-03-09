@@ -1,21 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
 import Checkbox from '../components/Checkbox.tsx';
 import Radio from '../components/Radio.tsx';
+import {
+  getCastlingFEN,
+  getTurnFEN,
+  setCastlingFEN,
+  setTurnFEN
+} from '../../util.ts';
 
 interface EditProps {
-  positionFEN: string;
-  positionInfo: PositionInfo;
+  fen: string;
 }
 
-function EditPanel({ positionFEN, positionInfo }: EditProps) {
-  const electron = window.electronAPI;
-  const [inputFEN, setInputFEN] = useState(positionFEN);
-  const [prevFEN, setPrevFEN] = useState(positionFEN);
+function EditPanel({ fen }: EditProps) {
+  const [inputFEN, setInputFEN] = useState(fen);
+  const [prevFEN, setPrevFEN] = useState(fen);
   const [separateCastlingRow, setSeparateCastlingRow] = useState(false);
   const editFieldRef = useRef<HTMLFieldSetElement>(null);
-  if (prevFEN !== positionFEN) {
-    setInputFEN(positionFEN);
-    setPrevFEN(positionFEN);
+  if (prevFEN !== fen) {
+    setInputFEN(fen);
+    setPrevFEN(fen);
   }
   useEffect(() => {
     const resizeObserver = new ResizeObserver((entries) => {
@@ -28,52 +32,25 @@ function EditPanel({ positionFEN, positionInfo }: EditProps) {
     }
     return () => resizeObserver.disconnect();
   }, []);
+  const sendFEN = (fen: string) =>
+    window.electronAPI.sendSignal('positionFEN', fen);
+  const castlingBox = (label: string, title: string, castling: string) =>
+    <Checkbox
+      label={label}
+      title={title}
+      checked={getCastlingFEN(fen, castling)}
+      onChange={(value) => sendFEN(setCastlingFEN(fen, castling, value))}
+    />;
   const castlingCheckboxes = <>
     <div className='flex-column'>
       <p style={{margin: '4px 0'}}>White:</p>
-      <Checkbox
-        label='O-O'
-        title='White can castle kingside'
-        checked={positionInfo.whiteCastlingRights.k}
-        onChange={(value) => {
-          const newPositionInfo = structuredClone(positionInfo);
-          newPositionInfo.whiteCastlingRights.k = value;
-          electron.sendSignal('positionInfo', newPositionInfo);
-        }}
-      />
-      <Checkbox
-        label='O-O-O'
-        title='White can castle queenside'
-        checked={positionInfo.whiteCastlingRights.q}
-        onChange={(value) => {
-          const newPositionInfo = structuredClone(positionInfo);
-          newPositionInfo.whiteCastlingRights.q = value;
-          electron.sendSignal('positionInfo', newPositionInfo);
-        }}
-      />
+      {castlingBox('O-O', 'White can castle kingside', 'K')}
+      {castlingBox('O-O-O', 'White can castle queenside', 'Q')}
     </div>
     <div className='flex-column'>
       <p style={{margin: '4px 0'}}>Black:</p>
-      <Checkbox
-        label='O-O'
-        title='Black can castle kingside'
-        checked={positionInfo.blackCastlingRights.k}
-        onChange={(value) => {
-          const newPositionInfo = structuredClone(positionInfo);
-          newPositionInfo.blackCastlingRights.k = value;
-          electron.sendSignal('positionInfo', newPositionInfo);
-        }}
-      />
-      <Checkbox
-        label='O-O-O'
-        title='Black can castle queenside'
-        checked={positionInfo.blackCastlingRights.q}
-        onChange={(value) => {
-          const newPositionInfo = structuredClone(positionInfo);
-          newPositionInfo.blackCastlingRights.q = value;
-          electron.sendSignal('positionInfo', newPositionInfo);
-        }}
-      />
+      {castlingBox('O-O', 'Black can castle kingside', 'k')}
+      {castlingBox('O-O-O', 'Black can castle queenside', 'q')}
     </div>
   </>;
   return (<fieldset ref={editFieldRef} className='scroll-field'>
@@ -87,14 +64,12 @@ function EditPanel({ positionFEN, positionInfo }: EditProps) {
           onChange={(e) => setInputFEN(e.target.value)}
           onKeyDown={(e: React.KeyboardEvent) => {
             if (e.key === 'Enter') {
-              electron.sendSignal('positionFEN', inputFEN);
+              sendFEN(inputFEN);
               e.preventDefault();
             }
           }}
         />
-        <button onClick={() => electron.sendSignal('positionFEN', inputFEN)}>
-          Set FEN
-        </button>
+        <button onClick={() => sendFEN(inputFEN)}>Set FEN</button>
       </div>
       <div className='flex-row'>
         <div className={separateCastlingRow ? 'flex-row' : 'flex-column'}>
@@ -103,22 +78,16 @@ function EditPanel({ positionFEN, positionInfo }: EditProps) {
             label='White'
             name='turn'
             value='w'
-            checked={positionInfo.isWhiteTurn}
-            onChange={() => {
-              const newPositionInfo = structuredClone(positionInfo);
-              newPositionInfo.isWhiteTurn = true;
-              electron.sendSignal('positionInfo', newPositionInfo);
-            }}/>
+            checked={getTurnFEN(fen)}
+            onChange={() => sendFEN(setTurnFEN(fen, true))}
+          />
           <Radio
             label='Black'
             name='turn'
             value='b'
-            checked={!positionInfo.isWhiteTurn}
-            onChange={() => {
-              const newPositionInfo = structuredClone(positionInfo);
-              newPositionInfo.isWhiteTurn = false;
-              electron.sendSignal('positionInfo', newPositionInfo);
-            }}/>
+            checked={!getTurnFEN(fen)}
+            onChange={() => sendFEN(setTurnFEN(fen, false))}
+          />
         </div>
         {!separateCastlingRow && castlingCheckboxes}
       </div>

@@ -247,10 +247,7 @@ const createWindow = async (
     sendSignal('engineInfo', { ...value, principalVariations: pv });
   }));
 
-  game.addListener('position', (value) => {
-    sendSignal('positionInfo', game.getPositionInfo());
-    sendSignal('positionFEN', value);
-  });
+  game.addListener('position', (value) => sendSignal('positionFEN', value));
   game.reset();
 
   agent.addListener('status', updateStatus);
@@ -579,7 +576,6 @@ const createWindow = async (
       }
     },
     positionFEN: (value) => agent.loadPosition(value),
-    positionInfo: (value) => agent.loadPositionInfo(value),
     action: (value) => actionListeners[value]?.(),
     requestPreference: (name) =>
       sendToApp('preference', name, getPreference(name)),

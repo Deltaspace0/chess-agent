@@ -88,6 +88,18 @@ class Game extends EventEmitter<GameEventMap> implements AgentGame {
 
   load(fen: string) {
     this.chess.load(fen);
+    const whiteRights = this.chess.getCastlingRights('w');
+    const blackRights = this.chess.getCastlingRights('b');
+    this.chess.setCastlingRights('w', whiteRights);
+    this.chess.setCastlingRights('b', blackRights);
+    const turn = this.chess.turn();
+    try {
+      this.chess.setTurn(turn === 'w' ? 'b' : 'w');
+    } catch {
+      this.emitPosition();
+      return;
+    }
+    this.chess.setTurn(turn);
     this.emitPosition();
   }
 
@@ -106,24 +118,6 @@ class Game extends EventEmitter<GameEventMap> implements AgentGame {
       return false;
     }
     return this.chess.findPiece({ type: 'k', color: 'b' }).length > 0;
-  }
-
-  getPositionInfo(): PositionInfo {
-    return {
-      whiteCastlingRights: this.chess.getCastlingRights('w'),
-      blackCastlingRights: this.chess.getCastlingRights('b'),
-      isWhiteTurn: this.chess.turn() === 'w'
-    };
-  }
-
-  setPositionInfo(info: PositionInfo): boolean {
-    if (!this.chess.setCastlingRights('w', info.whiteCastlingRights)) {
-      return false;
-    }
-    if (!this.chess.setCastlingRights('b', info.blackCastlingRights)) {
-      return false;
-    }
-    return this.setTurn(info.isWhiteTurn ? 'w' : 'b');
   }
 
   isMyTurn(): boolean {

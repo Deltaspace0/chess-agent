@@ -91,12 +91,6 @@ declare global {
     author?: string;
   }
 
-  interface PositionInfo {
-    whiteCastlingRights: { k: boolean, q: boolean };
-    blackCastlingRights: { k: boolean, q: boolean };
-    isWhiteTurn: boolean;
-  }
-
   interface DroppedPiece {
     sourceSquare: string | null;
     targetSquare: string | null;
@@ -114,7 +108,6 @@ declare global {
   interface Signals {
     status: string;
     positionFEN: string;
-    positionInfo: PositionInfo;
     engineData: { name: string, data: string };
     engineInfo?: EngineInfo;
     mouseActive: boolean;

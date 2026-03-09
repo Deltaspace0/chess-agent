@@ -29,7 +29,6 @@ export interface AgentGame {
   load(fen: string): void;
   isLegalMove(move: string): boolean;
   kingsExist(): boolean;
-  setPositionInfo(info: PositionInfo): boolean;
   setMyTurn(): boolean;
   setOppTurn(): boolean;
   putPieces(pieces: [Piece, number, number][]): void;
@@ -270,13 +269,6 @@ export class Agent<T> extends EventEmitter<AgentEventMap> {
     }
     this.engine.reset(fen);
     this.emit('status', 'New position');
-  }
-
-  loadPositionInfo(info: PositionInfo) {
-    this.recognizer.stopWaitingMove();
-    if (this.game.setPositionInfo(info)) {
-      this.syncEngine();
-    }
   }
 
   putPiece(droppedPiece: DroppedPiece) {
