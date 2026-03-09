@@ -27,7 +27,6 @@ function getNumberValue(words: string[], name: string): number {
 class EngineUCI extends EventEmitter<EngineUCIEventMap> implements AgentEngine {
   private process: EngineProcess | null = null;
   private loadingProcess: EngineProcess | null = null;
-  private processLock: Promise<void> = Promise.resolve();
   private moves: string[] = [];
   private analyzedMoves: string[] = [];
   private whiteFirst: boolean = true;
@@ -41,19 +40,12 @@ class EngineUCI extends EventEmitter<EngineUCIEventMap> implements AgentEngine {
   };
   private processListener = this.processData.bind(this);
 
-  private async sendToProcess(data: string | string[]) {
-    await this.processLock;
-    this.processLock = new Promise((resolve) => {
-      if (typeof data === 'string') {
-        this.process?.send(data);
-      } else {
-        for (const line of data) {
-          this.process?.send(line);
-        }
-      }
-      resolve();
-    });
-    return this.processLock;
+  private sendToProcess(data: string | string[]) {
+    if (typeof data === 'string') {
+      this.process?.send(data);
+    } else {
+      data.forEach((line) => this.process?.send(line));
+    }
   }
 
   private processData(data: string) {
