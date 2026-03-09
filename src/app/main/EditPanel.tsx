@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import Checkbox from '../components/Checkbox.tsx';
 import Radio from '../components/Radio.tsx';
 import {
@@ -15,23 +15,10 @@ interface EditProps {
 function EditPanel({ fen }: EditProps) {
   const [inputFEN, setInputFEN] = useState(fen);
   const [prevFEN, setPrevFEN] = useState(fen);
-  const [separateCastlingRow, setSeparateCastlingRow] = useState(false);
-  const editFieldRef = useRef<HTMLFieldSetElement>(null);
   if (prevFEN !== fen) {
     setInputFEN(fen);
     setPrevFEN(fen);
   }
-  useEffect(() => {
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setSeparateCastlingRow(entry.contentRect.width < 240);
-      }
-    });
-    if (editFieldRef.current) {
-      resizeObserver.observe(editFieldRef.current);
-    }
-    return () => resizeObserver.disconnect();
-  }, []);
   const sendFEN = (fen: string) =>
     window.electronAPI.sendSignal('positionFEN', fen);
   const castlingBox = (label: string, title: string, castling: string) =>
@@ -41,61 +28,52 @@ function EditPanel({ fen }: EditProps) {
       checked={getCastlingFEN(fen, castling)}
       onChange={(value) => sendFEN(setCastlingFEN(fen, castling, value))}
     />;
-  const castlingCheckboxes = <>
-    <div className='flex-column'>
-      <p style={{margin: '4px 0'}}>White:</p>
-      {castlingBox('O-O', 'White can castle kingside', 'K')}
-      {castlingBox('O-O-O', 'White can castle queenside', 'Q')}
+  return (<div className='flex-column' style={{overflow: 'auto'}}>
+    <div className='flex-row'>
+      <input
+        type='text'
+        style={{minWidth: 'calc(100% - 80px)'}}
+        value={inputFEN}
+        onChange={(e) => setInputFEN(e.target.value)}
+        onKeyDown={(e: React.KeyboardEvent) => {
+          if (e.key === 'Enter') {
+            sendFEN(inputFEN);
+            e.preventDefault();
+          }
+        }}
+      />
+      <button onClick={() => sendFEN(inputFEN)}>Set FEN</button>
     </div>
-    <div className='flex-column'>
-      <p style={{margin: '4px 0'}}>Black:</p>
-      {castlingBox('O-O', 'Black can castle kingside', 'k')}
-      {castlingBox('O-O-O', 'Black can castle queenside', 'q')}
-    </div>
-  </>;
-  return (<fieldset ref={editFieldRef} className='scroll-field'>
-    <legend>Edit board</legend>
-    <div className='flex-column'>
-      <div className='flex-row'>
-        <input
-          type='text'
-          style={{minWidth: 'calc(100% - 80px)'}}
-          value={inputFEN}
-          onChange={(e) => setInputFEN(e.target.value)}
-          onKeyDown={(e: React.KeyboardEvent) => {
-            if (e.key === 'Enter') {
-              sendFEN(inputFEN);
-              e.preventDefault();
-            }
-          }}
+    <div className='flex-row'>
+      <div className='flex-column'>
+        <p style={{margin: '4px 0'}}>Turn:</p>
+        <Radio
+          label='White'
+          name='turn'
+          value='w'
+          checked={getTurnFEN(fen)}
+          onChange={() => sendFEN(setTurnFEN(fen, true))}
         />
-        <button onClick={() => sendFEN(inputFEN)}>Set FEN</button>
+        <Radio
+          label='Black'
+          name='turn'
+          value='b'
+          checked={!getTurnFEN(fen)}
+          onChange={() => sendFEN(setTurnFEN(fen, false))}
+        />
       </div>
-      <div className='flex-row'>
-        <div className={separateCastlingRow ? 'flex-row' : 'flex-column'}>
-          <p style={{margin: '4px 0'}}>Turn:</p>
-          <Radio
-            label='White'
-            name='turn'
-            value='w'
-            checked={getTurnFEN(fen)}
-            onChange={() => sendFEN(setTurnFEN(fen, true))}
-          />
-          <Radio
-            label='Black'
-            name='turn'
-            value='b'
-            checked={!getTurnFEN(fen)}
-            onChange={() => sendFEN(setTurnFEN(fen, false))}
-          />
-        </div>
-        {!separateCastlingRow && castlingCheckboxes}
+      <div className='flex-column'>
+        <p style={{margin: '4px 0'}}>White:</p>
+        {castlingBox('O-O', 'White can castle kingside', 'K')}
+        {castlingBox('O-O-O', 'White can castle queenside', 'Q')}
       </div>
-      {separateCastlingRow && <div className='flex-row'>
-        {castlingCheckboxes}
-      </div>}
+      <div className='flex-column'>
+        <p style={{margin: '4px 0'}}>Black:</p>
+        {castlingBox('O-O', 'Black can castle kingside', 'k')}
+        {castlingBox('O-O-O', 'Black can castle queenside', 'q')}
+      </div>
     </div>
-  </fieldset>);
+  </div>);
 }
 
 export default EditPanel;

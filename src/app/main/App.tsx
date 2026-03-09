@@ -152,24 +152,21 @@ function App() {
     {text}
   </a>;
   const panels = {
-    main: <>
-      <fieldset className='pv-field'>
-        <legend>Principal variations</legend>
-        <p className='text'>
-          Depth: {engineInfo.depth}, time: {engineInfo.time} ms,
-          nodes: {engineInfo.nodes}
-        </p>
-        {engineInfo.bestMove && <p className='text'>
-          Best move: {arrowSource(engineInfo.bestMove)},
-          ponder move: {arrowSource(engineInfo.ponderMove)}
-        </p>}
-        {principalVariations.map((x) => <p className='text'>
-          {arrowSource(x.pgn, x.variation)}
-        </p>)}
-      </fieldset>
-    </>,
-    promotion: <fieldset>
-      <legend>Promote pawn to</legend>
+    main: <div className='flex-column' style={{overflow: 'auto'}}>
+      <p className='text'>
+        Depth: {engineInfo.depth}, time: {engineInfo.time} ms,
+        nodes: {engineInfo.nodes}
+      </p>
+      {engineInfo.bestMove && <p className='text'>
+        Best move: {arrowSource(engineInfo.bestMove)},
+        ponder move: {arrowSource(engineInfo.ponderMove)}
+      </p>}
+      {principalVariations.map((x) => <p className='text'>
+        {arrowSource(x.pgn, x.variation)}
+      </p>)}
+    </div>,
+    promotion: <div className='flex-column' style={{overflow: 'auto'}}>
+      <p className='text'>Promote pawn to:</p>
       <div className='flex-row'>
         <ActionButton name='promoteQueen' label='Queen'/>
         <ActionButton name='promoteRook' label='Rook'/>
@@ -179,7 +176,7 @@ function App() {
       <div className='flex-row'>
         <button onClick={() => setPanelType('main')}>Cancel</button>
       </div>
-    </fieldset>,
+    </div>,
     edit: <EditPanel fen={positionFEN}/>,
     settings: <SettingsPanel/>
   };
