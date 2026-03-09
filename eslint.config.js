@@ -35,6 +35,7 @@ export default tseslint.config(
       'arrow-body-style': ['error', 'as-needed'],
       '@stylistic/arrow-parens': ['error', 'always'],
       '@stylistic/semi': ['error', 'always'],
+      '@stylistic/no-trailing-spaces': ['error'],
       "@typescript-eslint/no-require-imports": "off"
     },
   },

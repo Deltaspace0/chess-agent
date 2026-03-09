@@ -138,7 +138,7 @@ describe('Board', () => {
       await mouse.press();
       await expect.poll(() => listener).toHaveBeenCalledWith('b5');
     });
-  
+
     describe('Promotion', () => {
       it('should detect Queen promotion', async () => {
         const mouse = new MouseMock();

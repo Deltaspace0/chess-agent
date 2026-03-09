@@ -148,13 +148,13 @@ const createWindow = async (
 
   const sendToApp = (channel: string, ...args: unknown[]) => {
     if (appRunning) {
-      [mainWin, engineWin, overlayWin].forEach((win) => 
+      [mainWin, engineWin, overlayWin].forEach((win) =>
         win.webContents.send(channel, ...args)
       );
     }
   };
 
-  const sendSignal = <T extends Signal>(name: T, value?: Signals[T]) => 
+  const sendSignal = <T extends Signal>(name: T, value?: Signals[T]) =>
     sendToApp('signal', name, value);
 
   const updateStatus = (status: string) => {
@@ -162,7 +162,7 @@ const createWindow = async (
     sendSignal('status', status);
   };
 
-  const sendEngineData = (name: string, data: string) => 
+  const sendEngineData = (name: string, data: string) =>
     sendSignal('engineData', { name, data });
 
   const setMouseActive = (value: boolean) => {
@@ -177,7 +177,7 @@ const createWindow = async (
 
   const unsuppressMouse = () => setMouseActive(wasMouseActive);
 
-  const getPreference = <T extends Preference>(name: T) => 
+  const getPreference = <T extends Preference>(name: T) =>
     preferenceManager.getPreference(name);
 
   const syncPreference = <T extends Preference>(name: T, value: Preferences[T]) => {
@@ -241,7 +241,7 @@ const createWindow = async (
   engineInternal.addListener('stderr', intHandlers.stderr);
 
   engineUCI.addListener('info', debounce((value) => {
-    const pv = value.principalVariations.map((x) => 
+    const pv = value.principalVariations.map((x) =>
       game.formatPrincipalVariation(x)
     );
     sendSignal('engineInfo', { ...value, principalVariations: pv });
@@ -445,7 +445,7 @@ const createWindow = async (
           });
           const directory = result.filePaths[0];
           if (directory) {
-            await Promise.all(images.map((image, i) => 
+            await Promise.all(images.map((image, i) =>
               saveImage({ image, path: path.join(directory, `${i}.png`) })
             ));
             updateStatus('Saved screenshots');
@@ -479,7 +479,7 @@ const createWindow = async (
       setPreference(name, value);
       const prefConfig = preferenceConfig[name];
       const prefix = prefConfig.statusPrefix ?? (prefConfig.label + ': ');
-      const valueText = value 
+      const valueText = value
         ? (prefConfig.statusOnTrue ?? 'enabled')
         : (prefConfig.statusOnFalse ?? 'disabled');
       updateStatus(`${prefix}${valueText}${prefConfig.statusSuffix ?? ''}`);
@@ -487,7 +487,7 @@ const createWindow = async (
   }
 
   const actionRegionManager = new ActionRegionManager(mouse);
-  actionRegionManager.addListener('hover', (name?: string) => 
+  actionRegionManager.addListener('hover', (name?: string) =>
     sendSignal('hoveredAction', name)
   );
 

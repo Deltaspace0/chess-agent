@@ -149,7 +149,7 @@ export class MouseMock extends Mouse {
   }
 
   async getPosition(): Promise<Point> {
-    return this.position;  
+    return this.position;
   }
 
   async move(point: Point): Promise<void> {
