@@ -50,13 +50,6 @@ class EngineUCI extends EventEmitter<EngineUCIEventMap> implements AgentEngine {
   }
 
   private processData(data: string) {
-    if (data.includes('readyok')) {
-      this.waitingReady = false;
-      return;
-    }
-    if (this.waitingReady) {
-      return;
-    }
     if (data.startsWith('id')) {
       if (data.startsWith('id name')) {
         this.engineInfo.name = data.slice('id name '.length);
@@ -64,6 +57,13 @@ class EngineUCI extends EventEmitter<EngineUCIEventMap> implements AgentEngine {
         this.engineInfo.author = data.slice('id author '.length);
       }
       this.emitInfo();
+      return;
+    }
+    if (data.includes('readyok')) {
+      this.waitingReady = false;
+      return;
+    }
+    if (this.waitingReady) {
       return;
     }
     const words = data.split(' ');
