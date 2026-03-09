@@ -537,7 +537,6 @@ const createWindow = async (
     },
     enginePath: (value) => {
       if (!value) {
-        engineInternal.refresh();
         engineUCI.setProcess(engineInternal);
         engineExternal.kill();
         updateStatus('Ready');

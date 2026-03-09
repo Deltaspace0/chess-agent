@@ -115,10 +115,9 @@ class EngineUCI extends EventEmitter<EngineUCIEventMap> implements AgentEngine {
   }
 
   private sendOption(option: keyof EngineOptions) {
-    return this.sendToProcess([
-      'stop',
-      `setoption name ${optionNames[option]} value ${this.options[option]}`
-    ]);
+    const name = optionNames[option];
+    const value = this.options[option];
+    this.sendToProcess(`setoption name ${name} value ${value}`);
   }
 
   analyzePosition(moves?: string[], duration?: number) {
@@ -142,11 +141,9 @@ class EngineUCI extends EventEmitter<EngineUCIEventMap> implements AgentEngine {
     const uciSupported = await process.expect('uciok', 2000, 'uci');
     if (uciSupported && process === this.loadingProcess) {
       this.process = process;
-      const promises = [];
       for (const option in optionNames) {
-        promises.push(this.sendOption(option as keyof EngineOptions));
+        this.sendOption(option as keyof EngineOptions);
       }
-      await Promise.all(promises);
       this.analyzePosition();
     }
     this.loadingProcess = null;
@@ -160,13 +157,14 @@ class EngineUCI extends EventEmitter<EngineUCIEventMap> implements AgentEngine {
     return this.moves.join(' ');
   }
 
-  async setOption<T extends keyof EngineOptions>(
+  setOption<T extends keyof EngineOptions>(
     option: T,
     value: EngineOptions[T]
   ) {
     this.options[option] = value;
     if (option in optionNames) {
-      await this.sendOption(option);
+      this.sendToProcess('stop');
+      this.sendOption(option);
     }
     if (option !== 'threads') {
       this.analyzePosition();
