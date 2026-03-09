@@ -29,7 +29,8 @@ class EngineUCI extends EventEmitter<EngineUCIEventMap> implements AgentEngine {
   private loadingProcess: EngineProcess | null = null;
   private moves: string[] = [];
   private analyzedMoves: string[] = [];
-  private whiteFirst: boolean = true;
+  private whiteFirst = true;
+  private waitingReady = false;
   private fen: string | null = null;
   private engineInfo: EngineInfo = { principalVariations: [] };
   private options: EngineOptions = {
@@ -49,20 +50,27 @@ class EngineUCI extends EventEmitter<EngineUCIEventMap> implements AgentEngine {
   }
 
   private processData(data: string) {
+    if (data.includes('readyok')) {
+      this.waitingReady = false;
+      return;
+    }
+    if (this.waitingReady) {
+      return;
+    }
     if (data.startsWith('id')) {
       if (data.startsWith('id name')) {
         this.engineInfo.name = data.slice('id name '.length);
       } else if (data.startsWith('id author')) {
         this.engineInfo.author = data.slice('id author '.length);
       }
-      this.sendEngineInfo();
+      this.emitInfo();
       return;
     }
     const words = data.split(' ');
     if (words.includes('depth')) {
       const depth = getNumberValue(words, 'depth');
       if (depth === 0) {
-        this.sendEngineInfo();
+        this.emitInfo();
         return;
       }
       const pv = getNumberValue(words, 'multipv')-1;
@@ -84,7 +92,7 @@ class EngineUCI extends EventEmitter<EngineUCIEventMap> implements AgentEngine {
       this.engineInfo.ponderMove = words.includes('ponder')
         ? words[words.indexOf('ponder')+1]
         : undefined;
-      this.sendEngineInfo();
+      this.emitInfo();
     }
   }
 
@@ -96,13 +104,13 @@ class EngineUCI extends EventEmitter<EngineUCIEventMap> implements AgentEngine {
     return evaluation;
   }
 
-  private sendEngineInfo() {
+  private emitInfo() {
     this.emit('info', this.engineInfo);
   }
 
   private setPrincipalVariation(pv: number, move: PrincipalVariation) {
     this.engineInfo.principalVariations[pv] = move;
-    this.sendEngineInfo();
+    this.emitInfo();
   }
 
   private resetAnalysis() {
@@ -111,7 +119,14 @@ class EngineUCI extends EventEmitter<EngineUCIEventMap> implements AgentEngine {
       name: this.engineInfo.name,
       author: this.engineInfo.author
     };
+    this.sendStop();
+    this.emitInfo();
+  }
+
+  private sendStop() {
+    this.waitingReady = true;
     this.sendToProcess('stop');
+    this.sendToProcess('isready');
   }
 
   private sendOption(option: keyof EngineOptions) {
@@ -163,7 +178,7 @@ class EngineUCI extends EventEmitter<EngineUCIEventMap> implements AgentEngine {
   ) {
     this.options[option] = value;
     if (option in optionNames) {
-      this.sendToProcess('stop');
+      this.sendStop();
       this.sendOption(option);
     }
     if (option !== 'threads') {
@@ -186,7 +201,6 @@ class EngineUCI extends EventEmitter<EngineUCIEventMap> implements AgentEngine {
   clear() {
     this.moves = [];
     this.resetAnalysis();
-    this.sendEngineInfo();
   }
 
   sendMove(move: string, skipAnalysis?: boolean): string {

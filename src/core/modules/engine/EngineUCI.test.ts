@@ -5,8 +5,17 @@ import EngineProcess from './EngineProcess.ts';
 class ProcessMock extends EngineProcess {
   private messages: string[] = [];
   private resolveMessage: ((message: string) => void) | null = null;
+  private autoReadyOk: boolean;
+
+  constructor(autoReadyOk?: boolean) {
+    super();
+    this.autoReadyOk = autoReadyOk ?? true;
+  }
 
   send(message: string) {
+    if (message === 'isready' && this.autoReadyOk) {
+      this.output('readyok');
+    }
     if (this.resolveMessage) {
       this.resolveMessage(message);
       this.resolveMessage = null;
@@ -80,6 +89,7 @@ describe('EngineUCI', () => {
       engine.setOption('threads', 3);
       const next = () => expect(process.nextMessage()).resolves;
       await next().toBe('stop');
+      await next().toBe('isready');
       await next().toBe('setoption name Threads value 3');
     });
 
@@ -89,6 +99,7 @@ describe('EngineUCI', () => {
       engine.sendMove('e2e4');
       const next = () => expect(process.nextMessage()).resolves;
       await next().toBe('stop');
+      await next().toBe('isready');
       await next().toBe('position startpos moves e2e4');
       await next().toMatch(/^go /);
       expect(engine.getMoves()).toBe('e2e4');
@@ -100,6 +111,7 @@ describe('EngineUCI', () => {
       engine.reset('<custom fen>');
       const next = () => expect(process.nextMessage()).resolves;
       await next().toBe('stop');
+      await next().toBe('isready');
       await next().toMatch(/position fen <custom fen>/);
       await next().toMatch(/^go /);
     });
@@ -129,7 +141,7 @@ describe('EngineUCI', () => {
       });
     });
 
-    it('should send correct engine info', async () => {
+    it('should emit correct engine info', async () => {
       const process = new ProcessMock();
       const engine = await getInitializedEngine(process);
       const listener = vi.fn();
@@ -146,7 +158,7 @@ describe('EngineUCI', () => {
       });
     });
 
-    it('should send correct principal variations', async () => {
+    it('should emit correct principal variations', async () => {
       const process = new ProcessMock();
       const engine = await getInitializedEngine(process);
       engine.setOption('multiPV', 3);
@@ -168,7 +180,7 @@ describe('EngineUCI', () => {
       );
     });
 
-    it('should send best and ponder moves', async () => {
+    it('should emit best and ponder moves', async () => {
       const process = new ProcessMock();
       const engine = await getInitializedEngine(process);
       const listener = vi.fn();
@@ -179,7 +191,7 @@ describe('EngineUCI', () => {
       );
     });
 
-    it('should not send ponder move if it is not provided', async () => {
+    it('should not emit ponder move if it is not provided', async () => {
       const process = new ProcessMock();
       const engine = await getInitializedEngine(process);
       const listener = vi.fn();
@@ -187,6 +199,21 @@ describe('EngineUCI', () => {
       process.output('bestmove e2e4');
       await expect.poll(() => listener).toHaveBeenCalledWith(
         expect.objectContaining({ bestMove: 'e2e4', ponderMove: undefined })
+      );
+    });
+
+    it('should not emit info if readyok is not received', async () => {
+      const process = new ProcessMock(false);
+      const engine = await getInitializedEngine(process);
+      const listener = vi.fn();
+      engine.addListener('info', listener);
+      process.output('bestmove e2e4 ponder e7e5');
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      expect(process.getMessageCount()).toBe(0);
+      process.output('readyok');
+      process.output('bestmove d2d4');
+      await expect.poll(() => listener).toHaveBeenCalledWith(
+        expect.objectContaining({ bestMove: 'd2d4' })
       );
     });
   });
