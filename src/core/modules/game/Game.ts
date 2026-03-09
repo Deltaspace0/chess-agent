@@ -100,6 +100,7 @@ class Game extends EventEmitter<GameEventMap> implements AgentGame {
       return;
     }
     this.chess.setTurn(turn);
+    this.chess.load(fen);
     this.emitPosition();
   }
 
