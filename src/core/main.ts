@@ -329,6 +329,25 @@ const createWindow = async (
     }
   };
 
+  const checkRegion = () => {
+    const value = getPreference('region');
+    if (!value) {
+      updateStatus('Please select region first');
+    }
+    return value;
+  };
+
+  const checkHashes = () => {
+    if (!checkRegion()) {
+      return;
+    }
+    const value = getPreference('recognizerModel');
+    if (!value) {
+      updateStatus('Please load hashes first');
+    }
+    return value;
+  };
+
   const actionListeners: Partial<Record<Action, () => void>> = {
     selectRegion: () => {
       overlayWin.setIgnoreMouseEvents(false);
@@ -339,7 +358,7 @@ const createWindow = async (
     },
     hideRegion: () => overlayWin.close(),
     loadHashes: () => {
-      if (!getPreference('region')) {
+      if (!checkRegion()) {
         return;
       }
       const perspective = getPreference('perspective');
@@ -364,19 +383,9 @@ const createWindow = async (
       }
     },
     clearPosition: () => agent.clearPosition(),
-    recognizeBoard: () => {
-      if (!getPreference('region')) {
-        updateStatus('No region selected');
-        return;
-      }
-      if (!getPreference('recognizerModel')) {
-        updateStatus('Load hashes first');
-        return;
-      }
-      agent.recognizeBoard();
-    },
-    recognizeBoardSkipMove: () => agent.recognizeBoard(true),
-    recognizeBoardAfterMove: () => agent.recognizeBoardAfterMove(),
+    recognizeBoard: () => checkHashes() && agent.recognizeBoard(),
+    recognizeBoardSkipMove: () => checkHashes() && agent.recognizeBoard(true),
+    recognizeBoardAfterMove: () => checkHashes() && agent.recognizeBoardAfterMove(),
     dialogEngine: async () => {
       suppressMouse();
       const result = await dialog.showOpenDialog(engineWin, {
