@@ -62,9 +62,8 @@ export class ConcreteMouse extends Mouse {
     if (!this.isActive) {
       return;
     }
-    const key = performance.now();
-    this.worker.postMessage({ action, arg, key });
     return new Promise<void>((resolve, reject) => {
+      const key = performance.now();
       const listen = (data: { action: string, key: number }) => {
         if (data.action === action && data.key === key) {
           this.worker.off('message', listen);
@@ -74,6 +73,7 @@ export class ConcreteMouse extends Mouse {
       };
       this.worker.on('message', listen);
       this.stopListeners.add(reject);
+      this.worker.postMessage({ action, arg, key });
     });
   }
 
